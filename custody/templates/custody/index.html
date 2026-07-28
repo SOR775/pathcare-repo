@@ -1,0 +1,36 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Custody - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Custody</p>
+    <h1>Custody checkpoint overview</h1>
+    <p>Track the checkpoints that make up the sample handoff history.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Checkpoint records</p>
+      <h2>Custody checkpoints</h2>
+    </div>
+  </div>
+  {% if checkpoints %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Checkpoint</th><th>Order</th><th>Notes</th></tr></thead>
+        <tbody>
+          {% for checkpoint in checkpoints %}
+            <tr><td>{{ checkpoint.checkpoint_name }}</td><td>{{ checkpoint.order.reference_code }}</td><td>{{ checkpoint.notes|default:"—" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No custody checkpoints have been recorded yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Clients - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Facility management</p>
+      <h2>Clients</h2>
+    </div>
+    <form method="post" action="{% url 'tracking:client_create' %}" class="inline-form">
+      {% csrf_token %}
+      {{ form.name }}
+      {{ form.contact_name }}
+      {{ form.contact_phone }}
+      {{ form.contact_email }}
+      {{ form.address }}
+      <button class="button primary" type="submit">Add client</button>
+    </form>
+  </div>
+
+  {% if clients %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Address</th></tr></thead>
+        <tbody>
+          {% for client in clients %}
+            <tr>
+              <td>{{ client.name }}</td>
+              <td>{{ client.contact_name }}</td>
+              <td>{{ client.contact_phone }}</td>
+              <td>{{ client.address }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p class="empty-state">No clients yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

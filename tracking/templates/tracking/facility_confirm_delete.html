@@ -1,0 +1,44 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Delete Facility - Pathcare{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Configuration</p>
+      <h2>Delete Facility</h2>
+    </div>
+  </div>
+</section>
+
+<section class="panel" style="max-width: 500px;">
+  <div style="padding: 2rem; text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+    
+    <h3 style="margin: 0 0 0.5rem 0; color: var(--danger);">Delete {{ facility.name }}?</h3>
+    
+    <p class="muted" style="margin: 0.5rem 0 1.5rem 0;">
+      This action cannot be undone. If this facility is referenced by existing orders, they will be affected.
+    </p>
+
+    <div style="background: #fff9e6; border-left: 4px solid #fbbf24; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: left;">
+      <p style="margin: 0; font-size: 0.95rem; color: #666;">
+        <strong>{{ facility.name }}</strong><br>
+        {{ facility.address }}<br>
+        {% if facility.contact_phone %}Phone: {{ facility.contact_phone }}{% endif %}
+      </p>
+    </div>
+
+    <form method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      {% csrf_token %}
+      <button type="submit" class="button" style="background: var(--danger); color: white; border: none; padding: 0.75rem 1.5rem; cursor: pointer; border-radius: var(--radius-md); font-weight: 600;">
+        Delete anyway
+      </button>
+      <a href="{% url 'tracking:facility_list' %}" class="button secondary" style="text-align: center; padding: 0.75rem 1.5rem;">
+        Cancel
+      </a>
+    </form>
+  </div>
+</section>
+{% endblock %}

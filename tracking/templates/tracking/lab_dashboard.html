@@ -1,0 +1,67 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Lab Dashboard - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Laboratory control panel</p>
+    <h1>Lab staff dashboard</h1>
+    <p>Confirm samples delivered by carriers, complete chain-of-custody verification, and track lab receipt status.</p>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <strong>{{ pending_receive }}</strong>
+      <span>Deliveries awaiting confirmation</span>
+    </div>
+    <div>
+      <strong>{{ orders.count }}</strong>
+      <span>Recent lab deliveries</span>
+    </div>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Delivery confirmations</p>
+      <h2>Orders delivered to lab</h2>
+    </div>
+  </div>
+  {% if orders %}
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Client</th>
+            <th>Carrier</th>
+            <th>Pickup</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
+              <td>{{ order.client.name }}</td>
+              <td>{{ order.carrier|default:"Unassigned" }}</td>
+              <td>{{ order.requested_pickup_time|default:"Not scheduled" }}</td>
+              <td>{{ order.get_status_display }}</td>
+              <td>
+                <form method="post" action="{% url 'tracking:order_mark_received' order.pk %}">
+                  {% csrf_token %}
+                  <button class="button primary" type="submit">Confirm received</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">There are no delivered orders awaiting lab confirmation.</p>
+  {% endif %}
+</section>
+{% endblock %}

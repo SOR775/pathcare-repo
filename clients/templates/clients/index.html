@@ -1,0 +1,36 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Clients - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Clients</p>
+    <h1>Client service overview</h1>
+    <p>Review active client profiles and the service level attached to each account.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Client records</p>
+      <h2>Client profiles</h2>
+    </div>
+  </div>
+  {% if clients %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Client</th><th>Contact</th><th>Phone</th><th>Address</th></tr></thead>
+        <tbody>
+          {% for client in clients %}
+            <tr><td>{{ client.name }}</td><td>{{ client.contact_name|default:"—" }}</td><td>{{ client.contact_phone|default:"—" }}</td><td>{{ client.address|default:"—" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No client profiles have been created yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

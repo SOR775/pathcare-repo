@@ -1,0 +1,61 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Issue details - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card compact">
+  <div>
+    <p class="eyebrow">Issue conversation</p>
+    <h1>{{ issue.get_category_display }} issue</h1>
+    <p class="muted">Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · Order {{ issue.order.reference_code }}{% endif %}</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button secondary" href="{% url 'tracking:carrier_issue_list' %}">Back to issues</a>
+  </div>
+</div>
+
+<div class="issue-report-card">
+  <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+    <div>
+      <p class="eyebrow">Status</p>
+      <h2 style="margin:0;">{{ issue.get_status_display }}</h2>
+    </div>
+    <div>
+      <p class="eyebrow">Reported</p>
+      <p style="margin:0;">{{ issue.created_at|timesince }} ago</p>
+    </div>
+  </div>
+  <div style="margin-top:1rem;">
+    <strong>Description</strong>
+    <p style="margin:0.5rem 0 0 0;">{{ issue.description|linebreaksbr }}</p>
+  </div>
+</div>
+
+<div class="issue-report-card" style="margin-top:1rem;">
+  <h3>Conversation</h3>
+  {% if issue.replies.all %}
+    {% for reply in issue.replies.all %}
+      <div class="issue-history-item" style="margin-bottom:1rem;">
+        <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+        <small>{{ reply.created_at|date:"M d, Y H:i" }}</small>
+        <p style="margin:0.75rem 0 0 0;">{{ reply.message|linebreaksbr }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="muted">No conversation yet. Use the form below to reply.</p>
+  {% endif %}
+</div>
+
+<div class="issue-report-card" style="margin-top:1rem;">
+  <h3>Post a reply</h3>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="reply_submit" value="1" />
+    <div class="form-field">
+      {{ reply_form.message.label_tag }}
+      {{ reply_form.message }}
+    </div>
+    <button class="button primary" type="submit">Send response</button>
+  </form>
+</div>
+{% endblock %}

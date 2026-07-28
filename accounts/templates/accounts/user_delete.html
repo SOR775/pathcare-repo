@@ -1,0 +1,21 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Delete user - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Delete user</p>
+    <h1>Confirm delete</h1>
+    <p>Are you sure you want to delete {{ delete_user.get_full_name|default:delete_user.username }}?</p>
+  </div>
+</div>
+
+<section class="panel">
+  <form method="post" class="filter-form" style="display:block;max-width:520px;">
+    {% csrf_token %}
+    <button type="submit" class="btn danger">Delete user</button>
+    <a href="{% url 'accounts:user_management' %}" class="btn secondary">Cancel</a>
+  </form>
+</section>
+{% endblock %}

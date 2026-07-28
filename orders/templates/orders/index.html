@@ -1,0 +1,36 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Orders - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Orders</p>
+    <h1>Order workflow overview</h1>
+    <p>Inspect lifecycle handoff settings and workflow readiness for each order.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Workflow records</p>
+      <h2>Order workflows</h2>
+    </div>
+  </div>
+  {% if workflows %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Order</th><th>Handoff window</th><th>Signature required</th></tr></thead>
+        <tbody>
+          {% for workflow in workflows %}
+            <tr><td>{{ workflow.order.reference_code }}</td><td>{{ workflow.handoff_window_minutes }} min</td><td>{% if workflow.requires_signature %}Yes{% else %}No{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No order workflows have been created yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

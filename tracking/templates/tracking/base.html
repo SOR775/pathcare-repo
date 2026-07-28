@@ -1,0 +1,1051 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Pathcare Kenya{% endblock %}</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="description" content="PathCare Kenya - Laboratory Sample Tracking and Management System">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PathCare">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192x192.png' %}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{% static 'icons/icon-512x512.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+
+  <link rel="stylesheet" href="{% static 'tracking/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'tracking/css/notifications.css' %}">
+  <link rel="stylesheet" href="{% static 'tracking/css/navigation.css' %}">
+  <link rel="stylesheet" href="{% static 'tracking/css/notifications-sidebar.css' %}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  {% block extra_head %}{% endblock %}
+
+  <style>
+ :root {
+  /* Primary Colors */
+  --primary: #059669;        /* Emerald 600 — medical green */
+  --primary-soft: #ecfdf5;   /* Emerald 50 — soft background */
+  --danger: #ef4444;         /* Keep red for errors */
+  
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0fdf4;   /* Very light green tint */
+  
+  /* Text Colors */
+  --text-main: #1f2937;
+  --text-inverse: #ffffff;
+  --text-muted: #6b7280;
+  
+  /* Border & Shadow */
+  --border-color: #d1fae5;   /* Light green border */
+  --panel-bg: #f0fdf4;       /* Light green panel */
+}
+      
+      /* Spacing & Radius */
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      
+      /* Shadows */
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;
+    }
+
+    body{
+        background:var(--bg-primary);
+        color:var(--text-main);
+    }
+
+    .navbar{
+        position:sticky;
+        top:0;
+        z-index:999;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:15px 40px;
+        background:var(--primary);
+        color:var(--text-inverse);
+        box-shadow:0 2px 16px rgba(0,0,0,.18);
+    }
+
+    .brand{
+        color:var(--text-inverse);
+        font-size:24px;
+        font-weight:bold;
+        text-decoration:none;
+        display:flex;
+        align-items:center;
+    }
+
+    .brand-logo{
+        height:36px;
+        width:auto;
+        display:block;
+    }
+
+    nav{
+        display:flex;
+        align-items:center;
+        gap:15px;
+        flex-wrap:wrap;
+    }
+
+    nav a{
+        color:var(--text-inverse);
+        text-decoration:none;
+        padding:8px 14px;
+        border-radius:8px;
+        transition:.3s;
+        font-size:14px;
+    }
+
+    nav a:hover{
+        background:rgba(255,255,255,.18);
+    }
+
+    .nav-user{
+        display:flex;
+        flex-direction:column;
+        text-align:right;
+        margin-left:15px;
+    }
+
+    .user-name{
+        font-weight:bold;
+        font-size:14px;
+    }
+
+    .user-role{
+        font-size:12px;
+        opacity:.85;
+    }
+
+    .container{
+        max-width:1400px;
+        margin:auto;
+        padding:30px;
+    }
+
+    .messages{
+        margin-bottom:20px;
+    }
+
+    .message{
+        padding:15px;
+        margin-bottom:10px;
+        border-radius:8px;
+        background:var(--panel-bg);
+        border-left:5px solid var(--primary);
+        box-shadow:0 2px 8px rgba(0,0,0,.08);
+        color:var(--text-main);
+    }
+
+    .badge{
+        background:red;
+        color:white;
+        padding:2px 7px;
+        border-radius:20px;
+        font-size:12px;
+        margin-left:5px;
+    }
+
+    .nav-notifications{
+        position:relative;
+    }
+
+    .notif-toggle{
+      cursor:pointer;
+      background:var(--bg-secondary);
+      border:1px solid var(--border-color);
+      color:var(--text-main);
+      font:inherit;
+      padding:8px 14px;
+      border-radius:8px;
+      transition:background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .notif-toggle:hover{
+      background:var(--primary-soft);
+      border-color:var(--primary);
+      color:var(--primary);
+    }
+
+    .notif-dropdown{
+        display:none;
+        position:absolute;
+        right:0;
+        top:42px;
+        width:320px;
+        background:white;
+        color:#333;
+        border-radius:8px;
+        box-shadow:0 10px 25px rgba(0,0,0,.15);
+        overflow:hidden;
+    }
+
+    .nav-notifications:hover .notif-dropdown{
+      display:block;
+    }
+
+    /* Support touch/click toggle on mobile: show dropdown when parent has .open */
+    .nav-notifications.open .notif-dropdown{
+      display:block;
+    }
+
+    .notif-dropdown {
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .notif-dropdown.open {
+      display: block;
+    }
+
+    .notif-item{
+        padding:12px;
+        border-bottom:1px solid #eee;
+    }
+
+    .notif-item:hover{
+        background:var(--bg-secondary);
+    }
+
+    .notif-item a{
+        color:var(--primary);
+        text-decoration:none;
+        display:block;
+        margin-bottom:5px;
+        word-break:break-word;
+    }
+
+    .notif-item small {
+        display:block;
+        color:#666;
+        font-size:12px;
+    }
+
+    .notif-empty{
+        padding:20px;
+        text-align:center;
+        color:#777;
+    }
+
+    .mobile-tabbar{
+        display:none;
+    }
+
+    @media(max-width:768px){
+
+        .navbar{
+            flex-direction:column;
+            align-items:flex-start;
+            padding:15px;
+        }
+
+        nav{
+            width:100%;
+            margin-top:15px;
+            flex-direction:column;
+            align-items:flex-start;
+            gap:10px;
+        }
+
+        nav a{
+            width:100%;
+        }
+
+        .container{
+            padding:20px;
+            margin-bottom:100px;
+        }
+
+        .mobile-tabbar{
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            background:var(--panel-bg);
+            border-top:1px solid var(--border-color);
+            box-shadow:0 -2px 12px rgba(0,0,0,.12);
+            padding:10px 0;
+            z-index:999;
+        }
+
+        .mobile-tabbar a{
+            text-decoration:none;
+            color:var(--text-main);
+            font-size:12px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            padding:4px 0;
+        }
+
+        .mobile-tabbar a:hover,
+        .mobile-tabbar a.active {
+            color:var(--primary);
+        }
+
+        .mobile-tabbar .icon{
+            font-size:20px;
+            margin-bottom:3px;
+        }
+
+        .notif-toggle{
+            width:100%;
+            text-align:left;
+        }
+
+        .notif-dropdown {
+            position:fixed;
+            top:72px;
+            right:12px;
+            left:12px;
+            width:auto;
+            max-width:none;
+            z-index:10000;
+            box-shadow:0 14px 35px rgba(0,0,0,.18);
+        }
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a class="brand" href="{% url 'accounts:role_redirect' %}">
+      <img src="{% static 'icons/icon-192x192.png' %}" alt="PathCare Kenya" class="brand-logo">
+    Pathcare
+    </a>
+    
+    <!-- Mobile hamburger menu -->
+    <button class="nav-toggle-btn" id="nav-toggle" aria-label="Toggle navigation">☰</button>
+    
+    <!-- Desktop/Tablet Navigation -->
+    <nav class="nav-links" id="nav-links">
+      {% if user.is_authenticated %}
+        {% if user.role == 'super_admin' %}
+          <!-- Dashboard -->
+          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Carrier Management Group -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
+              <i data-lucide="truck"></i>
+              <span>Carrier Mgmt</span>
+              <span class="chevron">⋮</span>
+            </button>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-header">Carrier Management</div>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_monitoring' %}">
+                <i data-lucide="map-pin"></i><span>Monitoring</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_issue_list' %}">
+                <i data-lucide="message-circle"></i><span>Issues</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_list' %}">
+                <i data-lucide="truck"></i><span>Carriers</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Administration Group -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
+              <i data-lucide="shield-alert"></i>
+              <span>Admin</span>
+              <span class="chevron">⋮</span>
+            </button>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-header">Administration</div>
+              <a class="nav-dropdown-item" href="{% url 'accounts:user_management' %}">
+                <i data-lucide="users"></i><span>Users</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:client_list' %}">
+                <i data-lucide="briefcase"></i><span>Clients</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:facility_list' %}">
+                <i data-lucide="building"></i><span>Facilities</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Reports -->
+          <a class="nav-link" href="{% url 'tracking:reports_view' %}">
+            <i data-lucide="chart-column"></i><span>Reports</span>
+          </a>
+
+          <!-- Profile -->
+          <a class="nav-link" href="{% url 'accounts:account_index' %}">
+            <i data-lucide="user-round"></i><span>Profile</span>
+          </a>
+
+        {% elif user.role == 'dispatcher' %}
+          <!-- Dashboard -->
+          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Carrier Management Group -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
+              <i data-lucide="truck"></i>
+              <span>Carriers</span>
+              <span class="chevron">⋮</span>
+            </button>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-header">Carrier Management</div>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_monitoring' %}">
+                <i data-lucide="map-pin"></i><span>Monitoring</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_issue_list' %}">
+                <i data-lucide="message-circle"></i><span>Issues</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_list' %}">
+                <i data-lucide="truck"></i><span>View Carriers</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Orders & Resources Group -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
+              <i data-lucide="package"></i>
+              <span>Operations</span>
+              <span class="chevron">⋮</span>
+            </button>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-header">Operations</div>
+              <a class="nav-dropdown-item" href="{% url 'tracking:order_search' %}">
+                <i data-lucide="package-plus"></i><span>Pickup Queue</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:client_list' %}">
+                <i data-lucide="users"></i><span>Clients</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:facility_list' %}">
+                <i data-lucide="building"></i><span>Facilities</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Reports -->
+          <a class="nav-link" href="{% url 'tracking:reports_view' %}">
+            <i data-lucide="chart-column"></i><span>Reports</span>
+          </a>
+
+          <!-- Profile -->
+          <a class="nav-link" href="{% url 'accounts:account_index' %}">
+            <i data-lucide="user-round"></i><span>Profile</span>
+          </a>
+
+        {% elif user.role == 'carrier' %}
+          <!-- Assigned Pickups -->
+          <a class="nav-link" href="{% url 'tracking:carrier_view' %}">
+            <i data-lucide="package-plus"></i><span>Assigned Pickups</span>
+          </a>
+          
+          <!-- Navigation -->
+          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="map-pinned"></i><span>Navigation</span>
+          </a>
+          
+          <!-- Profile -->
+          <a class="nav-link" href="{% url 'accounts:account_index' %}">
+            <i data-lucide="user-round"></i><span>Profile</span>
+          </a>
+
+        {% elif user.role == 'lab_staff' %}
+          <!-- Lab Dashboard -->
+          <a class="nav-link" href="{% url 'tracking:lab_dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Lab Dashboard</span>
+          </a>
+          
+          <!-- Profile -->
+          <a class="nav-link" href="{% url 'accounts:account_index' %}">
+            <i data-lucide="user-round"></i><span>Profile</span>
+          </a>
+
+        {% elif user.role == 'client' %}
+          <!-- Dashboard -->
+          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Orders Group -->
+          <div class="nav-group">
+            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
+              <i data-lucide="package"></i>
+              <span>Orders</span>
+              <span class="chevron">⋮</span>
+            </button>
+            <div class="nav-dropdown">
+              <div class="nav-dropdown-header">Manage Orders</div>
+              <a class="nav-dropdown-item" href="{% url 'tracking:client_request_pickup' %}">
+                <i data-lucide="package-plus"></i><span>Request Pickup</span>
+              </a>
+              <a class="nav-dropdown-item" href="{% url 'tracking:order_search' %}">
+                <i data-lucide="clipboard-list"></i><span>My Pickups</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Profile -->
+          <a class="nav-link" href="{% url 'accounts:account_index' %}">
+            <i data-lucide="user-round"></i><span>Profile</span>
+          </a>
+        {% endif %}
+
+        {% comment %}Notifications sidebar{% endcomment %}
+        <div class="notifications-icon-wrapper">
+          <button class="notifications-icon-button" id="notif-toggle" aria-label="Toggle notifications">
+            <i data-lucide="bell"></i>
+            <span>Notifications</span>
+            {% if notifications_unread_count %}<span class="notifications-badge">{{ notifications_unread_count }}</span>{% endif %}
+          </button>
+        </div>
+
+        <a class="nav-link nav-link-logout" href="{% url 'accounts:logout' %}"><i data-lucide="log-out"></i><span>Logout</span></a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}">Login</a>
+      {% endif %}
+    </nav>
+  </div>
+
+  <!-- Mobile Sidebar -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span style="font-weight: bold; color: #333;">Navigation</span>
+      <button class="sidebar-close" id="sidebar-close" aria-label="Close sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      {% if user.is_authenticated %}
+        {% if user.role == 'super_admin' %}
+          <!-- Dashboard -->
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Carrier Management Group -->
+          <div class="sidebar-nav-group">
+            <button class="sidebar-nav-group-toggle" aria-expanded="false">
+              <span><i data-lucide="truck"></i>Carrier Mgmt</span>
+              <span class="chevron">▼</span>
+            </button>
+            <div class="sidebar-nav-items">
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_monitoring' %}">
+                <i data-lucide="map-pin"></i><span>Monitoring</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_issue_list' %}">
+                <i data-lucide="message-circle"></i><span>Issues</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_list' %}">
+                <i data-lucide="truck"></i><span>Carriers</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Administration Group -->
+          <div class="sidebar-nav-group">
+            <button class="sidebar-nav-group-toggle" aria-expanded="false">
+              <span><i data-lucide="shield-alert"></i>Administration</span>
+              <span class="chevron">▼</span>
+            </button>
+            <div class="sidebar-nav-items">
+              <a class="sidebar-nav-item" href="{% url 'accounts:user_management' %}">
+                <i data-lucide="users"></i><span>Users</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:client_list' %}">
+                <i data-lucide="briefcase"></i><span>Clients</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:facility_list' %}">
+                <i data-lucide="building"></i><span>Facilities</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Reports -->
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:reports_view' %}">
+            <i data-lucide="chart-column"></i><span>Reports</span>
+          </a>
+
+        {% elif user.role == 'dispatcher' %}
+          <!-- Dashboard -->
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Carrier Management Group -->
+          <div class="sidebar-nav-group">
+            <button class="sidebar-nav-group-toggle" aria-expanded="false">
+              <span><i data-lucide="truck"></i>Carriers</span>
+              <span class="chevron">▼</span>
+            </button>
+            <div class="sidebar-nav-items">
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_monitoring' %}">
+                <i data-lucide="map-pin"></i><span>Monitoring</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_issue_list' %}">
+                <i data-lucide="message-circle"></i><span>Issues</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_list' %}">
+                <i data-lucide="truck"></i><span>View Carriers</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Operations Group -->
+          <div class="sidebar-nav-group">
+            <button class="sidebar-nav-group-toggle" aria-expanded="false">
+              <span><i data-lucide="package"></i>Operations</span>
+              <span class="chevron">▼</span>
+            </button>
+            <div class="sidebar-nav-items">
+              <a class="sidebar-nav-item" href="{% url 'tracking:order_search' %}">
+                <i data-lucide="package-plus"></i><span>Pickup Queue</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:client_list' %}">
+                <i data-lucide="users"></i><span>Clients</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:facility_list' %}">
+                <i data-lucide="building"></i><span>Facilities</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Reports -->
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:reports_view' %}">
+            <i data-lucide="chart-column"></i><span>Reports</span>
+          </a>
+
+        {% elif user.role == 'carrier' %}
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:carrier_view' %}">
+            <i data-lucide="package-plus"></i><span>Assigned Pickups</span>
+          </a>
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="map-pinned"></i><span>Navigation</span>
+          </a>
+
+        {% elif user.role == 'lab_staff' %}
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:lab_dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Lab Dashboard</span>
+          </a>
+
+        {% elif user.role == 'client' %}
+          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
+            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+          </a>
+
+          <!-- Orders Group -->
+          <div class="sidebar-nav-group">
+            <button class="sidebar-nav-group-toggle" aria-expanded="false">
+              <span><i data-lucide="package"></i>Orders</span>
+              <span class="chevron">▼</span>
+            </button>
+            <div class="sidebar-nav-items">
+              <a class="sidebar-nav-item" href="{% url 'tracking:client_request_pickup' %}">
+                <i data-lucide="package-plus"></i><span>Request Pickup</span>
+              </a>
+              <a class="sidebar-nav-item" href="{% url 'tracking:order_search' %}">
+                <i data-lucide="clipboard-list"></i><span>My Pickups</span>
+              </a>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Divider -->
+        <div style="border-bottom: 1px solid #f0f0f0; margin: 10px 0;"></div>
+
+        <!-- Notifications & Profile (always at bottom) -->
+        <button class="sidebar-nav-item-direct" id="sidebar-notif-toggle" style="width: 100%; text-align: left; background: none; border: none; padding: 14px 20px; cursor: pointer;">
+          <i data-lucide="bell"></i>
+          <span>Notifications</span>
+        </button>
+        <a class="sidebar-nav-item-direct" href="{% url 'accounts:account_index' %}">
+          <i data-lucide="user-round"></i><span>Profile</span>
+        </a>
+        <a class="sidebar-nav-item-direct" href="{% url 'accounts:logout' %}" style="color: #ef4444;">
+          <i data-lucide="log-out"></i><span>Logout</span>
+        </a>
+      {% endif %}
+    </nav>
+  </div>
+
+  <!-- Notifications Sidebar -->
+  <div class="notifications-overlay" id="notifications-overlay"></div>
+  <div class="notifications-sidebar" id="notifications-sidebar">
+    <div class="notifications-sidebar-header">
+      <h2>
+        <i data-lucide="bell"></i>
+        Notifications
+        {% if notifications_unread_count %}<span class="notifications-count">{{ notifications_unread_count }}</span>{% endif %}
+      </h2>
+      <button class="notifications-sidebar-close" id="notifications-close" aria-label="Close notifications">✕</button>
+    </div>
+    
+    <div class="notifications-content">
+      {% if notifications_list %}
+        <div class="notifications-list">
+          {% for notification in notifications_list %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" data-pk="{{ notification.pk }}">
+              <div class="notification-indicator"></div>
+              <div class="notification-content">
+                <a href="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-mark-url="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-next-url="/">
+                  <span class="notification-message">{{ notification.message }}</span>
+                  <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="notifications-empty">
+          <span class="notifications-empty-icon">🔕</span>
+          <div class="notifications-empty-text">No notifications yet</div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if notifications_list %}
+      <div class="notifications-footer">
+        <button class="mark-read-btn">Mark all as read</button>
+        <button class="clear-btn">Clear all</button>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- flash notification band (auto-hide) -->
+  <div id="flash-band" class="flash-band" role="status" aria-live="polite" style="display:none;"></div>
+
+  <div class="container">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  {% if user.is_authenticated %}
+    <div class="mobile-tabbar" aria-label="Mobile navigation">
+      {% if user.role == 'super_admin' or user.role == 'dispatcher' %}
+        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+        <a href="{% url 'tracking:client_list' %}"><i data-lucide="users"></i><span>Clients</span></a>
+        <a href="{% url 'tracking:carrier_list' %}"><i data-lucide="truck"></i><span>Carriers</span></a>
+        <a href="{% url 'tracking:reports_view' %}"><i data-lucide="chart-column"></i><span>Reports</span></a>
+      {% elif user.role == 'carrier' %}
+        <a href="{% url 'tracking:carrier_view' %}"><i data-lucide="clipboard-list"></i><span>Pickups</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="map-pinned"></i><span>Map</span></a>
+        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+      {% elif user.role == 'lab_staff' %}
+        <a href="{% url 'tracking:lab_dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Lab</span></a>
+        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+      {% elif user.role == 'client' %}
+        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+        <a href="{% url 'tracking:client_request_pickup' %}"><i data-lucide="package-plus"></i><span>Request</span></a>
+        <a href="{% url 'tracking:order_search' %}"><i data-lucide="clipboard-list"></i><span>My pickups</span></a>
+        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+      {% endif %}
+      <a href="{% url 'accounts:logout' %}"><i data-lucide="log-out"></i><span>Logout</span></a>
+    </div>
+  {% endif %}
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+  {% block extra_js %}{% endblock %}
+  <script>
+    function renderIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', renderIcons);
+  </script>
+  <script src="{% static 'tracking/js/notifications.js' %}"></script>
+  <script>
+    // Flash band handler: shows first Django message briefly and hides original message block
+    (function(){
+      function ready(fn){ if(document.readyState!='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+      ready(function(){
+        try{
+          var messagesEl = document.querySelector('.messages');
+          var flash = document.getElementById('flash-band');
+          if(!messagesEl || !flash) return;
+
+          var first = messagesEl.querySelector('.message');
+          if(!first) return;
+          var text = first.textContent.trim();
+          var classes = first.className || '';
+
+          // Determine severity class
+          if(/success/.test(classes)) flash.classList.add('success');
+          else if(/warning/.test(classes)) flash.classList.add('warning');
+          else if(/error|danger/.test(classes)) flash.classList.add('danger');
+          else if(/info/.test(classes)) flash.classList.add('info');
+
+          flash.textContent = text;
+          // show
+          flash.classList.add('show');
+          flash.style.display = '';
+
+          // auto-hide after 3.2s
+          var hideTimer = setTimeout(function(){
+            flash.classList.remove('show'); flash.classList.add('hide');
+            setTimeout(function(){ flash.style.display='none'; flash.classList.remove('hide'); }, 300);
+          }, 3200);
+
+          // clicking the band hides it quickly
+          flash.addEventListener('click', function(){ clearTimeout(hideTimer); flash.classList.remove('show'); flash.classList.add('hide'); setTimeout(function(){ flash.style.display='none'; flash.classList.remove('hide'); }, 200); });
+
+          // hide original messages to avoid duplication
+          messagesEl.style.display = 'none';
+        }catch(e){ console.error('flash band error', e); }
+      });
+    })();
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('{% static "service-worker.js" %}')
+          .then(function(registration) {
+            console.log('Service Worker registered:', registration);
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+
+  <!-- Navigation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Desktop Dropdown Navigation
+      const navGroups = document.querySelectorAll('.nav-group');
+      navGroups.forEach(group => {
+        const toggle = group.querySelector('.nav-group-toggle');
+        const dropdown = group.querySelector('.nav-dropdown');
+
+        if (!toggle || !dropdown) return;
+
+        // Click to toggle
+        toggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          const isActive = group.classList.contains('active');
+          
+          // Close all other groups
+          document.querySelectorAll('.nav-group.active').forEach(activeGroup => {
+            if (activeGroup !== group) {
+              activeGroup.classList.remove('active');
+            }
+          });
+
+          // Toggle current group
+          group.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', !isActive);
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!group.contains(e.target)) {
+            group.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        // Close dropdown when item is clicked
+        dropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+          item.addEventListener('click', function() {
+            group.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+          });
+        });
+      });
+
+      // Mobile Sidebar Navigation
+      const navToggle = document.getElementById('nav-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const sidebarClose = document.getElementById('sidebar-close');
+
+      if (navToggle && sidebar) {
+        // Open sidebar
+        navToggle.addEventListener('click', function() {
+          sidebar.classList.add('open');
+          sidebarOverlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+          renderIcons(); // Render lucide icons for sidebar
+        });
+
+        // Close sidebar
+        function closeSidebar() {
+          sidebar.classList.remove('open');
+          sidebarOverlay.classList.remove('open');
+          document.body.style.overflow = 'auto';
+        }
+
+        sidebarClose.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when a nav link is clicked
+        document.querySelectorAll('.sidebar-nav-item, .sidebar-nav-item-direct').forEach(link => {
+          link.addEventListener('click', function() {
+            closeSidebar();
+          });
+        });
+      }
+
+      // Sidebar group toggles
+      const sidebarGroups = document.querySelectorAll('.sidebar-nav-group');
+      sidebarGroups.forEach(group => {
+        const toggle = group.querySelector('.sidebar-nav-group-toggle');
+        const items = group.querySelector('.sidebar-nav-items');
+
+        if (!toggle || !items) return;
+
+        toggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          const isActive = group.classList.contains('active');
+          group.classList.toggle('active');
+          toggle.setAttribute('aria-expanded', !isActive);
+        });
+      });
+
+      // Notifications Sidebar
+      const notifToggle = document.getElementById('notif-toggle');
+      const sidebarNotifToggle = document.getElementById('sidebar-notif-toggle');
+      const notificationsSidebar = document.getElementById('notifications-sidebar');
+      const notificationsOverlay = document.getElementById('notifications-overlay');
+      const notificationsClose = document.getElementById('notifications-close');
+
+      if (notificationsSidebar) {
+        // Open notifications sidebar
+        function openNotifications() {
+          notificationsSidebar.classList.add('open');
+          notificationsOverlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+          renderIcons(); // Render lucide icons for notifications sidebar
+        }
+
+        // Close notifications sidebar
+        function closeNotifications() {
+          notificationsSidebar.classList.remove('open');
+          notificationsOverlay.classList.remove('open');
+          document.body.style.overflow = 'auto';
+        }
+
+        // Toggle buttons
+        if (notifToggle) {
+          notifToggle.addEventListener('click', openNotifications);
+        }
+
+        if (sidebarNotifToggle) {
+          sidebarNotifToggle.addEventListener('click', function() {
+            closeNotifications();
+            if (sidebar) closeSidebar();
+            setTimeout(openNotifications, 300);
+          });
+        }
+
+        // Close button
+        notificationsClose.addEventListener('click', closeNotifications);
+        notificationsOverlay.addEventListener('click', closeNotifications);
+
+        // Close when notification item is clicked
+        document.querySelectorAll('.notification-item a').forEach(link => {
+          link.addEventListener('click', function() {
+            closeNotifications();
+          });
+        });
+
+        // Mark all as read button
+        const markAllBtn = document.querySelector('.mark-read-btn');
+        if (markAllBtn) {
+          markAllBtn.addEventListener('click', function() {
+            fetch('{% url "tracking:mark_all_notifications_read" %}', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                               document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                // Update all unread items to read
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                  item.classList.remove('unread');
+                  const indicator = item.querySelector('.notification-indicator');
+                  if (indicator) indicator.style.background = '#d0d0d0';
+                });
+                // Hide the action buttons
+                const footer = document.querySelector('.notifications-footer');
+                if (footer) footer.style.display = 'none';
+              }
+            })
+            .catch(error => console.error('Error marking notifications as read:', error));
+          });
+        }
+
+        // Clear all button
+        const clearBtn = document.querySelector('.clear-btn');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all notifications?')) {
+              fetch('{% url "tracking:clear_all_notifications" %}', {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  // Clear the notifications list
+                  const content = document.querySelector('.notifications-content');
+                  const footer = document.querySelector('.notifications-footer');
+                  content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon">🔕</span><div class="notifications-empty-text">No notifications yet</div></div>';
+                  if (footer) footer.remove();
+                  
+                  // Update badge
+                  const badge = document.querySelector('.notifications-badge');
+                  if (badge) badge.remove();
+                }
+              })
+              .catch(error => console.error('Error clearing notifications:', error));
+            }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

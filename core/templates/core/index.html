@@ -1,0 +1,87 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Core settings - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Operations modules</p>
+    <h1>Core platform settings</h1>
+    <p>These settings and module views are the foundation for the logistics platform’s growing operations surface.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Operations modules</p>
+      <h2>Core platform areas</h2>
+    </div>
+  </div>
+
+  <div class="alert-grid">
+    <div class="alert-card">
+      <h3>Accounts</h3>
+      <p>Manage service accounts, dispatch users, and operational contacts.</p>
+      <a href="{% url 'accounts:account_index' %}">Open accounts</a>
+    </div>
+    <div class="alert-card">
+      <h3>Clients</h3>
+      <p>Review client onboarding profiles and service arrangements.</p>
+      <a href="{% url 'clients:client_index' %}">Open clients</a>
+    </div>
+    <div class="alert-card">
+      <h3>Carriers</h3>
+      <p>Track carrier assignments and service coverage.</p>
+      <a href="{% url 'carriers:carrier_index' %}">Open carriers</a>
+    </div>
+    <div class="alert-card">
+      <h3>Orders</h3>
+      <p>Monitor order workflow states and handoff requirements.</p>
+      <a href="{% url 'orders:order_index' %}">Open orders</a>
+    </div>
+    <div class="alert-card">
+      <h3>Samples</h3>
+      <p>Inspect sample conditions and chain-of-custody readiness.</p>
+      <a href="{% url 'samples:sample_index' %}">Open samples</a>
+    </div>
+    <div class="alert-card">
+      <h3>Custody</h3>
+      <p>Review custody checkpoints and evidence trails.</p>
+      <a href="{% url 'custody:custody_index' %}">Open custody</a>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">System values</p>
+      <h2>Current configuration</h2>
+    </div>
+  </div>
+
+  {% if settings %}
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in settings %}
+            <tr>
+              <td>{{ item.key }}</td>
+              <td>{{ item.value }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No system settings have been configured yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

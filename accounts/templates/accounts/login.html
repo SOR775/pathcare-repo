@@ -1,0 +1,25 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Login - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Authentication</p>
+    <h1>Sign in to Pathcare</h1>
+    <p>Access the transport and sample handling workspace with your role-based account.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <form method="post" class="filter-form" style="display:block;max-width:420px;">
+    {% csrf_token %}
+    <label for="username">Username</label>
+    <input id="username" name="username" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" name="password" required>
+    <button type="submit" class="btn">Sign in</button>
+    <p style="margin-top:12px;"><a href="{% url 'accounts:password_reset' %}">Forgot password?</a></p>
+  </form>
+</section>
+{% endblock %}

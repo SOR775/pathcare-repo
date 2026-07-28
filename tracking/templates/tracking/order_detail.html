@@ -1,0 +1,369 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Order details - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card compact">
+  <div>
+    <p class="eyebrow">Order overview</p>
+    <h1>{{ order.reference_code }}</h1>
+    <p>{{ order.client.name }} · {{ order.get_priority_display }} priority · {{ order.get_status_display }}</p>
+  </div>
+  <div class="hero-actions order-actions">
+    <span class="status-pill {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'assigned' %}warning{% endif %}">{{ order.get_status_display }}</span>
+    <div class="action-toolbar">
+      {% if user.is_super_admin or user.is_dispatcher %}
+        {% if order.status == 'pending_review' %}
+          <form class="action-item" method="post" action="{% url 'tracking:order_approve_request' order.pk %}">
+            {% csrf_token %}
+            <button class="button primary" type="submit">Approve request</button>
+          </form>
+        {% endif %}
+        {% if order.status == 'pending_review' or order.status == 'pending' %}
+          <form class="action-item" method="post" action="{% url 'tracking:order_auto_assign' order.pk %}">
+            {% csrf_token %}
+            <button class="button primary" type="submit">Auto-assign best carrier</button>
+          </form>
+          <form class="action-item" method="post" action="{% url 'tracking:order_assign_carrier' order.pk %}">
+            {% csrf_token %}
+            {{ assign_form.carrier }}
+            <button class="button secondary" type="submit">Assign carrier</button>
+          </form>
+        {% endif %}
+      {% endif %}
+      {% if user.is_super_admin or user.is_carrier %}
+        {% if order.carrier and order.carrier.user == user %}
+          <a class="action-item button secondary" href="{% url 'tracking:carrier_view' %}">My pickups</a>
+          {% if order.status == 'pending' or order.status == 'assigned' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_accept_assignment' order.pk %}">
+              {% csrf_token %}
+              <button class="button primary" type="submit">Accept assignment</button>
+            </form>
+          {% elif order.status == 'accepted' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_start_to_client' order.pk %}">
+              {% csrf_token %}
+              <button class="button primary" type="submit">Start trip to client</button>
+            </form>
+          {% elif order.status == 'en_route_client' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_arrive_client' order.pk %}">
+              {% csrf_token %}
+              <button class="button primary" type="submit">Mark arrival at client</button>
+            </form>
+          {% elif order.status == 'at_client' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_mark_pickup' order.pk %}">
+              {% csrf_token %}
+              <button class="button primary" type="submit">Confirm pickup</button>
+            </form>
+          {% elif order.status == 'picked_up' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_mark_in_transit' order.pk %}">
+              {% csrf_token %}
+              <button class="button secondary" type="submit">Begin transport</button>
+            </form>
+          {% elif order.status == 'in_transit' %}
+            <form class="action-item" method="post" action="{% url 'tracking:order_mark_delivery' order.pk %}">
+              {% csrf_token %}
+              <button class="button secondary" type="submit">Confirm delivery</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      <a class="action-item button secondary" href="{% url 'tracking:dashboard' %}">Back to dashboard</a>
+      <a class="action-item button secondary" href="{% url 'tracking:reports_view' %}">View reports</a>
+    </div>
+  </div>
+</div>
+
+{% if user.is_super_admin or user.is_dispatcher or user.is_lab_staff %}
+  <div style="margin:0.5rem 0">
+    <form method="post" action="{% url 'tracking:order_mark_received' order.pk %}" style="display:inline-block">
+      {% csrf_token %}
+      <button class="button secondary" type="submit">Mark received at lab</button>
+    </form>
+    {% if not user.is_lab_staff %}
+      <form method="post" action="{% url 'tracking:order_mark_complete' order.pk %}" style="display:inline-block">
+        {% csrf_token %}
+        <button class="button" type="submit">Mark complete</button>
+      </form>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% include "tracking/workflow_visual.html" %}
+
+{% if suggested_carriers %}
+  {% if order.status == 'pending_review' or order.status == 'pending' %}
+    {% if user.is_super_admin or user.is_dispatcher %}
+      <section class="panel">
+        <div class="panel-header">
+        <div>
+          <p class="eyebrow">Dispatcher helper</p>
+          <h2>Suggested carriers</h2>
+        </div>
+      </div>
+  <div class="details-grid">
+    <div class="detail-card">
+      <p>These carriers are available and closest to the pickup location.</p>
+      <ol>
+        {% for item in suggested_carriers %}
+          <li>
+            <strong>{{ item.carrier.display_name }}</strong>
+            <div>Phone: {{ item.carrier.phone }}</div>
+            <div>Status: {{ item.carrier.get_status_display }}</div>
+            <div>Distance: {% if item.distance_km is not None %}{{ item.distance_km|floatformat:1 }} km{% else %}Unknown{% endif %}</div>
+            <form method="post" action="{% url 'tracking:order_assign_carrier' order.pk %}" style="margin-top:0.5rem;">
+              {% csrf_token %}
+              <input type="hidden" name="carrier" value="{{ item.carrier.pk }}">
+              <button class="button secondary" type="submit">Assign this carrier</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+    <div class="detail-card">
+      <h3>How it works</h3>
+      <p>Pick the closest available driver or use auto-assign to let the system choose the best candidate.</p>
+      <p>Auto-assign picks the top-ranked carrier based on nearest active GPS location and availability.</p>
+      <p><strong>Note:</strong> The order will be assigned immediately and the carrier will be notified.</p>
+    </div>
+  </div>
+</section>
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Order details</p>
+      <h2>Samples and handoff actions</h2>
+    </div>
+  </div>
+
+  <div class="details-grid">
+    <div class="detail-card">
+      <h3>Order information</h3>
+      <p><strong>Client:</strong> {{ order.client.name }}</p>
+      <p><strong>Carrier:</strong> {{ order.carrier|default:"Unassigned" }}</p>
+      <p><strong>Pickup contact:</strong> {{ order.requestor_name|default:order.client.contact_name|default:"Not specified" }}</p>
+      <p><strong>Contact phone:</strong> {{ order.requestor_phone|default:order.client.contact_phone|default:"Not specified" }}</p>
+      <p><strong>Requested pickup:</strong> {{ order.requested_pickup_time|default:"Not scheduled" }}</p>
+      <p><strong>Priority:</strong> {{ order.get_priority_display }}</p>
+      <p><strong>Notes:</strong> {{ order.notes|default:"No notes" }}</p>
+    </div>
+    <div class="detail-card">
+      <h3>Operational guidance</h3>
+      <p><strong>Current stage:</strong> {{ order.get_status_display }}</p>
+      <p><strong>Next step:</strong>
+        {% if order.status == 'pending_review' %}Review and approve the pickup request before assigning a carrier.{% elif order.status == 'pending' %}Assign a carrier and approve the order.{% elif order.status == 'assigned' %}Wait for carrier acceptance or prompt the carrier.{% elif order.status == 'accepted' %}Start the trip to the client.{% elif order.status == 'en_route_client' %}Arrive at the client location.{% elif order.status == 'at_client' %}Confirm pickup and secure samples.{% elif order.status == 'picked_up' %}Begin transit to the laboratory.{% elif order.status == 'in_transit' %}Confirm delivery at the lab.{% elif order.status == 'delivered' %}Mark the order received and complete the chain of custody.{% else %}Review the latest custody events for follow-up.{% endif %}
+      </p>
+      <p><strong>Client address:</strong> {{ order.client.address|default:"No address recorded" }}</p>
+      {% if order.carrier and order.carrier.last_location_update %}
+        <p><strong>Carrier last seen:</strong> {{ order.carrier.last_location_update|date:"M d, Y H:i" }}</p>
+      {% endif %}
+      {% if order.latitude and order.longitude %}
+        <p><strong>Pinned pickup location:</strong> {{ order.latitude }}, {{ order.longitude }}</p>
+        <div id="order-map"
+             data-lat="{{ order.latitude }}"
+             data-lng="{{ order.longitude }}"
+             {% if carrier_coordinates %}data-carrier-lat="{{ carrier_coordinates.latitude }}" data-carrier-lng="{{ carrier_coordinates.longitude }}"{% endif %}
+             style="height: 320px; margin-top: 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; position: relative; z-index: 1;">
+        </div>
+      {% endif %}
+      <p><strong>Audit trail:</strong> {{ custody_events|length }} event{{ custody_events|length|pluralize }} recorded.</p>
+    </div>
+    <div class="detail-card">
+      <h3>Samples in this order</h3>
+      {% if samples %}
+        <ul class="sample-list">
+          {% for sample in samples %}
+            <li>
+              <div>
+                <strong>{{ sample.barcode }}</strong>
+                <p>{{ sample.get_sample_type_display }} · {{ sample.get_cold_chain_requirement_display }}</p>
+              </div>
+              <div class="sample-actions">
+                {% if sample.is_received %}
+                  <span class="status-pill success">Delivered</span>
+                {% else %}
+                  <form method="post" action="{% url 'tracking:sample_mark_pickup' sample.pk %}">
+                    {% csrf_token %}
+                    <button class="button primary" type="submit">Mark pickup</button>
+                  </form>
+                  <form method="post" action="{% url 'tracking:sample_mark_delivery' sample.pk %}">
+                    {% csrf_token %}
+                    <button class="button secondary" type="submit">Mark delivery</button>
+                  </form>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if order.carrier and order.carrier.user == user %}
+          <div style="margin-top:0.75rem">
+            <form method="post" action="{% url 'tracking:verify_samples_collection' order.pk %}">
+              {% csrf_token %}
+              <label for="id_barcodes">Scan/Enter sample barcodes (one per line or comma separated)</label>
+              <textarea name="barcodes" id="id_barcodes" rows="4" style="width:100%;padding:0.6rem;border:1px solid var(--border);border-radius:8px"></textarea>
+              <div style="margin-top:0.5rem">
+                <button class="button primary" type="submit">Verify scanned barcodes</button>
+              </div>
+            </form>
+          </div>
+        {% endif %}
+      {% else %}
+        {% if user.is_super_admin or user.is_carrier %}
+          {% if order.carrier and order.carrier.user == user %}
+            {% if order.status == 'assigned' %}
+              <form method="post" action="{% url 'tracking:order_accept_assignment' order.pk %}">
+                {% csrf_token %}
+                <button class="button primary" type="submit">Accept assignment</button>
+              </form>
+            {% elif order.status == 'accepted' %}
+              {% if order.latitude and order.longitude %}
+                <a class="button primary" href="#order-map">View route in app</a>
+                <p class="status-pill info" style="display:inline-block; margin:0 0 0 0.75rem;">Pickup location is pinned on the map below.</p>
+              {% elif navigation_url %}
+                <a class="button primary" href="{{ navigation_url }}">Start navigation</a>
+              {% endif %}
+              <form method="post" action="{% url 'tracking:order_start_to_client' order.pk %}" style="display:inline-block; margin-left:0.75rem;">
+                {% csrf_token %}
+                <button class="button primary" type="submit">Mark en route</button>
+              </form>
+            {% elif order.status == 'en_route_client' %}
+              {% if order.latitude and order.longitude %}
+                <a class="button primary" href="#order-map">View route in app</a>
+                <p class="status-pill info" style="display:inline-block; margin:0 0 0 0.75rem;">Pickup route is visible on the page above.</p>
+              {% elif navigation_url %}
+                <a class="button primary" href="{{ navigation_url }}">Open route</a>
+              {% endif %}
+              <form method="post" action="{% url 'tracking:order_arrive_client' order.pk %}">
+                {% csrf_token %}
+                <button class="button primary" type="submit">Mark arrival at client</button>
+              </form>
+            {% elif order.status == 'at_client' %}
+              <form method="post" action="{% url 'tracking:order_mark_pickup' order.pk %}">
+                {% csrf_token %}
+                <button class="button primary" type="submit">Confirm pickup</button>
+              </form>
+            {% elif order.status == 'picked_up' %}
+              <form method="post" action="{% url 'tracking:order_mark_in_transit' order.pk %}">
+                {% csrf_token %}
+                <button class="button secondary" type="submit">Begin transport</button>
+              </form>
+            {% elif order.status == 'in_transit' %}
+              <form method="post" action="{% url 'tracking:order_mark_delivery' order.pk %}">
+                {% csrf_token %}
+                <button class="button secondary" type="submit">Confirm delivery</button>
+              </form>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+        <p class="empty-state">No samples added yet.</p>
+      {% endif %}
+    </div>
+    <div class="detail-card full-width">
+      <h3>Chain-of-custody events</h3>
+      {% if custody_events and custody_events|length > 0 %}
+        {% with latest=custody_events|first %}
+          <div id="latest-event">
+            <ul class="timeline compact">
+              <li>
+                <i data-lucide="{{ latest.event_type|yesno:"received:check-circle,delivered:package,picked_up:package-plus,arrived_at_client:map-pin,started_to_client:airplane,assignment_accepted:check,carrier_assigned:truck,request_approved:badge-check,order_created:clipboard-list" }}" class="timeline-icon"></i>
+                <div>
+                  <strong>{{ latest.get_event_type_display }}</strong>
+                  <span>{{ latest.timestamp|date:"M d, Y H:i" }}</span>
+                  <p>{{ latest.notes|default:"Recorded event" }}</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div id="full-timeline" class="{% if not request.GET.show_all %}hidden{% endif %}" style="margin-top:0.75rem;">
+            <ul class="timeline compact">
+              {% for event in custody_events %}
+                <li>
+                  <i data-lucide="{% if event.event_type == 'received' %}check-circle{% elif event.event_type == 'delivered' %}package{% elif event.event_type == 'picked_up' %}package-plus{% elif event.event_type == 'arrived_at_client' %}map-pin{% elif event.event_type == 'started_to_client' %}airplane{% elif event.event_type == 'assignment_accepted' %}check{% elif event.event_type == 'carrier_assigned' %}truck{% elif event.event_type == 'request_approved' %}badge-check{% elif event.event_type == 'order_created' %}clipboard-list{% elif event.event_type == 'temp_check' %}thermometer{% elif event.event_type == 'departed' %}navigation{% elif event.event_type == 'completed' %}flag-checkered{% elif event.event_type == 'exception' %}alert-triangle{% else %}circle{% endif %}" class="timeline-icon"></i>
+                  <div>
+                    <strong>{{ event.get_event_type_display }}</strong>
+                    <span>{{ event.timestamp|date:"M d, Y H:i" }}</span>
+                    <p>{{ event.notes|default:"Recorded event" }}</p>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <p style="margin-top:0.5rem;">
+            <a href="#" id="show-timeline-toggle">{% if request.GET.show_all %}See less{% else %}See more{% endif %}</a>
+            <small style="margin-left:0.75rem;color:#666;">({{ custody_events|length }} events)</small>
+          </p>
+        {% endwith %}
+      {% else %}
+        <ul class="timeline"><li>No custody events yet.</li></ul>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var orderMapEl = document.getElementById("order-map");
+    if (!orderMapEl) {
+      return;
+    }
+
+    var orderLat = parseFloat(orderMapEl.dataset.lat);
+    var orderLng = parseFloat(orderMapEl.dataset.lng);
+    if (Number.isNaN(orderLat) || Number.isNaN(orderLng)) {
+      return;
+    }
+
+    var carrierLat = parseFloat(orderMapEl.dataset.carrierLat);
+    var carrierLng = parseFloat(orderMapEl.dataset.carrierLng);
+    var hasCarrierLocation = !Number.isNaN(carrierLat) && !Number.isNaN(carrierLng);
+
+    var orderMap = L.map("order-map");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(orderMap);
+
+    var pickupMarker = L.marker([orderLat, orderLng]).addTo(orderMap);
+    pickupMarker.bindPopup("Pickup location").openPopup();
+
+    var routePoints = [[orderLat, orderLng]];
+    if (hasCarrierLocation) {
+      var carrierMarker = L.marker([carrierLat, carrierLng]).addTo(orderMap);
+      carrierMarker.bindPopup("Carrier current location");
+      routePoints.unshift([carrierLat, carrierLng]);
+      L.polyline(routePoints, { color: "#C8102E", weight: 4, opacity: 0.8 }).addTo(orderMap);
+    }
+
+    if (routePoints.length > 1) {
+      orderMap.fitBounds(routePoints, { padding: [40, 40] });
+    } else {
+      orderMap.setView([orderLat, orderLng], 13);
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.getElementById('show-timeline-toggle');
+    var full = document.getElementById('full-timeline');
+    if (!toggle || !full) return;
+
+    toggle.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      var isHidden = full.style.display === 'none' || full.style.display === '';
+      full.style.display = isHidden ? 'block' : 'none';
+      toggle.textContent = isHidden ? 'See less' : 'See more';
+      // Smooth scroll to reveal content when expanding
+      if (isHidden) {
+        setTimeout(function () { full.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+      }
+    });
+  });
+</script>
+{% endblock %}

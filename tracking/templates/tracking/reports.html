@@ -1,0 +1,48 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Reports - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Performance overview</p>
+      <h2>Reports and analytics</h2>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div><strong>{{ summary.delivered }}</strong><span>Delivered</span></div>
+    <div><strong>{{ summary.pending }}</strong><span>Pending</span></div>
+    <div><strong>{{ summary.urgent }}</strong><span>Urgent</span></div>
+    <div><strong>{{ summary.exceptions }}</strong><span>Exceptions</span></div>
+  </div>
+
+  <div class="panel-header" style="margin-top:1rem;">
+    <div>
+      <p class="eyebrow">Delivered orders</p>
+      <h3>Recent completed jobs</h3>
+    </div>
+  </div>
+
+  {% if orders %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Reference</th><th>Client</th><th>Carrier</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <td>{{ order.reference_code }}</td>
+              <td>{{ order.client.name }}</td>
+              <td>{{ order.carrier|default:"Unassigned" }}</td>
+              <td><span class="status-pill success">Delivered</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No delivered orders yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

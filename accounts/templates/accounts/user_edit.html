@@ -1,0 +1,22 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Edit user - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Edit user</p>
+    <h1>Update user details</h1>
+    <p>Change the assigned role, status, or password for this account.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <form method="post" class="filter-form" style="display:block;max-width:520px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Save changes</button>
+    <a href="{% url 'accounts:user_management' %}" class="btn secondary">Cancel</a>
+  </form>
+</section>
+{% endblock %}

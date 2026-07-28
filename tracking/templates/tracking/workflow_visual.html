@@ -1,0 +1,20 @@
+<section class="panel workflow-panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Sample journey</p>
+      <h2>Chain of custody</h2>
+    </div>
+  </div>
+
+  <div class="workflow-steps">
+    {% for step in workflow_steps %}
+      <div class="workflow-step {% if step.active %}active{% endif %}">
+        <div class="step-badge">{{ forloop.counter }}</div>
+        <div>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>

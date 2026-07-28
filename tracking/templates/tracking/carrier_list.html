@@ -1,0 +1,52 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carriers - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Field operations</p>
+      <h2>Carriers</h2>
+    </div>
+    <form method="post" action="{% url 'tracking:carrier_create' %}" class="inline-form">
+      {% csrf_token %}
+      {{ form.username }}
+      {{ form.password }}
+      {{ form.phone }}
+      <button class="button primary" type="submit">Add carrier</button>
+    </form>
+  </div>
+
+  {% if carriers %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for carrier in carriers %}
+            <tr>
+              <td>{{ carrier.display_name }}</td>
+              <td>{{ carrier.phone }}</td>
+              <td>{{ carrier.vehicle_type }} {{ carrier.vehicle_plate }}</td>
+              <td><span class="status-pill">{{ carrier.get_status_display }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <p class="empty-state">No carriers yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

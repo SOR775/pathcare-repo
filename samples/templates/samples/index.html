@@ -1,0 +1,36 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Samples - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Samples</p>
+    <h1>Sample condition overview</h1>
+    <p>Review sample conditions and packaging detail captured for each specimen.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Condition records</p>
+      <h2>Sample conditions</h2>
+    </div>
+  </div>
+  {% if conditions %}
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Barcode</th><th>Temperature</th><th>Sealed</th></tr></thead>
+        <tbody>
+          {% for condition in conditions %}
+            <tr><td>{{ condition.sample.barcode }}</td><td>{{ condition.temperature_celsius }} C</td><td>{% if condition.is_sealed %}Yes{% else %}No{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No sample conditions have been recorded yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

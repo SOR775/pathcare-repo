@@ -1,0 +1,377 @@
+/* ============================================================
+   NOTIFICATIONS.CSS — Real-time notification system styles
+   Integrates with the design token system in style.css
+   ============================================================ */
+
+/* ── Navbar Notification Bell ─────────────────────────────── */
+.nav-notifications {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notif-toggle {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.notif-toggle:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.notif-toggle .bell-icon {
+  font-size: 1rem;
+  animation: none;
+}
+
+/* Animate bell when there are unread notifications */
+.notif-toggle.has-unread .bell-icon {
+  animation: bell-shake 1.5s ease-in-out infinite;
+}
+
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 90% { transform: rotate(-8deg); }
+  20%, 80% { transform: rotate(8deg); }
+  30%, 70% { transform: rotate(-6deg); }
+  40%, 60% { transform: rotate(6deg); }
+  50%       { transform: rotate(0deg); }
+}
+
+/* Badge dot */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: var(--danger);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  line-height: 1;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+}
+
+/* ── Dropdown Panel ────────────────────────────────────────── */
+.notif-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 340px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  z-index: 3000;
+  transform: translateY(-6px);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.notif-dropdown.open {
+  display: block;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.notif-dropdown-header span {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.notif-dropdown-header .notif-mark-all {
+  font-size: 0.78rem;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.notif-dropdown-header .notif-mark-all:hover {
+  background: var(--primary-soft);
+}
+
+/* Scrollable list */
+.notif-list {
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.notif-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notif-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notif-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+/* Individual notification row */
+.notif-item {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.notif-item.unread {
+  background-color: var(--primary-soft);
+  border-left: 3px solid var(--primary);
+}
+
+.notif-item.unread:hover {
+  background-color: #dbeafe;
+}
+
+.notif-item a {
+  color: var(--text-main);
+  text-decoration: none;
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.notif-item a:hover {
+  color: var(--primary);
+}
+
+.notif-item small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.notif-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.notif-empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* ── Toast Notification Stack ─────────────────────────────── */
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.65rem;
+  pointer-events: none;
+  max-width: 360px;
+  width: 100%;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  padding: 0.85rem 1rem;
+  pointer-events: all;
+  cursor: pointer;
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  min-width: 280px;
+  position: relative;
+}
+
+.toast.removing {
+  animation: toast-slide-out 0.3s ease forwards;
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+}
+
+/* Toast type variants */
+.toast.toast-success { border-left-color: var(--success); }
+.toast.toast-danger  { border-left-color: var(--danger); }
+.toast.toast-warning { border-left-color: var(--warning); }
+.toast.toast-info    { border-left-color: var(--primary); }
+
+/* Toast icon */
+.toast-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+/* Toast body */
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+  color: var(--text-muted);
+}
+
+.toast-message {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  font-weight: 500;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* Progress bar running across the bottom */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--primary);
+  width: 100%;
+  transform-origin: left;
+  animation: toast-progress-shrink 5s linear forwards;
+}
+
+.toast.toast-success .toast-progress { background: var(--success); }
+.toast.toast-danger  .toast-progress { background: var(--danger); }
+.toast.toast-warning .toast-progress { background: var(--warning); }
+
+@keyframes toast-progress-shrink {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* Close button */
+.toast-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.toast-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-main);
+}
+
+/* User role pill */
+.user-name {
+  margin-right: 0.4rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.user-role {
+  background: var(--primary-soft);
+  color: var(--primary-soft-text);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Responsive stack */
+@media (max-width: 480px) {
+  #toast-container {
+    bottom: 5.5rem; /* above mobile tabbar */
+    right: 0.75rem;
+    left: 0.75rem;
+    max-width: unset;
+  }
+}

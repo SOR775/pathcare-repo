@@ -1,0 +1,613 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carrier Monitoring - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<style>
+  .monitoring-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding: 1.3rem 1.4rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .monitoring-hero h1 {
+    margin-bottom: 0.6rem;
+    font-size: 1.8rem;
+  }
+  .monitoring-hero p {
+    color: #52525b;
+    line-height: 1.6;
+  }
+  .operations-map-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .map-card {
+    min-height: 560px;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  #carrier-monitor-map {
+    width: 100%;
+    height: 100%;
+    min-height: 560px;
+  }
+  .sidebar-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .panel-block {
+    padding: 1rem;
+    border-radius: 1rem;
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .carrier-status-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+  .carrier-card {
+    padding: 0.95rem 1rem;
+    border-radius: 0.95rem;
+    display: grid;
+    gap: 0.45rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fafafa;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .carrier-card:hover,
+  .carrier-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .carrier-card.no-location {
+    opacity: 0.75;
+  }
+  .carrier-card strong {
+    display: block;
+    font-size: 1rem;
+  }
+  .carrier-card small {
+    color: #6b7280;
+    line-height: 1.5;
+  }
+  .carrier-card .status-pill {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 9999px;
+  }
+  .status-pill.success { background: #d1fae5; color: #047857; }
+  .status-pill.warning { background: #fef3c7; color: #92400e; }
+  .status-pill.danger { background: #fee2e2; color: #991b1b; }
+  .status-pill.primary { background: var(--primary-soft); color: var(--primary); }
+  .carrier-label-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .carrier-label-icon img {
+    display: none;
+  }
+  .carrier-label-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    user-select: none;
+    pointer-events: auto;
+  }
+  .carrier-label-marker.success { background: #16a34a; }
+  .carrier-label-marker.warning { background: #f59e0b; }
+  .carrier-label-marker.danger { background: #dc2626; }
+  .carrier-label-marker.primary { background: var(--primary); }
+  .carrier-map-tooltip {
+    background: rgba(15, 23, 42, 0.95);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
+    border-radius: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .leaflet-tooltip.carrier-map-tooltip {
+    opacity: 1;
+  }
+  .carrier-map-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(37, 99, 235, 0.95);
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    white-space: nowrap;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
+  }
+  .monitoring-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .monitoring-summary-card {
+    padding: 1.25rem 1.35rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1.5px 18px rgba(15, 23, 42, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .monitoring-summary-card h3 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+  }
+  .monitoring-summary-card strong {
+    font-size: 2rem;
+    line-height: 1;
+    color: #111827;
+  }
+  .monitoring-summary-card small {
+    color: #4b5563;
+    display: block;
+  }
+  .monitoring-status-bar {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 1rem;
+  }
+  .monitoring-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .monitoring-status-row span {
+    color: #4b5563;
+    font-size: 0.95rem;
+  }
+  .monitoring-status-row strong {
+    color: #111827;
+  }
+
+  @media (max-width: 1100px) {
+    .monitoring-summary-grid {
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+  }
+  @media (max-width: 760px) {
+    .monitoring-summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .empty-state {
+    margin: 0;
+    color: #6b7280;
+  }
+</style>
+
+<section class="hero-card">
+  <div class="monitoring-hero">
+    <div>
+      <p class="eyebrow">Carrier monitoring</p>
+      <h1>Live carrier movement</h1>
+      <p>Track active carrier locations, routes, and status updates in real time. This view refreshes automatically every 15 seconds so dispatchers and admins see live field movement.</p>
+    </div>
+  </div>
+</section>
+
+<section class="monitoring-summary-grid">
+  <div class="monitoring-summary-card">
+    <h3>Active shipments</h3>
+    <strong id="summary-active-shipments">0</strong>
+    <small id="summary-active-shipments-label">Live sample deliveries</small>
+  </div>
+  <div class="monitoring-summary-card">
+    <h3>Total active carriers</h3>
+    <strong id="summary-active-carriers">0</strong>
+    <small id="summary-active-carriers-label">All active carriers</small>
+  </div>
+  <div class="monitoring-summary-card">
+    <h3>Online carriers</h3>
+    <strong id="summary-online-carriers">0</strong>
+    <small id="summary-online-carriers-label">Available or on job</small>
+  </div>
+  <div class="monitoring-summary-card">
+    <h3>Missing location</h3>
+    <strong id="summary-missing-location">0</strong>
+    <small id="summary-missing-location-label">No GPS update yet</small>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Real-time map</p>
+      <h2>Field operations map</h2>
+    </div>
+  </div>
+  <div class="operations-map-grid">
+    <div class="map-card">
+      <div id="carrier-monitor-map"></div>
+    </div>
+    <aside class="map-sidebar">
+      <div class="panel-block">
+        <h3>Selected carrier</h3>
+        <div id="carrier-detail-content" class="carrier-card">
+          <p class="empty-state">Click a carrier to view their location and status details.</p>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h3>Active carrier statuses</h3>
+        <div id="carrier-status-list" class="carrier-status-list">
+          <p class="empty-state">Loading live carrier positions...</p>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h3>Legend</h3>
+        <ul style="list-style:none; padding:0; margin:0; display:grid; gap:0.75rem;">
+          <li><span class="status-pill success">Delivered / Received</span></li>
+          <li><span class="status-pill warning">Available or soon</span></li>
+          <li><span class="status-pill danger">In transit</span></li>
+          <li><span class="status-pill primary">Click marker for details</span></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var mapEl = document.getElementById('carrier-monitor-map');
+    if (!mapEl) {
+      return;
+    }
+
+    var labLat = {{ lab_location.latitude }};
+    var labLng = {{ lab_location.longitude }};
+    var carrierMap = L.map('carrier-monitor-map').setView([labLat, labLng], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(carrierMap);
+
+    var carrierLayer = L.layerGroup().addTo(carrierMap);
+    var routeLayer = L.layerGroup().addTo(carrierMap);
+    var carrierMarkers = {};
+    var selectedCarrierId = null;
+    var tempFocusMarker = null;
+
+    function getStatusClass(status) {
+      if (status === 'In transit') return 'danger';
+      if (status === 'Delivered' || status === 'Received' || status === 'Completed') return 'success';
+      if (status === 'Available' || status === 'On job') return 'warning';
+      return 'primary';
+    }
+
+    function getCarrierDisplayStatus(carrier) {
+      return carrier.order_status || carrier.status || 'Unknown';
+    }
+
+    function getMarkerColor(carrier) {
+      var displayStatus = getCarrierDisplayStatus(carrier);
+      if (displayStatus === 'In transit') return '#dc2626';
+      if (displayStatus === 'Delivered' || displayStatus === 'Received' || displayStatus === 'Completed') return '#16a34a';
+      return '#f59e0b';
+    }
+
+    function updateSelectedCardStyles() {
+      var cards = document.querySelectorAll('#carrier-status-list .carrier-card');
+      cards.forEach(function (card) {
+        if (card.dataset.carrierId === selectedCarrierId) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      });
+    }
+
+    function renderSelectedCarrier(carrier) {
+      var detail = document.getElementById('carrier-detail-content');
+      if (!detail) return;
+
+      // clear any temporary focus marker
+      if (tempFocusMarker) {
+        try { carrierLayer.removeLayer(tempFocusMarker); } catch (e) {}
+        tempFocusMarker = null;
+      }
+
+      if (!carrier) {
+        selectedCarrierId = null;
+        detail.innerHTML = '<p class="empty-state">Click a carrier to view their location and status details.</p>';
+        updateSelectedCardStyles();
+        return;
+      }
+
+      var displayStatus = getCarrierDisplayStatus(carrier);
+      selectedCarrierId = String(carrier.id);
+      detail.innerHTML =
+        '<strong>' + carrier.name + '</strong>' +
+        '<p>Order: ' + (carrier.order || 'None') + '</p>' +
+        '<p>Order status: ' + (carrier.order_status || 'No active order') + '</p>' +
+        '<p>Current status: <span class="status-pill ' + getStatusClass(displayStatus) + '">' + displayStatus + '</span></p>' +
+        '<p>Location: ' + (carrier.latitude != null && carrier.longitude != null ? carrier.latitude + ', ' + carrier.longitude : 'Not shared') + '</p>' +
+        '<p>Last update: ' + (carrier.last_location_update || 'Unknown') + '</p>';
+
+      updateSelectedCardStyles();
+
+      if (carrier.latitude != null && carrier.longitude != null) {
+        carrierMap.flyTo([carrier.latitude, carrier.longitude], 12, { animate: true, duration: 0.8 });
+        var marker = carrierMarkers[String(carrier.id)];
+        if (marker) {
+          marker.openPopup();
+          marker.bringToFront();
+        } else {
+          tempFocusMarker = L.circleMarker([carrier.latitude, carrier.longitude], {
+            radius: 12,
+            fillColor: getMarkerColor(carrier),
+            color: '#ffffff',
+            weight: 2,
+            fillOpacity: 0.95,
+          }).addTo(carrierLayer).bindPopup('<strong>' + carrier.name + '</strong><br>Order: ' + (carrier.order || 'N/A')).openPopup();
+        }
+        return;
+      }
+
+      if (carrier.pickup_latitude != null && carrier.pickup_longitude != null) {
+        var px = carrier.pickup_latitude, py = carrier.pickup_longitude;
+        carrierMap.flyTo([px, py], 12, { animate: true, duration: 0.8 });
+        tempFocusMarker = L.marker([px, py]).addTo(carrierLayer).bindPopup('<strong>Pinned pickup location</strong><br>' + (carrier.order || 'Order')).openPopup();
+        return;
+      }
+
+      try {
+        carrierMap.flyTo([labLat, labLng], 10, { animate: true, duration: 0.8 });
+      } catch (e) {}
+    }
+
+    function makeLabelText(carrier) {
+      if (carrier.order) {
+        return carrier.order.length <= 4 ? carrier.order : carrier.order.slice(-4);
+      }
+      var nameParts = (carrier.name || '').split(' ').filter(Boolean);
+      if (nameParts.length === 0) {
+        return 'C';
+      }
+      if (nameParts.length === 1) {
+        return nameParts[0].slice(0, 2).toUpperCase();
+      }
+      return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+    }
+
+    function createCarrierMarker(carrier) {
+      var displayStatus = getCarrierDisplayStatus(carrier);
+      var labelText = makeLabelText(carrier);
+      var statusClass = getStatusClass(displayStatus);
+      var iconHtml = '<div class="carrier-label-marker ' + statusClass + '">' + labelText + '</div>';
+      var icon = L.divIcon({
+        html: iconHtml,
+        className: 'carrier-label-icon',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
+
+      var marker = L.marker([carrier.latitude, carrier.longitude], {
+        icon: icon,
+        riseOnHover: true,
+        zIndexOffset: 500,
+      }).bindPopup(
+        '<strong>' + carrier.name + '</strong><br>' +
+        'Order: ' + (carrier.order || 'N/A') + '<br>' +
+        'Order status: ' + (carrier.order_status || 'N/A') + '<br>' +
+        'Carrier status: ' + carrier.status + '<br>' +
+        'Last update: ' + (carrier.last_location_update || 'unknown') + '<br>' +
+        'Display: ' + displayStatus
+      );
+
+      marker.bindTooltip(
+        labelText,
+        {
+          permanent: true,
+          direction: 'top',
+          className: 'carrier-map-tooltip',
+          offset: [0, -22],
+          opacity: 1,
+        }
+      );
+
+      marker.on('click', function () {
+        renderSelectedCarrier(carrier);
+      });
+
+      carrierMarkers[carrier.id] = marker;
+      return marker;
+    }
+
+    function updateStatusList(data) {
+      var list = document.getElementById('carrier-status-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      if (!data.carriers || !data.carriers.length) {
+        list.innerHTML = '<p class="empty-state">No active carriers found.</p>';
+        renderSelectedCarrier(null);
+        return;
+      }
+
+      data.carriers.forEach(function (carrier) {
+        var displayStatus = getCarrierDisplayStatus(carrier);
+        var statusClass = getStatusClass(displayStatus);
+        var card = document.createElement('div');
+        card.className = 'carrier-card';
+        card.dataset.carrierId = carrier.id;
+        if (carrier.latitude == null || carrier.longitude == null) {
+          card.classList.add('no-location');
+        }
+        if (selectedCarrierId === String(carrier.id)) {
+          card.classList.add('selected');
+        }
+        card.innerHTML =
+          '<strong>' + carrier.name + '</strong>' +
+          '<small>Order: ' + (carrier.order || 'None') + '</small>' +
+          '<small>Order status: ' + (carrier.order_status || 'N/A') + '</small>' +
+          '<small>Location: ' + (carrier.latitude != null && carrier.longitude != null ? carrier.latitude + ', ' + carrier.longitude : 'Not shared') + '</small>' +
+          '<small>Last update: ' + (carrier.last_location_update || 'Unknown') + '</small>' +
+          '<span class="status-pill ' + statusClass + '">' + (carrier.order_status || carrier.status) + '</span>';
+
+        card.addEventListener('click', function () {
+          renderSelectedCarrier(carrier);
+        });
+        list.appendChild(card);
+      });
+
+      if (!selectedCarrierId && data.carriers.length) {
+        var defaultCarrier = data.carriers.find(function (carrier) {
+          return carrier.latitude != null && carrier.longitude != null;
+        }) || data.carriers[0];
+        renderSelectedCarrier(defaultCarrier);
+      } else if (selectedCarrierId) {
+        var selected = data.carriers.find(function (carrier) {
+          return carrier.id === selectedCarrierId;
+        });
+        if (selected) {
+          renderSelectedCarrier(selected);
+        } else {
+          renderSelectedCarrier(null);
+        }
+      }
+    }
+
+    function drawRoutes(data) {
+      routeLayer.clearLayers();
+      if (!data.carriers) return;
+      data.carriers.forEach(function (carrier) {
+        if (carrier.route && carrier.route.length > 1) {
+          L.polyline(carrier.route, { color: '#C8102E', weight: 3, opacity: 0.75 }).addTo(routeLayer);
+        }
+      });
+    }
+
+    function updateSummaryCards(data) {
+      if (!data || !Array.isArray(data.carriers)) return;
+      var activeShipments = data.carriers.filter(function (carrier) {
+        return carrier.order != null;
+      }).length;
+      var totalCarriers = data.carriers.length;
+      var onlineCarriers = data.carriers.filter(function (carrier) {
+        return carrier.status === 'Available' || carrier.status === 'On job';
+      }).length;
+      var missingLocation = data.carriers.filter(function (carrier) {
+        return carrier.latitude == null || carrier.longitude == null;
+      }).length;
+
+      var shipmentText = activeShipments === 1 ? 'Live sample delivery' : 'Live sample deliveries';
+      var carrierText = totalCarriers === 1 ? 'Active carrier' : 'Active carriers';
+      var onlineText = onlineCarriers === 1 ? 'Online carrier' : 'Online carriers';
+      var missingText = missingLocation === 1 ? 'Carrier without location' : 'Carriers without location';
+
+      var activeCarriersEl = document.getElementById('summary-active-carriers');
+      var activeCarriersLabelEl = document.getElementById('summary-active-carriers-label');
+      var onlineCarriersEl = document.getElementById('summary-online-carriers');
+      var onlineCarriersLabelEl = document.getElementById('summary-online-carriers-label');
+      var missingLocationEl = document.getElementById('summary-missing-location');
+      var missingLocationLabelEl = document.getElementById('summary-missing-location-label');
+      var activeShipmentsEl = document.getElementById('summary-active-shipments');
+      var activeShipmentsLabelEl = document.getElementById('summary-active-shipments-label');
+
+      if (activeCarriersEl) activeCarriersEl.textContent = totalCarriers;
+      if (activeCarriersLabelEl) activeCarriersLabelEl.textContent = carrierText;
+      if (onlineCarriersEl) onlineCarriersEl.textContent = onlineCarriers;
+      if (onlineCarriersLabelEl) onlineCarriersLabelEl.textContent = onlineText;
+      if (missingLocationEl) missingLocationEl.textContent = missingLocation;
+      if (missingLocationLabelEl) missingLocationLabelEl.textContent = missingText;
+      if (activeShipmentsEl) activeShipmentsEl.textContent = activeShipments;
+      if (activeShipmentsLabelEl) activeShipmentsLabelEl.textContent = shipmentText;
+    }
+
+    function refresh() {
+      if (carrierMap) {
+        carrierMap.invalidateSize();
+      }
+      fetch('{% url "tracking:carrier_positions" %}')
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          carrierLayer.clearLayers();
+          carrierMarkers = {};
+          drawRoutes(data);
+          updateStatusList(data);
+          updateSummaryCards(data);
+
+          var bounds = L.latLngBounds();
+          data.carriers.forEach(function (carrier) {
+            if (carrier.latitude == null || carrier.longitude == null) {
+              return;
+            }
+            var marker = createCarrierMarker(carrier).addTo(carrierLayer);
+            bounds.extend([carrier.latitude, carrier.longitude]);
+            if (marker && marker.openTooltip) {
+              marker.openTooltip();
+            }
+          });
+
+          if (bounds.isValid()) {
+            if (data.carriers.filter(function (carrier) {
+              return carrier.latitude != null && carrier.longitude != null;
+            }).length === 1) {
+              carrierMap.fitBounds(bounds.pad(0.5));
+            } else {
+              carrierMap.fitBounds(bounds, { padding: [40, 40] });
+            }
+          }
+        })
+        .catch(function (error) {
+          console.warn('Carrier positions load failed', error);
+        });
+    }
+
+    setTimeout(function () {
+      carrierMap.invalidateSize();
+      refresh();
+    }, 50);
+    setInterval(refresh, 15000);
+  });
+</script>
+{% endblock %}

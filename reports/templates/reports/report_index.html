@@ -1,0 +1,90 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Reports - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Operational report overview</p>
+      <h2>Reports and analytics</h2>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div><strong>{{ summary.total_orders }}</strong><span>Total orders</span></div>
+    <div><strong>{{ summary.pending }}</strong><span>Pending</span></div>
+    <div><strong>{{ summary.delivered }}</strong><span>Delivered</span></div>
+    <div><strong>{{ summary.urgent }}</strong><span>Urgent</span></div>
+    <div><strong>{{ summary.exceptions }}</strong><span>Exceptions</span></div>
+  </div>
+
+  <div class="panel-header" style="margin-top:1rem;">
+    <div>
+      <p class="eyebrow">Latest snapshots</p>
+      <h3>Saved report summaries</h3>
+    </div>
+  </div>
+
+  {% if snapshots %}
+    <div class="alert-grid">
+      {% for snapshot in snapshots %}
+        <div class="alert-card primary">
+          <h3>{{ snapshot.title }}</h3>
+          <p>{{ snapshot.summary|default:"No summary available yet." }}</p>
+          <small>{{ snapshot.created_at|date:"M d, Y H:i" }}</small>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty-state">No report snapshots have been saved yet.</p>
+  {% endif %}
+
+  <div class="panel-header" style="margin-top:1rem;">
+    <div>
+      <p class="eyebrow">Recent activity</p>
+      <h3>Latest orders</h3>
+    </div>
+    <form method="get" class="filter-form">
+      <label for="status" class="sr-only">Filter status</label>
+      <select id="status" name="status" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for value, label in statuses %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="button secondary" type="submit">Apply</button>
+      <a class="button primary" href="?download=csv{% if status_filter %}&status={{ status_filter }}{% endif %}">Export CSV</a>
+    </form>
+  </div>
+
+  {% if orders %}
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Client</th>
+            <th>Carrier</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <td>{{ order.reference_code }}</td>
+              <td>{{ order.client.name }}</td>
+              <td>{{ order.carrier|default:"Unassigned" }}</td>
+              <td>{{ order.get_status_display }}</td>
+              <td>{{ order.created_at|date:"M d, Y" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No orders have been created yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

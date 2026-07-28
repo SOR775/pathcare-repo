@@ -1,0 +1,323 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}User management - Pathcare Kenya{% endblock %}
+
+{% block content %}
+
+<style>
+.hero-card{
+    background:linear-gradient(135deg,#C8102E,#97001F);
+    color:#fff;
+    padding:30px;
+    border-radius:12px;
+    margin-bottom:30px;
+    box-shadow:0 5px 15px rgba(0,0,0,.16);
+}
+
+.hero-card h1{
+    margin:10px 0;
+    font-size:32px;
+}
+
+.hero-card p{
+    margin:0;
+}
+
+.eyebrow{
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:1px;
+    opacity:.9;
+    font-weight:bold;
+}
+
+.panel{
+    background:#fff;
+    padding:25px;
+    margin-bottom:30px;
+    border-radius:12px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.panel-header{
+    margin-bottom:20px;
+    border-bottom:1px solid #eee;
+    padding-bottom:15px;
+}
+
+.panel-header h2{
+    margin-top:8px;
+    color:#C8102E;
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.65rem 0.95rem;
+    align-items: start;
+}
+
+.filter-form p{
+    margin: 0;
+    display: grid;
+    gap: 0.25rem;
+}
+
+.filter-form label{
+    display:block;
+    font-weight:600;
+    margin-bottom:0;
+    font-size:0.88rem;
+}
+
+.filter-form input,
+.filter-form select,
+.filter-form textarea{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:13px;
+    background:#fff;
+}
+
+.filter-form input:focus,
+.filter-form select:focus,
+.filter-form textarea:focus{
+    outline:none;
+    border-color:#C8102E;
+    box-shadow:0 0 0 2px rgba(200,16,46,.16);
+}
+
+.filter-form button.btn {
+    grid-column: span 2;
+    justify-self: start;
+    margin-top:0.25rem;
+    padding:0.8rem 1rem;
+    font-size:0.92rem;
+}
+
+@media(max-width:1024px) {
+    .filter-form {
+        grid-template-columns: 1fr;
+    }
+    .filter-form button.btn {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+}
+
+.btn{
+    background:#C8102E;
+    color:#fff;
+    padding:12px 24px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+    transition:.3s;
+}
+
+.btn:hover{
+    background:#97001F;
+}
+
+.table-card{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:750px;
+}
+
+thead{
+    background:#C8102E;
+    color:white;
+}
+
+th,td{
+    padding:14px;
+    text-align:left;
+    border-bottom:1px solid #eee;
+}
+
+tbody tr:hover{
+    background:#FDE7EA;
+}
+
+td a{
+    text-decoration:none;
+    color:#C8102E;
+    font-weight:600;
+    margin-right:15px;
+}
+
+td a:hover{
+    color:#97001F;
+}
+
+.empty-state{
+    text-align:center;
+    padding:40px;
+    color:#777;
+    font-style:italic;
+}
+
+@media(max-width:768px){
+
+.hero-card{
+    padding:20px;
+}
+
+.hero-card h1{
+    font-size:24px;
+}
+
+.panel{
+    padding:18px;
+}
+
+.btn{
+    width:100%;
+}
+
+th,td{
+    padding:10px;
+    font-size:13px;
+}
+
+}
+</style>
+
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">User Management</p>
+    <h1>Create and Review Platform Users</h1>
+    <p>Grant access to the system with a role that matches their responsibilities.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Create User</p>
+      <h2>New Account</h2>
+    </div>
+  </div>
+
+  <form method="post" class="filter-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="btn">
+      Create User
+    </button>
+  </form>
+</section>
+
+<section class="panel">
+
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Existing Users</p>
+      <h2>Current Accounts</h2>
+    </div>
+    <form method="get" style="margin-top:1rem; display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+      <input type="search" name="q" placeholder="Search users by name, email, phone, username, or role" value="{{ query|default:'' }}" style="flex:1 1 280px; padding:0.9rem 1rem; border:1px solid #ddd; border-radius:10px;">
+      <button type="submit" class="btn" style="padding:0.9rem 1.25rem;">Search</button>
+    </form>
+  </div>
+
+  {% if users %}
+
+  <div class="table-card">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th width="220">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+      {% for user in users %}
+
+        <tr>
+
+          <td>{{ user.username }}</td>
+
+          <td>{{ user.get_full_name|default:"—" }}</td>
+
+          <td>{{ user.get_role_display }}</td>
+
+          <td>{{ user.email|default:"—" }}</td>
+
+          <td>
+            {% if user.is_active %}
+                <span style="background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;">
+                    Active
+                </span>
+            {% else %}
+                <span style="background:#dc3545;color:white;padding:5px 10px;border-radius:20px;font-size:12px;">
+                    Inactive
+                </span>
+            {% endif %}
+          </td>
+
+          <td>
+
+            <a href="{% url 'accounts:user_edit' user.pk %}">
+              ✏ Edit
+            </a>
+
+            <a href="{% url 'accounts:user_toggle_active' user.pk %}">
+              {{ user.is_active|yesno:"⛔ Deactivate,✅ Activate" }}
+            </a>
+
+            <a href="{% url 'accounts:user_delete' user.pk %}" style="color:#dc3545;">
+              🗑 Delete
+            </a>
+
+          </td>
+
+        </tr>
+
+      {% endfor %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+  {% if page_obj.has_other_pages %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% else %}
+
+  <p class="empty-state">
+      No users have been created yet.
+  </p>
+
+  {% endif %}
+
+</section>
+
+{% endblock %}

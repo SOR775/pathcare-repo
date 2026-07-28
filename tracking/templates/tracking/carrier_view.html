@@ -1,0 +1,774 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carrier view - Pathcare Kenya{% endblock %}
+
+{% block extra_head %}
+<style>
+  .carrier-dashboard-grid {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .carrier-summary-card,
+  .active-pickup-card,
+  .upcoming-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+  }
+
+  .carrier-summary-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .summary-tiles {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  @media (min-width: 760px) {
+    .summary-tiles {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+
+  .summary-tile {
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    background: var(--bg-secondary);
+  }
+
+  .summary-tile strong {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .status-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .status-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+  }
+
+  .status-pill.indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-right: 0.75rem;
+  }
+
+  .status-pill.indicator.active { background: #16a34a; }
+  .status-pill.indicator.warning { background: #f59e0b; }
+  .status-pill.indicator.offline { background: #dc2626; }
+
+  .active-pickup-card {
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .active-pickup-card::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 220px;
+    height: 220px;
+    background: rgba(200, 16, 46, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .active-pickup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .active-pickup-header h2 {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+
+  .active-pickup-body {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .active-pickup-body .pickup-meta {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+  }
+
+  .pickup-meta strong {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 0.35rem;
+  }
+
+  #carrier-route-map {
+    width: 100%;
+    min-height: 320px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    position: relative;
+    z-index: 1;
+  }
+
+  .route-guidance-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    position: relative;
+    z-index: 1;
+  }
+
+  .route-guidance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .route-guidance-list {
+    display: grid;
+    gap: 0.6rem;
+    padding-left: 1rem;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  .route-guidance-list li {
+    line-height: 1.45;
+  }
+
+  .route-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .route-metric {
+    background: var(--panel-bg);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+  }
+
+  .route-metric strong {
+    display: block;
+    font-size: 1.3rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .route-actions {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .route-actions .button {
+    min-width: 170px;
+  }
+
+  .carrier-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tab-button {
+    border: 1px solid var(--border-color);
+    background: var(--panel-bg);
+    color: var(--text-main);
+    border-radius: 999px;
+    padding: 0.75rem 1.1rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .tab-button.active {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-color: rgba(200, 16, 46, 0.35);
+  }
+
+  .tab-panel.hidden {
+    display: none;
+  }
+
+  .issue-report-card {
+    padding: 1.25rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+  }
+
+  .form-field {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-field textarea,
+  .form-field select {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1rem;
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    font: inherit;
+    min-height: 3.5rem;
+  }
+
+  .issue-history {
+    margin-top: 1.5rem;
+  }
+
+  .issue-history-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.85rem;
+    background: var(--panel-bg);
+  }
+
+  .issue-history-item strong {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .issue-history-item small {
+    color: var(--muted-text);
+  }
+
+  .upcoming-card {
+    padding: 1rem;
+  }
+
+  .upcoming-card strong {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 900px) {
+    .carrier-dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .active-pickup-body .pickup-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .route-metrics {
+      grid-template-columns: 1fr;
+    }
+
+    .route-actions {
+      flex-direction: column;
+    }
+
+    .route-actions .button {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="carrier-dashboard-grid">
+  <aside class="carrier-summary-card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
+      <div>
+        <p class="eyebrow" style="margin:0 0 0.5rem 0;">Today's Summary</p>
+        <h3 style="margin:0; font-size:1.25rem;">Carrier dashboard</h3>
+      </div>
+      <span class="status-pill {% if gps_active %}success{% else %}danger{% endif %}" style="padding:0.5rem 0.75rem; font-weight:700;">{{ gps_active|yesno:"GPS active,GPS offline" }}</span>
+    </div>
+
+    <div class="summary-tiles">
+      <div class="summary-tile">
+        <strong>{{ total_pickups }}</strong>
+        <small>Total pickups</small>
+      </div>
+      <div class="summary-tile">
+        <strong>{{ total_samples }}</strong>
+        <small>Total samples</small>
+      </div>
+      <div class="summary-tile">
+        <strong>{{ completed_pickups }}/{{ total_pickups }}</strong>
+        <small>Completed</small>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="margin:0 0 0.85rem 0; font-size:1rem;">Status</h3>
+      <ul class="status-list">
+        <li><span><span class="status-pill indicator {% if gps_active %}active{% else %}offline{% endif %}"></span>GPS active</span><strong>{{ gps_active|yesno:"Yes,No" }}</strong></li>
+        <li><span><span class="status-pill indicator {% if connected %}active{% else %}warning{% endif %}"></span>Connected</span><strong>{{ connected|yesno:"Yes,No" }}</strong></li>
+        <li><span><span class="status-pill indicator active"></span>Temperature</span><strong>4°C - Normal</strong></li>
+      </ul>
+    </div>
+
+    <div style="display:grid; gap:0.75rem;">
+      <a class="button primary" href="#carrier-route-map">Navigate to pickup</a>
+      <a class="button secondary" href="#upcoming-pickups">See upcoming</a>
+    </div>
+  </aside>
+
+  <main>
+    <div class="carrier-tabs">
+      <button type="button" class="tab-button active" data-tab="pickup-tab">Active pickup</button>
+      <button type="button" class="tab-button" data-tab="issues-tab">Report issue</button>
+    </div>
+
+    <div class="tab-panel" id="pickup-tab">
+      <div class="active-pickup-card">
+        {% if next_pickup_order or lab_return_order %}
+          <div class="active-pickup-header">
+            <div>
+              <p class="eyebrow" style="margin:0 0 0.5rem 0;">{% if lab_return_order %}Return to lab{% else %}Active Pickup{% endif %}</p>
+          <h2 style="margin:0;">{% if lab_return_order %}{{ lab_return_order.client.name }}{% else %}{{ next_pickup_order.client.name }}{% endif %}</h2>
+          <p class="muted" style="margin:0.5rem 0 0 0;">{% if lab_return_order %}{{ lab_return_order.reference_code }}{% else %}{{ next_pickup_order.reference_code }}{% endif %}</p>
+        </div>
+        <span class="status-pill warning" style="font-weight:700;">{% if lab_return_order %}Route to lab{% else %}In Progress{% endif %}</span>
+      </div>
+
+      <div class="active-pickup-body">
+        <div class="pickup-meta">
+          <div>
+            <p style="margin:0 0 0.35rem 0; font-weight:700;">{% if lab_return_order %}Destination{% else %}Location{% endif %}</p>
+            <p style="margin:0; font-size:1.1rem; font-weight:700;">{% if lab_return_order %}{{ lab_return_order.client.name }}{% else %}{{ next_pickup_order.client.name }}{% endif %}</p>
+            <p class="muted" style="margin:0.35rem 0 0 0;">{% if lab_return_order %}Route to the laboratory{% else %}{{ next_pickup_order.client.address }}{% endif %}</p>
+          </div>
+          <div style="text-align:right;">
+            <p style="margin:0 0 0.35rem 0; font-weight:700;">Distance & ETA</p>
+            {% if next_pickup_distance_km %}
+              <p style="margin:0; font-size:1.1rem; font-weight:700;">{{ next_pickup_distance_km|floatformat:1 }} km</p>
+              <p class="muted" style="margin:0.35rem 0 0 0;">ETA: {{ next_pickup_eta_minutes }} min</p>
+            {% else %}
+              <p class="muted" style="margin:0;">Distance not available</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div id="carrier-route-map"></div>
+
+        <div class="route-guidance-card">
+          <div class="route-guidance-header">
+            <h3 style="margin:0; font-size:1rem;">Route guidance</h3>
+            <a class="button secondary" id="open-route-maps" href="#" target="_blank" rel="noopener noreferrer">Open in maps</a>
+          </div>
+          <p class="muted" id="route-status" style="margin:0 0 0.75rem 0;">{% if lab_return_order %}Preparing a turn-by-turn route to the laboratory.{% else %}Preparing a turn-by-turn route to the client.{% endif %}</p>
+          <p class="muted" id="route-summary" style="margin:0 0 0.35rem 0; font-weight:700; color:var(--text-main);">Best route</p>
+          <p class="muted" id="next-step" style="margin:0 0 0.75rem 0;">Finding the quickest road path…</p>
+          {% if lab_return_order %}<span class="lab-location" style="display:inline-block; margin-top:0.25rem; font-size:0.8rem; font-weight:700; color:var(--primary);">lab-location</span>{% endif %}
+          <ol class="route-guidance-list" id="route-guidance-list"></ol>
+        </div>
+
+        <div class="route-metrics">
+          <div class="route-metric">
+            <strong>{{ next_pickup_order.samples.count }}</strong>
+            <small>Samples</small>
+          </div>
+          <div class="route-metric">
+            <strong>4°C</strong>
+            <small>Temperature</small>
+          </div>
+          <div class="route-metric">
+            <strong>✓</strong>
+            <small>Compliant</small>
+          </div>
+        </div>
+
+        <div class="route-actions">
+          <button class="button primary" id="start-live-tracking" type="button">Start live tracking</button>
+          <a class="button secondary" href="{% if lab_return_order %}{% url 'tracking:order_detail' lab_return_order.pk %}{% else %}{% url 'tracking:order_detail' next_pickup_order.pk %}{% endif %}">View route inside app</a>
+          {% if not lab_return_order and next_pickup_order and next_pickup_order.status != 'picked_up' %}
+            <a class="button secondary" href="{% url 'tracking:order_detail' next_pickup_order.pk %}">Confirm Pickup</a>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+        <div style="padding: 3rem 1rem; text-align:center;">
+          <h2 style="margin:0 0 0.75rem 0;">No active pickup assigned</h2>
+          <p class="muted" style="margin:0;">You currently have no active pickup in progress.</p>
+        </div>
+      {% endif %}
+      </div>
+    </div>
+
+    <div class="tab-panel hidden" id="issues-tab">
+        <div class="issue-report-card">
+          <h3 style="margin-top:0;">Report an issue</h3>
+          <p class="muted">Submit incidents such as accidents, punctures, delays, or other delivery issues for dispatcher and admin review.</p>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="issue_submit" value="1" />
+            <div class="form-field">
+              {{ issue_form.category.label_tag }}
+              {{ issue_form.category }}
+            </div>
+            <div class="form-field">
+              {{ issue_form.description.label_tag }}
+              {{ issue_form.description }}
+            </div>
+            {{ issue_form.order }}
+            <button class="button primary" type="submit">Submit issue report</button>
+          </form>
+
+          <div class="issue-history">
+            <h4 style="margin:1.5rem 0 0.85rem 0;">Recent issue reports</h4>
+            {% if carrier_issues %}
+              {% for issue in carrier_issues %}
+                <div class="issue-history-item">
+                  <strong><a href="{% url 'tracking:carrier_issue_detail' issue.pk %}">{{ issue.get_category_display }} - {{ issue.get_status_display }}</a></strong>
+                  <p style="margin:0.4rem 0 0 0;">{{ issue.description|truncatechars:120 }}</p>
+                  <small>Reported {{ issue.created_at|timesince }} ago{% if issue.order %} for {{ issue.order.reference_code }}{% endif %}</small>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="empty-state">No issue reports yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+  </main>
+<section id="upcoming-pickups" style="display:grid; gap:1rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <div>
+      <p class="eyebrow" style="margin:0 0 0.35rem 0;">Upcoming pickups</p>
+      <h3 style="margin:0;">Upcoming pickups</h3>
+    </div>
+    <span class="chip">{{ orders|length }} total</span>
+  </div>
+
+  {% if orders %}
+    {% for order in orders %}
+      {% if not next_pickup_order or order.pk != next_pickup_order.pk %}
+      <div class="upcoming-card">
+        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+          <div>
+            <strong>{{ order.reference_code }}</strong>
+            <p style="margin:0.25rem 0 0 0;">{{ order.client.name }}</p>
+            <p class="muted" style="margin:0.35rem 0 0 0;">{{ order.get_priority_display }} · {{ order.get_status_display }}</p>
+          </div>
+          <span class="chip">{{ order.get_status_display }}</span>
+        </div>
+        <div class="card-footer">
+          <div>
+            <p style="margin:0;"><strong>{{ order.samples.count }}</strong> samples</p>
+            {% if order.requested_pickup_time %}
+              <p class="muted" style="margin:0;">ETA: {{ order.requested_pickup_time|date:"H:i" }}</p>
+            {% endif %}
+          </div>
+          <a class="button secondary" href="{% url 'tracking:order_detail' order.pk %}">Open</a>
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="empty-state">No assigned orders yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var buttons = document.querySelectorAll('.tab-button');
+    var panels = document.querySelectorAll('.tab-panel');
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        buttons.forEach(function (btn) {
+          btn.classList.remove('active');
+        });
+        panels.forEach(function (panel) {
+          panel.classList.add('hidden');
+        });
+        button.classList.add('active');
+        var target = document.getElementById(button.dataset.tab);
+        if (target) {
+          target.classList.remove('hidden');
+        }
+      });
+    });
+
+    var routeMapEl = document.getElementById('carrier-route-map');
+    if (!routeMapEl) {
+      return;
+    }
+
+    var map = L.map('carrier-route-map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    var routeStatus = document.getElementById('route-status');
+    var routeSummary = document.getElementById('route-summary');
+    var nextStep = document.getElementById('next-step');
+    var guidanceList = document.getElementById('route-guidance-list');
+    var openMapsLink = document.getElementById('open-route-maps');
+    var startTrackingButton = document.getElementById('start-live-tracking');
+    var trackingActive = false;
+    var watchId = null;
+    var carrierMarker = null;
+    var pickupMarker = null;
+    var routeLine = null;
+
+    function postLocation(latitude, longitude) {
+      fetch('{% url "tracking:update_carrier_location" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: JSON.stringify({ latitude: latitude, longitude: longitude })
+      }).catch(function () {
+        // Ignore network failures and keep the browser running as a local tracker.
+      });
+    }
+
+    function renderRouteFromCurrentPosition(latitude, longitude) {
+      if (pickupLat === null || pickupLng === null) {
+        return;
+      }
+
+      carrierLat = latitude;
+      carrierLng = longitude;
+
+      if (carrierMarker) {
+        carrierMarker.setLatLng([latitude, longitude]);
+      } else {
+        carrierMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('Your current location');
+      }
+
+      if (routeLine) {
+        map.removeLayer(routeLine);
+      }
+
+      var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' + longitude + ',' + latitude + ';' + pickupLng + ',' + pickupLat + '?overview=full&geometries=geojson&steps=true&alternatives=true';
+
+      if (routeStatus) {
+        routeStatus.textContent = 'Finding the quickest road path…';
+      }
+      if (routeSummary) {
+        routeSummary.textContent = 'Best route';
+      }
+      if (nextStep) {
+        nextStep.textContent = 'Checking the fastest road path from your current location…';
+      }
+
+      fetch(osrmUrl)
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          if (data.routes && data.routes.length > 0) {
+            var bestRoute = data.routes.reduce(function (selected, route) {
+              if (!selected) {
+                return route;
+              }
+              return route.duration < selected.duration ? route : selected;
+            }, null);
+
+            routeLine = L.geoJSON(bestRoute.geometry, {
+              style: { color: '#059669', weight: 5, opacity: 0.95 }
+            }).addTo(map);
+
+            if (routeStatus) {
+              routeStatus.textContent = 'Fastest route selected • ' + Math.round(bestRoute.duration / 60) + ' min • ' + (bestRoute.distance / 1000).toFixed(1) + ' km';
+            }
+            if (routeSummary) {
+              routeSummary.textContent = 'Best route';
+            }
+            if (guidanceList) {
+              guidanceList.innerHTML = '';
+              var steps = bestRoute.legs && bestRoute.legs.length > 0 ? bestRoute.legs[0].steps : [];
+              steps.slice(0, 5).forEach(function (step) {
+                var li = document.createElement('li');
+                li.textContent = step.maneuver && step.maneuver.instruction ? step.maneuver.instruction : step.name || 'Continue toward the destination';
+                guidanceList.appendChild(li);
+              });
+            }
+            if (nextStep) {
+              var firstStep = bestRoute.legs && bestRoute.legs.length > 0 && bestRoute.legs[0].steps.length > 0 ? bestRoute.legs[0].steps[0] : null;
+              var nextInstruction = firstStep && firstStep.maneuver && firstStep.maneuver.instruction ? firstStep.maneuver.instruction : (firstStep ? firstStep.name : 'Continue toward the destination');
+              nextStep.textContent = 'Next: ' + nextInstruction;
+            }
+
+            var routeBounds = L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds();
+            if (routeBounds.isValid()) {
+              map.fitBounds(routeBounds, { padding: [35, 35] });
+            }
+          } else {
+            throw new Error('No route data returned');
+          }
+        })
+        .catch(function () {
+          if (routeStatus) {
+            routeStatus.textContent = 'Route guidance unavailable right now. Use the map button to open directions in your preferred navigation app.';
+          }
+          if (nextStep) {
+            nextStep.textContent = 'Open directions in Google Maps or Waze for full turn-by-turn guidance.';
+          }
+          routeLine = L.polyline([[latitude, longitude], [pickupLat, pickupLng]], { color: '#C8102E', weight: 4, opacity: 0.8 }).addTo(map);
+          map.fitBounds(L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds(), { padding: [35, 35] });
+        });
+    }
+
+    function updateLiveRoute(latitude, longitude) {
+      renderRouteFromCurrentPosition(latitude, longitude);
+      if (routeStatus) {
+        routeStatus.textContent = 'Live GPS active. Updating route guidance from your current location.';
+      }
+    }
+
+    function startLiveTracking() {
+      if (!navigator.geolocation) {
+        if (routeStatus) {
+          routeStatus.textContent = 'Live GPS is not available in this browser. Please use a supported mobile browser.';
+        }
+        return;
+      }
+
+      if (trackingActive) {
+        return;
+      }
+
+      trackingActive = true;
+      if (startTrackingButton) {
+        startTrackingButton.textContent = 'Tracking live…';
+        startTrackingButton.disabled = true;
+      }
+
+      watchId = navigator.geolocation.watchPosition(function (position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+        postLocation(latitude, longitude);
+        updateLiveRoute(latitude, longitude);
+      }, function () {
+        if (routeStatus) {
+          routeStatus.textContent = 'Live GPS permission was denied or unavailable. You can still use the pinned client location.';
+        }
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 20000,
+      });
+    }
+
+    {% if carrier_location %}
+      var carrierLat = {{ carrier_location.latitude }};
+      var carrierLng = {{ carrier_location.longitude }};
+    {% else %}
+      var carrierLat = null;
+      var carrierLng = null;
+    {% endif %}
+
+    {% if lab_return_order %}
+      var pickupLat = {{ lab_location.latitude }};
+      var pickupLng = {{ lab_location.longitude }};
+      var destinationLabel = 'Laboratory';
+    {% elif next_pickup_order and next_pickup_order.latitude is not None and next_pickup_order.longitude is not None %}
+      var pickupLat = {{ next_pickup_order.latitude }};
+      var pickupLng = {{ next_pickup_order.longitude }};
+      var destinationLabel = 'Client location';
+    {% else %}
+      var pickupLat = null;
+      var pickupLng = null;
+      var destinationLabel = 'Destination';
+    {% endif %}
+
+    if (startTrackingButton) {
+      startTrackingButton.addEventListener('click', startLiveTracking);
+    }
+
+    if (pickupLat !== null && pickupLng !== null) {
+      pickupMarker = L.marker([pickupLat, pickupLng]).addTo(map).bindPopup(destinationLabel);
+      var googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + pickupLat + ',' + pickupLng + '&travelmode=driving';
+
+      if (carrierLat !== null && carrierLng !== null) {
+        googleMapsUrl += '&origin=' + carrierLat + ',' + carrierLng;
+        carrierMarker = L.marker([carrierLat, carrierLng]).addTo(map).bindPopup('Your current location');
+        if (openMapsLink) {
+          openMapsLink.href = googleMapsUrl;
+        }
+
+        renderRouteFromCurrentPosition(carrierLat, carrierLng);
+      } else {
+        map.setView([pickupLat, pickupLng], 13);
+        pickupMarker.bindPopup(destinationLabel).openPopup();
+        if (openMapsLink) {
+          openMapsLink.href = googleMapsUrl;
+        }
+        if (routeStatus) {
+          routeStatus.textContent = 'GPS position is not available yet. Use the pinned client location and the map button below to open directions in Google Maps or Waze.';
+        }
+      }
+    } else {
+      map.setView([-1.2921, 36.8219], 10);
+    }
+  });
+</script>
+{% endblock %}

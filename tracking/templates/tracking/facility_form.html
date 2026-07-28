@@ -1,0 +1,89 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility - Pathcare{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Configuration</p>
+      <h2>{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility</h2>
+    </div>
+    <a href="{% url 'tracking:facility_list' %}" class="button secondary">← Back to facilities</a>
+  </div>
+</section>
+
+<section class="panel">
+  <form method="post" class="form-grid" novalidate>
+    {% csrf_token %}
+
+    <div class="field-group" style="grid-column: 1 / -1;">
+      <label for="id_name">Facility Name *</label>
+      {{ form.name }}
+      {% if form.name.errors %}<div class="field-errors">{{ form.name.errors }}</div>{% endif %}
+      <small class="muted">The name of the facility (e.g., "City Medical Center")</small>
+    </div>
+
+    <div class="field-group" style="grid-column: 1 / -1;">
+      <label for="id_address">Address *</label>
+      {{ form.address }}
+      {% if form.address.errors %}<div class="field-errors">{{ form.address.errors }}</div>{% endif %}
+      <small class="muted">Physical location of the facility</small>
+    </div>
+
+    <div class="field-group">
+      <label for="id_latitude">Latitude (GPS)</label>
+      {{ form.latitude }}
+      {% if form.latitude.errors %}<div class="field-errors">{{ form.latitude.errors }}</div>{% endif %}
+      <small class="muted">e.g., -1.2921</small>
+    </div>
+
+    <div class="field-group">
+      <label for="id_longitude">Longitude (GPS)</label>
+      {{ form.longitude }}
+      {% if form.longitude.errors %}<div class="field-errors">{{ form.longitude.errors }}</div>{% endif %}
+      <small class="muted">e.g., 36.8219</small>
+    </div>
+
+    <div style="grid-column: 1 / -1; background: #f9f9f9; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+      <p style="margin: 0; color: #666; font-size: 0.95rem;">
+        <strong>💡 Tip:</strong> GPS coordinates are used for calculating distances and ETAs to the main lab. You can use Google Maps to find coordinates.
+      </p>
+    </div>
+
+    <div class="field-group">
+      <label for="id_contact_name">Contact Person</label>
+      {{ form.contact_name }}
+      {% if form.contact_name.errors %}<div class="field-errors">{{ form.contact_name.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group">
+      <label for="id_contact_phone">Contact Phone</label>
+      {{ form.contact_phone }}
+      {% if form.contact_phone.errors %}<div class="field-errors">{{ form.contact_phone.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group">
+      <label for="id_contact_email">Contact Email</label>
+      {{ form.contact_email }}
+      {% if form.contact_email.errors %}<div class="field-errors">{{ form.contact_email.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group" style="grid-column: 1 / -1;">
+      <label>
+        {{ form.is_active }}
+        <span>Active facility</span>
+      </label>
+      {% if form.is_active.errors %}<div class="field-errors">{{ form.is_active.errors }}</div>{% endif %}
+      <small class="muted">Uncheck to disable this facility from appearing in client pickup requests</small>
+    </div>
+
+    <div style="grid-column: 1 / -1; display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="button primary">
+        {% if action == "Update" %}Update Facility{% else %}Create Facility{% endif %}
+      </button>
+      <a href="{% url 'tracking:facility_list' %}" class="button secondary">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carrier issue reports - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card compact">
+  <div>
+    <p class="eyebrow">Carrier issues</p>
+    <h1>Carrier issue reports</h1>
+    <p class="muted">Review and respond to carrier incident reports.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button primary" href="{% url 'tracking:dashboard' %}">Back to dashboard</a>
+  </div>
+</div>
+
+<div style="display:grid; gap:1rem;">
+  {% if issues %}
+    {% for issue in issues %}
+      <div class="issue-report-card">
+        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+          <div>
+            <p class="eyebrow" style="margin:0 0 0.35rem 0;">{{ issue.created_at|date:"M d, Y H:i" }}</p>
+            <h2 style="margin:0;"><a href="{% url 'tracking:carrier_issue_detail' issue.pk %}">{{ issue.get_category_display }} - {{ issue.get_status_display }}</a></h2>
+            <p class="muted" style="margin:0.5rem 0 0 0;">Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · Order {{ issue.order.reference_code }}{% endif %}</p>
+          </div>
+          <span class="chip">{{ issue.get_status_display }}</span>
+        </div>
+        <p style="margin:1rem 0 0 0;">{{ issue.description|linebreaksbr }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="issue-report-card">
+      <h3>No issues submitted yet</h3>
+      <p class="muted">No carrier incident reports are available for review.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
