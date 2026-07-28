@@ -1,0 +1,1 @@
+web: gunicorn pathcare.wsgi --log-file -
