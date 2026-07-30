@@ -27,7 +27,7 @@
             <tr>
               <td>{{ carrier.display_name }}</td>
               <td>{{ carrier.phone }}</td>
-              <td>{{ carrier.vehicle_type }} {{ carrier.vehicle_plate }}</td>
+              <td>{{ carrier.vehicle_display }}</td>
               <td><span class="status-pill">{{ carrier.get_status_display }}</span></td>
             </tr>
           {% endfor %}

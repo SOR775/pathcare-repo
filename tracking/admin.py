@@ -29,9 +29,13 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Carrier)
 class CarrierAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "phone", "status", "vehicle_plate", "is_active")
+    list_display = ("__str__", "phone", "status", "vehicle_info", "is_active")
     list_filter = ("status", "is_active")
     search_fields = ("user__username", "user__first_name", "user__last_name", "phone")
+
+    def vehicle_info(self, obj):
+        return obj.vehicle_display
+    vehicle_info.short_description = 'Vehicle'
 
 
 class SampleInline(admin.TabularInline):

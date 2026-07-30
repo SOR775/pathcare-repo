@@ -38,6 +38,19 @@ class Client(models.Model):
         return self.name
 
 
+class Vehicle(models.Model):
+    """A vehicle assigned to a carrier."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    vehicle_type = models.CharField(max_length=64, blank=True)
+    vehicle_plate = models.CharField(max_length=32, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.vehicle_type} {self.vehicle_plate}".strip() or "Vehicle pending"
+
+
 class Carrier(models.Model):
     """A driver who picks up and delivers samples."""
 
@@ -55,6 +68,13 @@ class Carrier(models.Model):
         blank=True,
     )
     phone = models.CharField(max_length=32)
+    vehicle = models.OneToOneField(
+        'Vehicle',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='carrier',
+    )
     vehicle_type = models.CharField(max_length=64, blank=True)
     vehicle_plate = models.CharField(max_length=32, blank=True)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.AVAILABLE)
@@ -77,6 +97,14 @@ class Carrier(models.Model):
 
     def __str__(self):
         return self.display_name
+
+    @property
+    def vehicle_display(self):
+        if self.vehicle:
+            return str(self.vehicle)
+        if self.vehicle_type or self.vehicle_plate:
+            return f"{self.vehicle_type} {self.vehicle_plate}".strip()
+        return "Vehicle pending"
 
     def has_active_order(self):
         return self.orders.filter(status__in=Order.active_statuses()).exists()

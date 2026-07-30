@@ -138,6 +138,36 @@
   scrollbar-color: var(--border-color) transparent;
 }
 
+@media (max-width: 640px) {
+  .notif-toggle {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+  }
+
+  .notif-dropdown {
+    position: fixed;
+    top: 70px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: calc(100% - 20px);
+    border-radius: 16px;
+    box-shadow: var(--shadow-xl);
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .notif-dropdown.open {
+    display: block;
+  }
+
+  .notif-list {
+    max-height: calc(100vh - 180px);
+  }
+}
+
 .notif-list::-webkit-scrollbar {
   width: 4px;
 }

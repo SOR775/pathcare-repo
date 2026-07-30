@@ -25,6 +25,7 @@ from .forms import (
     SampleForm,
 )
 from .models import Carrier, CarrierIssue, CarrierIssueReply, Client, CustodyEvent, Order, Sample, Notification
+from .signals import broadcast_order_update
 
 User = get_user_model()
 
@@ -97,6 +98,10 @@ def _order_queryset_for_user(user):
     if user.is_lab_staff():
         return Order.objects.filter(status__in=[Order.Status.DELIVERED, Order.Status.RECEIVED, Order.Status.COMPLETED])
     return Order.objects.none()
+
+
+def _order_can_be_assigned(order):
+    return order.status in [Order.Status.PENDING_REVIEW, Order.Status.PENDING] and order.carrier is None
 
 
 def _get_order_for_user(user, pk):
@@ -400,6 +405,59 @@ def update_carrier_location(request):
         "updated_at": carrier_profile.last_location_update.isoformat(),
     })
 
+@role_required("super_admin", "dispatcher", "client")
+def order_location(request, pk):
+    """Return the current carrier location for an order as JSON (if authorized)."""
+    order = get_object_or_404(Order, pk=pk)
+    user = request.user
+    # authorization: super_admin or dispatcher can view; client may view their own orders
+    allowed = False
+    if user.is_super_admin() or user.is_dispatcher():
+        allowed = True
+    elif user.is_client():
+        if order.client and (order.client.contact_email == user.email or order.client.contact_phone == user.phone):
+            allowed = True
+
+    if not allowed:
+        return JsonResponse({"error": "forbidden"}, status=403)
+
+    carrier = order.carrier
+    if not carrier or carrier.current_latitude is None or carrier.current_longitude is None:
+        return JsonResponse({"status": "no_location", "order_status": order.status})
+
+    return JsonResponse({
+        "status": "ok",
+        "order_status": order.status,
+        "carrier": {
+            "id": str(carrier.pk),
+            "display_name": carrier.display_name,
+            "latitude": carrier.current_latitude,
+            "longitude": carrier.current_longitude,
+            "updated_at": carrier.last_location_update.isoformat() if carrier.last_location_update else None,
+        }
+    })
+
+@role_required("super_admin", "dispatcher", "client")
+def client_order_tracking(request, pk):
+    """Render a client-facing real-time tracking page for an order."""
+    order = get_object_or_404(Order, pk=pk)
+    user = request.user
+    allowed = False
+    if user.is_super_admin() or user.is_dispatcher():
+        allowed = True
+    elif user.is_client():
+        if order.client and (order.client.contact_email == user.email or order.client.contact_phone == user.phone):
+            allowed = True
+
+    if not allowed:
+        messages.error(request, "You are not authorized to view this order tracking page.")
+        return redirect("tracking:dashboard")
+
+    return render(request, "tracking/client_order_tracking.html", {
+        "order": order,
+        "lab_location": settings.LAB_LOCATION,
+    })
+
 
 @role_required("super_admin", "dispatcher")
 def order_approve_request(request, pk):
@@ -413,6 +471,7 @@ def order_approve_request(request, pk):
             actor=request.user,
             notes="Pickup request approved by dispatcher.",
         )
+        broadcast_order_update(order)
         try:
             if order.client and order.client.contact_email:
                 User = get_user_model()
@@ -464,7 +523,11 @@ def carrier_create(request):
 @role_required("super_admin", "carrier")
 def carrier_view(request):
     carrier = getattr(request.user, "carrier_profile", None)
-    orders = Order.objects.filter(carrier=carrier).order_by("-created_at")
+    assigned_orders = Order.objects.filter(carrier=carrier).order_by("-created_at")
+    available_orders = Order.objects.filter(
+        carrier__isnull=True,
+        status=Order.Status.PENDING,
+    ).select_related("client").order_by("requested_pickup_time", "created_at")
     next_pickup_order = Order.objects.filter(
         carrier=carrier,
         status__in=[
@@ -509,7 +572,8 @@ def carrier_view(request):
             "order": next_pickup_order.pk if next_pickup_order else None,
         })
 
-    orders = orders.prefetch_related('samples')
+    assigned_orders = assigned_orders.prefetch_related('samples')
+    available_orders = available_orders.prefetch_related('samples')
     carrier_location = None
     next_pickup_distance_km = None
     next_pickup_eta_minutes = None
@@ -541,9 +605,30 @@ def carrier_view(request):
         )
         next_pickup_eta_minutes = _estimate_minutes(next_pickup_distance_km, speed_kmh=35)
 
-    total_pickups = orders.count()
-    total_samples = sum(order.samples.count() for order in orders)
-    completed_pickups = orders.filter(status__in=[
+    # Compute simple distance/ETA for available (unassigned) orders so carriers can see how far they are
+    if carrier_location and available_orders:
+        for o in available_orders:
+            try:
+                if o.latitude is None or o.longitude is None:
+                    o._distance_km = None
+                    o._eta_minutes = None
+                    continue
+
+                dist = _haversine_distance(
+                    carrier.current_latitude,
+                    carrier.current_longitude,
+                    o.latitude,
+                    o.longitude,
+                )
+                o.distance_km = dist
+                o.eta_minutes = _estimate_minutes(dist, speed_kmh=35)
+            except Exception:
+                o.distance_km = None
+                o.eta_minutes = None
+
+    total_pickups = assigned_orders.count()
+    total_samples = sum(order.samples.count() for order in assigned_orders)
+    completed_pickups = assigned_orders.filter(status__in=[
         Order.Status.DELIVERED,
         Order.Status.RECEIVED,
         Order.Status.COMPLETED,
@@ -551,12 +636,15 @@ def carrier_view(request):
     gps_active = carrier_location is not None
     connected = carrier.user.is_active if carrier and carrier.user else False
     carrier_issues = CarrierIssue.objects.filter(carrier=carrier).order_by("-created_at")[:8]
+    active_order = lab_return_order or next_pickup_order
 
     return render(request, "tracking/carrier_view.html", {
         "carrier": carrier,
-        "orders": orders,
+        "orders": assigned_orders,
+        "available_orders": available_orders,
         "next_pickup_order": next_pickup_order,
         "lab_return_order": lab_return_order,
+        "active_order": active_order,
         "carrier_location": carrier_location,
         "lab_location": lab_location,
         "next_pickup_distance_km": next_pickup_distance_km,
@@ -789,6 +877,10 @@ def carrier_positions(request):
 def order_assign_carrier(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == "POST":
+        if not _order_can_be_assigned(order):
+            messages.error(request, "Order cannot be assigned because it is already assigned or in progress.")
+            return redirect("tracking:order_detail", pk=pk)
+
         form = AssignCarrierForm(request.POST)
         if form.is_valid():
             carrier = form.cleaned_data["carrier"]
@@ -800,6 +892,7 @@ def order_assign_carrier(request, pk):
             order.status = Order.Status.ASSIGNED
             order.save()
             CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.CARRIER_ASSIGNED, actor=request.user, notes="Carrier assigned by dispatcher.")
+            broadcast_order_update(order)
             carrier.status = Carrier.Status.ON_JOB
             carrier.save()
             if carrier.user:
@@ -812,6 +905,10 @@ def order_assign_carrier(request, pk):
 def order_auto_assign(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == "POST":
+        if not _order_can_be_assigned(order):
+            messages.error(request, "Order cannot be assigned because it is already assigned or in progress.")
+            return redirect("tracking:order_detail", pk=pk)
+
         suggested = _suggest_carriers_for_order(order, limit=1)
         if not suggested:
             messages.error(request, "No available carriers found for auto-assignment.")
@@ -826,6 +923,7 @@ def order_auto_assign(request, pk):
         order.status = Order.Status.ASSIGNED
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.CARRIER_ASSIGNED, actor=request.user, notes="Carrier auto-assigned by dispatcher.")
+        broadcast_order_update(order)
         carrier.status = Carrier.Status.ON_JOB
         carrier.save()
         if carrier.user:
@@ -842,6 +940,7 @@ def order_accept_assignment(request, pk):
         order.status = Order.Status.ACCEPTED
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.ASSIGNMENT_ACCEPTED, actor=request.user, notes="Carrier accepted assignment.")
+        broadcast_order_update(order)
         messages.success(request, "assignment accepted")
     return redirect("tracking:order_detail", pk=pk)
 
@@ -856,6 +955,7 @@ def order_start_to_client(request, pk):
             order.status = Order.Status.EN_ROUTE_TO_CLIENT
             order.save()
             CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.STARTED_TO_CLIENT, actor=request.user, notes="Carrier began trip to client.")
+            broadcast_order_update(order)
             messages.success(request, "en route to client")
             return redirect("tracking:carrier_view")
         elif order.status == Order.Status.EN_ROUTE_TO_CLIENT:
@@ -874,6 +974,7 @@ def order_arrive_client(request, pk):
         order.status = Order.Status.AT_CLIENT
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.ARRIVED_AT_CLIENT, actor=request.user, notes="Carrier arrived at client location.")
+        broadcast_order_update(order)
         messages.success(request, "arrived at client")
     return redirect("tracking:order_detail", pk=pk)
 
@@ -886,6 +987,7 @@ def order_mark_pickup(request, pk):
         order.status = Order.Status.PICKED_UP
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.PICKED_UP, actor=request.user, notes="Carrier confirmed pickup.")
+        broadcast_order_update(order)
         messages.success(request, "marked picked up")
     return redirect("tracking:order_detail", pk=pk)
 
@@ -919,6 +1021,7 @@ def sample_mark_delivery(request, pk):
         if not sample.order.samples.filter(is_received=False).exists():
             sample.order.status = Order.Status.DELIVERED
             sample.order.save()
+            broadcast_order_update(sample.order)
         messages.success(request, f"Sample {sample.barcode} marked delivered.")
     return redirect("tracking:order_detail", pk=sample.order.pk)
 
@@ -952,9 +1055,7 @@ def order_mark_collected(request, pk):
     if request.method == "POST":
         order.status = Order.Status.PICKED_UP
         order.save()
-        messages.success(request, "Order marked collected")
-    return redirect("tracking:order_detail", pk=pk)
-
+        broadcast_order_update(order)
 
 @role_required("super_admin", "dispatcher", "carrier")
 def order_mark_in_transit(request, pk):
@@ -962,6 +1063,7 @@ def order_mark_in_transit(request, pk):
     if request.method == "POST":
         order.status = Order.Status.IN_TRANSIT
         order.save()
+        broadcast_order_update(order)
         messages.success(request, "Order marked in transit")
         if request.user.is_carrier():
             return redirect("tracking:carrier_view")
@@ -975,6 +1077,7 @@ def order_mark_delivery(request, pk):
         order.status = Order.Status.DELIVERED
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.DELIVERED, actor=request.user, notes="Delivered to lab.")
+        broadcast_order_update(order)
 
         carrier = order.carrier
         if carrier and carrier.status != Carrier.Status.AVAILABLE:
@@ -1008,6 +1111,7 @@ def order_mark_received(request, pk):
         order.status = Order.Status.RECEIVED
         order.save()
         CustodyEvent.objects.create(order=order, event_type=CustodyEvent.EventType.RECEIVED, actor=request.user, notes="Received at lab.")
+        broadcast_order_update(order)
         messages.success(request, "marked received at lab")
     return redirect("tracking:order_detail", pk=pk)
 
@@ -1022,6 +1126,7 @@ def order_mark_complete(request, pk):
 
         order.status = Order.Status.COMPLETED
         order.save()
+        broadcast_order_update(order)
 
         # Free up the carrier so they can accept new jobs
         carrier = order.carrier
@@ -1093,6 +1198,7 @@ def order_cancel(request, pk):
     if request.method == "POST":
         order.status = Order.Status.CANCELLED
         order.save()
+        broadcast_order_update(order)
 
         # Free up the carrier so they can take new jobs
         carrier = order.carrier

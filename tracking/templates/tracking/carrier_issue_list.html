@@ -1,39 +1,69 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Carrier issue reports - Pathcare Kenya{% endblock %}
+{% block title %}Carrier Issues — PathCare Kenya{% endblock %}
 
 {% block content %}
-<div class="hero-card compact">
-  <div>
-    <p class="eyebrow">Carrier issues</p>
-    <h1>Carrier issue reports</h1>
-    <p class="muted">Review and respond to carrier incident reports.</p>
-  </div>
-  <div class="hero-actions">
-    <a class="button primary" href="{% url 'tracking:dashboard' %}">Back to dashboard</a>
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  .issue-list { display: flex; flex-direction: column; gap: var(--space-md); }
+
+  .issue-card {
+    background: var(--color-surface); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg); padding: var(--space-lg);
+    transition: box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .issue-card:hover { box-shadow: var(--shadow-md); }
+
+  .issue-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-sm);
+  }
+  .issue-card-header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+  .issue-card-header a { color: var(--color-text); text-decoration: none; }
+  .issue-card-header a:hover { color: var(--color-primary); }
+  .issue-card-header .eyebrow {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted); margin: 0 0 4px;
+  }
+  .issue-card p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+  .issue-card .meta { font-size: .78rem; color: var(--color-text-muted); margin-top: 8px; }
+</style>
+
+<div class="hero-card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
+    <div>
+      <p class="eyebrow">Carrier Issues</p>
+      <h1>Issue Reports</h1>
+      <p>Review and respond to carrier incident reports.</p>
+    </div>
+    <a class="btn btn--outline btn--sm" href="{% url 'tracking:dashboard' %}">← Dashboard</a>
   </div>
 </div>
 
-<div style="display:grid; gap:1rem;">
-  {% if issues %}
+{% if issues %}
+  <div class="issue-list">
     {% for issue in issues %}
-      <div class="issue-report-card">
-        <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+      <div class="issue-card">
+        <div class="issue-card-header">
           <div>
-            <p class="eyebrow" style="margin:0 0 0.35rem 0;">{{ issue.created_at|date:"M d, Y H:i" }}</p>
-            <h2 style="margin:0;"><a href="{% url 'tracking:carrier_issue_detail' issue.pk %}">{{ issue.get_category_display }} - {{ issue.get_status_display }}</a></h2>
-            <p class="muted" style="margin:0.5rem 0 0 0;">Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · Order {{ issue.order.reference_code }}{% endif %}</p>
+            <p class="eyebrow">{{ issue.created_at|date:"M d, Y H:i" }}</p>
+            <h2><a href="{% url 'tracking:carrier_issue_detail' issue.pk %}">{{ issue.get_category_display }} — {{ issue.get_status_display }}</a></h2>
           </div>
-          <span class="chip">{{ issue.get_status_display }}</span>
+          <span class="badge badge--warning">{{ issue.get_status_display }}</span>
         </div>
-        <p style="margin:1rem 0 0 0;">{{ issue.description|linebreaksbr }}</p>
+        <p>{{ issue.description|linebreaksbr }}</p>
+        <p class="meta">Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · {{ issue.order.reference_code }}{% endif %}</p>
       </div>
     {% endfor %}
-  {% else %}
-    <div class="issue-report-card">
-      <h3>No issues submitted yet</h3>
-      <p class="muted">No carrier incident reports are available for review.</p>
+  </div>
+{% else %}
+  <div class="panel" style="text-align:center;">
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">📋</span>
+      <div class="empty-state__title">No Issues Yet</div>
+      <div class="empty-state__desc">No carrier incident reports have been submitted for review.</div>
     </div>
-  {% endif %}
-</div>
+  </div>
+{% endif %}
 {% endblock %}

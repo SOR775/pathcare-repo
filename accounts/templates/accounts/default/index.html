@@ -1,0 +1,76 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Accounts - Pathcare Kenya{% endblock %}
+
+{% block content %}
+{% if user.role == 'super_admin' %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Accounts</p>
+    <h1>Operational account directory</h1>
+    <p>Review service accounts and their assigned operational roles.</p>
+  </div>
+</div>
+
+<section class="panel">
+{% else %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Profile</p>
+    <h1>My account</h1>
+    <p>Review your own account details and role.</p>
+  </div>
+</div>
+
+<section class="panel">
+{% endif %}
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">User records</p>
+      <h2>Account profiles</h2>
+    </div>
+    {% if user.role == 'super_admin' %}
+      <a href="{% url 'accounts:user_management' %}" class="btn">Manage users</a>
+    {% endif %}
+  </div>
+
+  {% if user.role == 'super_admin' %}
+    {% if profiles %}
+      <div class="table-card">
+        <table>
+          <thead><tr><th>User</th><th>Role</th><th>Department</th></tr></thead>
+          <tbody>
+            {% for profile in profiles %}
+              <tr><td>{{ profile.user.get_full_name|default:profile.user.username }}</td><td>{{ profile.role }}</td><td>{{ profile.department|default:"—" }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">No account profiles have been created yet.</p>
+    {% endif %}
+  {% else %}
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Profile</p>
+          <h2>My account</h2>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <tbody>
+            <tr><th>Full name</th><td>{{ user.get_full_name|default:user.username }}</td></tr>
+            <tr><th>Username</th><td>{{ user.username }}</td></tr>
+            <tr><th>Email</th><td>{{ user.email|default:"—" }}</td></tr>
+            <tr><th>Phone</th><td>{{ user.phone|default:"—" }}</td></tr>
+            <tr><th>Role</th><td>{{ user.get_role_display }}</td></tr>
+            <tr><th>Department</th><td>{{ user.department|default:"—" }}</td></tr>
+            <tr><th>Status</th><td>{% if user.is_active %}Active{% else %}Inactive{% endif %}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

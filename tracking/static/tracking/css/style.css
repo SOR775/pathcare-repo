@@ -13,8 +13,46 @@
   border-width: 0;
 }
 
+/* Additional mobile readability fixes for carrier & client pages */
+@media (max-width: 768px) {
+  .monitoring-hero, .monitoring-hero *,
+  .monitoring-summary-card, .monitoring-summary-card *,
+  .carrier-card, .carrier-card *,
+  .hero-card, .hero-card *,
+  .notifications-sidebar, .notifications-sidebar * {
+    color: var(--text-main) !important;
+  }
+
+  .client-banner, .role-banner { color: var(--text-main) !important; }
+
+  /* Preserve dark map tooltip legibility */
+  .carrier-map-tooltip, .carrier-map-tooltip * { color: var(--text-inverse) !important; }
+}
+
+/* Ensure readable content inside common panels, cards, and notification containers.
+   Keep hero-card and explicitly dark headers untouched. */
+.panel, .panel * , .mobile-card, .mobile-card * , .table-card, .table-card * , .upcoming-card, .upcoming-card *, .tracking-card, .tracking-card *,
+.sidebar-panel, .sidebar-panel *, .panel-block, .panel-block *, .monitoring-summary-card, .monitoring-summary-card *, .monitoring-hero, .monitoring-hero *,
+.carrier-card, .carrier-card *, .notifications-sidebar, .notifications-sidebar *, .notification-item, .notification-item * {
+  color: var(--text-main) !important;
+}
+.table-card a, .panel a, .notifications-sidebar a { color: var(--primary) !important; }
+
 .hidden {
   display: none !important;
+}
+
+/* UI polish: base typography and smoothing */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-main);
 }
 
 .show-more-wrap {
@@ -53,6 +91,35 @@
   flex-wrap: wrap;
   gap: 0.75rem;
 }
+
+/* Slightly larger, airy panels and improved shadows */
+.panel, .table-card, .upcoming-card, .tracking-card, .sidebar-panel, .monitoring-summary-card {
+  padding: 1rem 1.15rem;
+  border-radius: calc(var(--radius-md) + 2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Primary CTA refinement */
+.button.primary, button.primary {
+  padding: 0.7rem 1.25rem;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.08);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.button.primary:active, button.primary:active { transform: translateY(1px); }
+
+/* Nav slideout polish for mobile */
+.nav-dropdown { padding: 0.5rem 0; border-radius: 8px; }
+.nav-dropdown-item { padding: 12px 16px; border-bottom: 1px solid var(--border-color); display:block; }
+.nav-dropdown-item:last-child { border-bottom: none; }
+.nav-group-toggle { padding: 10px 14px; border-radius: 8px; }
+
+/* Tighter table and list spacing */
+th, td { padding: 0.85rem 0.9rem; }
+
+/* Improve contrast for small muted text */
+.muted, .text-muted { color: #56606a; }
 
 /* Map intro */
 .map-intro {
@@ -484,10 +551,7 @@ body {
   gap: 0.5rem;
 }
 
-.brand::before {
-  content: "🧪";
-  font-size: 1.4rem;
-}
+
 
 .navbar nav {
   display: flex;
@@ -1120,6 +1184,19 @@ tr:hover td {
     width: 100%;
     justify-content: center;
   }
+  .action-toolbar .action-item select,
+  .action-toolbar .action-item input,
+  .action-toolbar .action-item textarea {
+    width: 100%;
+    min-width: 0;
+  }
+  .panel form,
+  .panel form .button,
+  .panel form select,
+  .panel form input,
+  .panel form textarea {
+    width: 100%;
+  }
   .search-filter-form {
     flex-direction: column;
     align-items: stretch;
@@ -1160,5 +1237,395 @@ tr:hover td {
   .mobile-tabbar .icon {
     font-size: 1.25rem;
     margin-bottom: 0.25rem;
+  }
+}
+
+/* Force mobile navigation links readable on light slideout menus */
+@media (max-width: 768px) {
+  #nav-links, .nav-links, .nav-links a, .nav-group-toggle, .nav-dropdown-item {
+    color: var(--text-main) !important;
+  }
+  /* Ensure dropdown background is light so text contrasts */
+  .nav-dropdown, .nav-dropdown-item { background: var(--panel-bg); }
+  .nav-dropdown-item a { color: var(--text-main) !important; }
+  .nav-toggle-btn { color: var(--text-main); background: transparent; border: none; }
+}
+
+
+
+/* ============================================================
+   MOBILE DASHBOARD POLISH
+   Add this at the END of style.css (it overrides earlier rules
+   at the same breakpoints via source order + specificity).
+   Nothing here touches desktop styles above 640px.
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  /* --- Hero card: from "shrunk desktop banner" to "status card" --- */
+  .hero-card {
+    background: var(--panel-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 1.1rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .hero-card .eyebrow {
+    color: var(--primary);
+  }
+
+  .order-actions .status-pill {
+    width: auto;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .hero-actions.order-actions .action-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .action-toolbar .action-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .action-toolbar .action-item button,
+  .action-toolbar .action-item a,
+  .action-toolbar .action-item select,
+  .action-toolbar .action-item input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .detail-card {
+    width: 100%;
+  }
+
+  .hero-card.compact {
+    padding: 1rem;
+  }
+
+  .hero-card .hero-actions {
+    width: 100%;
+  }
+
+  .hero-card h1 {
+    font-size: 1.15rem;
+    color: var(--text-main);
+  }
+
+  .hero-card p {
+    color: var(--text-muted);
+    opacity: 1;
+    font-size: 0.88rem;
+  }
+
+  .hero-card .button.primary {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+
+  /* --- Stat tiles: flat metric cards instead of glass tiles --- */
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .hero-stats > div {
+    background: var(--bg-secondary);
+    border: none;
+    backdrop-filter: none;
+    padding: 0.85rem 0.75rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+  }
+
+  .hero-stats > div:hover {
+    transform: none;
+  }
+
+  .hero-stats strong {
+    font-size: 1.35rem;
+    color: var(--text-main);
+  }
+
+  .hero-stats span {
+    color: var(--text-muted);
+    opacity: 1;
+    font-size: 0.68rem;
+  }
+
+  /* --- Action / alert grids: compact cards, not desktop tiles --- */
+  .action-grid, .alert-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .action-card, .alert-card {
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-md);
+    border-left-width: 3px;
+    box-shadow: none;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .action-card {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .alert-card h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .alert-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* --- Panels: tighter padding, still card-like --- */
+  .panel {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+
+  .panel-header h2 {
+    font-size: 1rem;
+  }
+
+  .panel-header .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  /* --- Table rows as real cards on mobile, not just bordered rows --- */
+  .table-card table tbody tr {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  .table-card table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-card table tbody tr td {
+    border-bottom: none;
+    padding: 0.3rem 0;
+    background: transparent;
+    font-size: 0.85rem;
+  }
+
+  .table-card table tbody tr td:first-child {
+    font-weight: 600;
+  }
+
+  .table-card {
+    border: none;
+    background: transparent;
+  }
+
+  /* --- Status pills: slightly smaller so they don't dominate a card row --- */
+  .status-pill {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  /* --- Custody timeline: align with card language --- */
+  .custody-event {
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.9rem;
+  }
+}
+
+/* ============================================================
+   GLOBAL LAYOUT & RESPONSIVE FIT
+   Ensures consistent spacing, no horizontal overflow, and
+   mobile-friendly container/nav behavior.
+   ============================================================ */
+html,
+body {
+  min-width: 320px;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-main);
+}
+
+.container {
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 5.5rem;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  width: 100%;
+}
+
+.navbar nav {
+  gap: 0.75rem;
+}
+
+.nav-toggle-btn {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 1.05rem 0.85rem 7rem;
+  }
+
+  .navbar {
+    padding: 1rem 0.85rem;
+  }
+
+  .navbar nav,
+  .nav-user {
+    display: none;
+  }
+
+  .nav-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-inverse);
+  }
+
+  .navbar .brand {
+    font-size: 1.05rem;
+  }
+
+  .hero-card,
+  .panel,
+  .table-card,
+  .mobile-card,
+  .action-card,
+  .alert-card,
+  .sidebar-panel,
+  .detail-card {
+    padding: 1rem;
+  }
+
+  .operations-map-grid,
+  .details-grid,
+  .action-grid,
+  .alert-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-progress-list {
+    min-width: auto;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .journey-progress-list li {
+    min-width: 108px;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding: 0.9rem 0.75rem 7.75rem;
+  }
+
+  .hero-card {
+    gap: 1rem;
+  }
+
+  .hero-card h1 {
+    font-size: 1.15rem;
+  }
+
+  .mobile-tabbar {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .mobile-tabbar a {
+    font-size: 0.75rem;
+    min-width: 0;
+  }
+
+  .table-card table {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem 0.65rem 8rem;
+  }
+
+  .navbar {
+    padding: 0.85rem 0.75rem;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .hero-card,
+  .panel,
+  .detail-card,
+  .table-card {
+    padding: 0.95rem;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+
+  .hero-card p,
+  .panel p,
+  .detail-card p {
+    font-size: 0.95rem;
+  }
+
+  .button,
+  button {
+    width: 100%;
   }
 }

@@ -1,28 +1,41 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Reports - Pathcare Kenya{% endblock %}
+{% block title %}Reports — PathCare Kenya{% endblock %}
 
 {% block content %}
+
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Performance Overview</p>
+    <h1>Reports &amp; Analytics</h1>
+    <p>Track delivery performance, pending jobs, and field exceptions.</p>
+  </div>
+</div>
+
+{# ── Summary stats ── #}
+<div class="stat-grid" style="margin-bottom: var(--space-lg);">
+  <div class="stat-card">
+    <span class="stat-card__value" style="color: #065f46;">{{ summary.delivered }}</span>
+    <span class="stat-card__label">Delivered</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value" style="color: #92400e;">{{ summary.pending }}</span>
+    <span class="stat-card__label">Pending</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value" style="color: #991b1b;">{{ summary.urgent }}</span>
+    <span class="stat-card__label">Urgent</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value" style="color: var(--color-primary);">{{ summary.exceptions }}</span>
+    <span class="stat-card__label">Exceptions</span>
+  </div>
+</div>
+
+{# ── Delivered orders ── #}
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Performance overview</p>
-      <h2>Reports and analytics</h2>
-    </div>
-  </div>
-
-  <div class="hero-stats">
-    <div><strong>{{ summary.delivered }}</strong><span>Delivered</span></div>
-    <div><strong>{{ summary.pending }}</strong><span>Pending</span></div>
-    <div><strong>{{ summary.urgent }}</strong><span>Urgent</span></div>
-    <div><strong>{{ summary.exceptions }}</strong><span>Exceptions</span></div>
-  </div>
-
-  <div class="panel-header" style="margin-top:1rem;">
-    <div>
-      <p class="eyebrow">Delivered orders</p>
-      <h3>Recent completed jobs</h3>
-    </div>
+    <div><p class="eyebrow">Delivered Orders</p><h2>Recent Completed Jobs</h2></div>
   </div>
 
   {% if orders %}
@@ -32,17 +45,21 @@
         <tbody>
           {% for order in orders %}
             <tr>
-              <td>{{ order.reference_code }}</td>
+              <td><strong>{{ order.reference_code }}</strong></td>
               <td>{{ order.client.name }}</td>
               <td>{{ order.carrier|default:"Unassigned" }}</td>
-              <td><span class="status-pill success">Delivered</span></td>
+              <td><span class="badge badge--success">Delivered</span></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   {% else %}
-    <p class="empty-state">No delivered orders yet.</p>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">📋</span>
+      <div class="empty-state__title">No Deliveries Yet</div>
+      <div class="empty-state__desc">No completed deliveries to show. Orders will appear here once they are delivered.</div>
+    </div>
   {% endif %}
 </section>
 {% endblock %}

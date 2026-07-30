@@ -2,714 +2,1007 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  {% load static %}
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Pathcare Kenya{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}PathCare Kenya{% endblock %}</title>
 
-  <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#1e3a8a">
-  <meta name="description" content="PathCare Kenya - Laboratory Sample Tracking and Management System">
+  {# ── PWA ── #}
+  <meta name="theme-color" content="#0d9488">
+  <meta name="description" content="PathCare Kenya — Laboratory Sample Tracking &amp; Management">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PathCare">
-  
-  <!-- PWA Manifest -->
   <link rel="manifest" href="{% static 'manifest.json' %}">
-  
-  <!-- App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32x32.png' %}">
   <link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192x192.png' %}">
   <link rel="icon" type="image/png" sizes="512x512" href="{% static 'icons/icon-512x512.png' %}">
   <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
 
+  {# ── Fonts ── #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  {# ── Stylesheets ── #}
   <link rel="stylesheet" href="{% static 'tracking/css/style.css' %}">
   <link rel="stylesheet" href="{% static 'tracking/css/notifications.css' %}">
   <link rel="stylesheet" href="{% static 'tracking/css/navigation.css' %}">
   <link rel="stylesheet" href="{% static 'tracking/css/notifications-sidebar.css' %}">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   {% block extra_head %}{% endblock %}
 
   <style>
- :root {
-  /* Primary Colors */
-  --primary: #059669;        /* Emerald 600 — medical green */
-  --primary-soft: #ecfdf5;   /* Emerald 50 — soft background */
-  --danger: #ef4444;         /* Keep red for errors */
-  
-  /* Background Colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f0fdf4;   /* Very light green tint */
-  
-  /* Text Colors */
-  --text-main: #1f2937;
-  --text-inverse: #ffffff;
-  --text-muted: #6b7280;
-  
-  /* Border & Shadow */
-  --border-color: #d1fae5;   /* Light green border */
-  --panel-bg: #f0fdf4;       /* Light green panel */
-}
-      
-      /* Spacing & Radius */
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      
+    /* ═══════════════════════════════════════════
+       PATHCARE KENYA — DESIGN SYSTEM
+       ═══════════════════════════════════════════ */
+
+    /* ── Tokens ── */
+    :root {
+      /* Palette */
+      --color-primary:        #0d9488;
+      --color-primary-hover:  #0f766e;
+      --color-primary-soft:   #f0fdfa;
+      --color-primary-border: #99f6e4;
+      --color-primary-ink:    #115e59;
+
+      --color-surface:        #ffffff;
+      --color-surface-alt:    #f8fafc;
+      --color-surface-raised: #ffffff;
+
+      --color-text:           #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted:     #94a3b8;
+
+      --color-border:         #e2e8f0;
+      --color-border-light:   #f1f5f9;
+
+      --color-danger:         #ef4444;
+      --color-danger-soft:    #fef2f2;
+      --color-warning:        #f59e0b;
+      --color-warning-soft:   #fffbeb;
+      --color-success:        #10b981;
+      --color-success-soft:   #ecfdf5;
+      --color-info:           #3b82f6;
+      --color-info-soft:      #eff6ff;
+
+      /* Spacing */
+      --space-xs:  4px;
+      --space-sm:  8px;
+      --space-md:  16px;
+      --space-lg:  24px;
+      --space-xl:  32px;
+      --space-2xl: 48px;
+
+      /* Radius */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --radius-full: 9999px;
+
       /* Shadows */
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    
-    *{
-        margin:0;
-        padding:0;
-        box-sizing:border-box;
-        font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;
+      --shadow-sm:  0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:  0 4px 12px rgba(0,0,0,.06);
+      --shadow-lg:  0 12px 32px rgba(0,0,0,.08);
+      --shadow-xl:  0 24px 48px rgba(0,0,0,.10);
+      --shadow-nav: 0 2px 20px rgba(0,0,0,.08);
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --duration-fast: 150ms;
+      --duration-normal: 250ms;
+      --duration-slow: 400ms;
+
+      /* Typography */
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    body{
-        background:var(--bg-primary);
-        color:var(--text-main);
+    /* ── Reset ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-tap-highlight-color: transparent;
+      scroll-behavior: smooth;
     }
 
-    .navbar{
-        position:sticky;
-        top:0;
-        z-index:999;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        padding:15px 40px;
-        background:var(--primary);
-        color:var(--text-inverse);
-        box-shadow:0 2px 16px rgba(0,0,0,.18);
+    body {
+      background: var(--color-surface-alt);
+      color: var(--color-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
     }
 
-    .brand{
-        color:var(--text-inverse);
-        font-size:24px;
-        font-weight:bold;
-        text-decoration:none;
-        display:flex;
-        align-items:center;
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
     }
 
-    .brand-logo{
-        height:36px;
-        width:auto;
-        display:block;
+
+    /* ═══════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      padding: 0 var(--space-lg);
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: var(--shadow-nav);
+      backdrop-filter: blur(12px);
     }
 
-    nav{
-        display:flex;
-        align-items:center;
-        gap:15px;
-        flex-wrap:wrap;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
     }
 
-    nav a{
-        color:var(--text-inverse);
-        text-decoration:none;
-        padding:8px 14px;
-        border-radius:8px;
-        transition:.3s;
-        font-size:14px;
+    .brand-logo {
+      height: 36px;
+      width: auto;
+      border-radius: var(--radius-sm);
     }
 
-    nav a:hover{
-        background:rgba(255,255,255,.18);
+    /* ── Nav links (desktop) ── */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: var(--space-md);
     }
 
-    .nav-user{
-        display:flex;
-        flex-direction:column;
-        text-align:right;
-        margin-left:15px;
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
     }
 
-    .user-name{
-        font-weight:bold;
-        font-size:14px;
+    .nav-link:hover,
+    .nav-link:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
     }
 
-    .user-role{
-        font-size:12px;
-        opacity:.85;
+    .nav-link-logout { color: rgba(255,255,255,.65); }
+    .nav-link-logout:hover { background: rgba(239,68,68,.2); color: #fecaca; }
+
+    /* ── Desktop dropdown groups ── */
+    .nav-group { position: relative; }
+    .nav-group-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.85);
+      font: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-group-toggle:hover,
+    .nav-group-toggle:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
+    }
+    .nav-group-toggle .chevron {
+      font-size: .75rem;
+      margin-left: 2px;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .nav-group.active .nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 220px;
+      background: var(--color-surface-raised);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
+      padding: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity var(--duration-fast) var(--ease-out),
+                  transform var(--duration-fast) var(--ease-out),
+                  visibility var(--duration-fast);
+      z-index: 1001;
+    }
+    .nav-group.active .nav-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
-    .container{
-        max-width:1400px;
-        margin:auto;
-        padding:30px;
+    .nav-dropdown-header {
+      padding: 8px 12px 6px;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--color-text-muted);
     }
 
-    .messages{
-        margin-bottom:20px;
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-dropdown-item:hover,
+    .nav-dropdown-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
     }
 
-    .message{
-        padding:15px;
-        margin-bottom:10px;
-        border-radius:8px;
-        background:var(--panel-bg);
-        border-left:5px solid var(--primary);
-        box-shadow:0 2px 8px rgba(0,0,0,.08);
-        color:var(--text-main);
+    /* ── User info ── */
+    .nav-user {
+      display: flex;
+      flex-direction: column;
+      text-align: right;
+      margin-left: var(--space-md);
     }
 
-    .badge{
-        background:red;
-        color:white;
-        padding:2px 7px;
-        border-radius:20px;
-        font-size:12px;
-        margin-left:5px;
+    /* ── Hamburger ── */
+    .nav-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-toggle-btn:hover { background: rgba(255,255,255,.12); }
+
+
+    /* ═══════════════════════════════════════════
+       NOTIFICATIONS BELL
+       ═══════════════════════════════════════════ */
+    .notifications-icon-wrapper { position: relative; flex-shrink: 0; }
+    .notifications-icon-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: rgba(255,255,255,.1);
+      border: none;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out),
+                  transform var(--duration-fast) var(--ease-out);
+    }
+    .notifications-icon-button:hover { background: rgba(255,255,255,.2); transform: scale(1.05); }
+    .notifications-icon-button:active { transform: scale(.95); }
+
+    .notifications-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: var(--radius-full);
+      background: var(--color-danger);
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      pointer-events: none;
+      animation: badge-pulse 2s infinite;
+    }
+    @keyframes badge-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
     }
 
-    .nav-notifications{
-        position:relative;
+
+    /* ═══════════════════════════════════════════
+       MAIN CONTAINER
+       ═══════════════════════════════════════════ */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-lg);
     }
 
-    .notif-toggle{
-      cursor:pointer;
-      background:var(--bg-secondary);
-      border:1px solid var(--border-color);
-      color:var(--text-main);
-      font:inherit;
-      padding:8px 14px;
-      border-radius:8px;
-      transition:background 0.2s ease, border-color 0.2s ease;
+
+    /* ═══════════════════════════════════════════
+       MESSAGES
+       ═══════════════════════════════════════════ */
+    .messages { margin-bottom: var(--space-lg); }
+    .message {
+      padding: 14px 18px;
+      margin-bottom: var(--space-sm);
+      border-radius: var(--radius-md);
+      background: var(--color-primary-soft);
+      border-left: 4px solid var(--color-primary);
+      box-shadow: var(--shadow-sm);
+      font-size: .875rem;
+    }
+    .message.success { background: var(--color-success-soft); border-color: var(--color-success); }
+    .message.warning { background: var(--color-warning-soft); border-color: var(--color-warning); }
+    .message.error,
+    .message.danger { background: var(--color-danger-soft); border-color: var(--color-danger); }
+
+    /* ── Flash band ── */
+    .flash-band {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      z-index: 2000;
+      padding: 12px 24px;
+      border-radius: var(--radius-full);
+      font-size: .875rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--color-primary);
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      transition: transform var(--duration-normal) var(--ease-out);
+      max-width: calc(100% - 32px);
+      text-align: center;
+    }
+    .flash-band.show { transform: translateX(-50%) translateY(0); }
+    .flash-band.hide { transform: translateX(-50%) translateY(-120%); }
+    .flash-band.success { background: var(--color-success); }
+    .flash-band.warning { background: var(--color-warning); color: var(--color-text); }
+    .flash-band.danger,
+    .flash-band.error { background: var(--color-danger); }
+    .flash-band.info { background: var(--color-info); }
+
+
+    /* ═══════════════════════════════════════════
+       MOBILE SIDEBAR
+       ═══════════════════════════════════════════ */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(15,23,42,.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--duration-normal) var(--ease-out),
+                  visibility var(--duration-normal);
+    }
+    .sidebar-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+      max-width: 85vw;
+      z-index: 1101;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(-100%);
+      transition: transform var(--duration-normal) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
     }
 
-    .notif-toggle:hover{
-      background:var(--primary-soft);
-      border-color:var(--primary);
-      color:var(--primary);
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      flex-shrink: 0;
     }
+    .sidebar-header span { font-weight: 700; font-size: 1.05rem; }
 
-    .notif-dropdown{
-        display:none;
-        position:absolute;
-        right:0;
-        top:42px;
-        width:320px;
-        background:white;
-        color:#333;
-        border-radius:8px;
-        box-shadow:0 10px 25px rgba(0,0,0,.15);
-        overflow:hidden;
+    .sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
     }
+    .sidebar-close:hover { background: var(--color-surface-alt); }
 
-    .nav-notifications:hover .notif-dropdown{
-      display:block;
-    }
-
-    /* Support touch/click toggle on mobile: show dropdown when parent has .open */
-    .nav-notifications.open .notif-dropdown{
-      display:block;
-    }
-
-    .notif-dropdown {
-      max-height: 380px;
+    .sidebar-nav {
+      flex: 1;
       overflow-y: auto;
+      padding: var(--space-sm) 0;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .notif-dropdown.open {
+    .sidebar-nav-item-direct {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px var(--space-lg);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+    .sidebar-nav-item-direct:hover,
+    .sidebar-nav-item-direct:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
+
+    .sidebar-nav-group { border-bottom: 1px solid var(--color-border-light); }
+    .sidebar-nav-group:last-child { border-bottom: none; }
+    .sidebar-nav-group-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 13px var(--space-lg);
+      background: none;
+      border: none;
+      color: var(--color-text);
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group-toggle:hover { background: var(--color-surface-alt); }
+    .sidebar-nav-group-toggle .chevron {
+      font-size: .65rem;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .sidebar-nav-items {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--duration-normal) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-items { max-height: 500px; }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px var(--space-lg) 11px 52px;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-item:hover,
+    .sidebar-nav-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
+
+
+    /* ═══════════════════════════════════════════
+       NOTIFICATIONS PANEL
+       ═══════════════════════════════════════════ */
+    .notifications-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      background: rgba(15,23,42,.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--duration-normal) var(--ease-out),
+                  visibility var(--duration-normal);
+    }
+    .notifications-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .notifications-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 90vw;
+      z-index: 1201;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(100%);
+      transition: transform var(--duration-normal) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+    }
+    .notifications-sidebar.open { transform: translateX(0); }
+
+    .notifications-sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      flex-shrink: 0;
+    }
+    .notifications-sidebar-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .notifications-count {
+      background: var(--color-danger);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .notifications-sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+    }
+    .notifications-sidebar-close:hover { background: var(--color-surface-alt); }
+
+    .notifications-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .notification-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .notification-item:hover { background: var(--color-surface-alt); }
+    .notification-item.unread { background: var(--color-primary-soft); }
+
+    .notification-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary);
+      flex-shrink: 0;
+      margin-top: 5px;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .notification-item:not(.unread) .notification-indicator { background: var(--color-border); }
+
+    .notification-content a {
+      text-decoration: none;
+      color: inherit;
       display: block;
     }
-
-    .notif-item{
-        padding:12px;
-        border-bottom:1px solid #eee;
+    .notification-message {
+      display: block;
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+    .notification-time {
+      font-size: .72rem;
+      color: var(--color-text-muted);
     }
 
-    .notif-item:hover{
-        background:var(--bg-secondary);
+    .notifications-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2xl);
+      color: var(--color-text-muted);
+      gap: var(--space-sm);
+    }
+    .notifications-empty-icon { font-size: 2.5rem; }
+    .notifications-empty-text { font-size: .9rem; font-weight: 500; }
+
+    .notifications-footer {
+      display: flex;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border-light);
+      flex-shrink: 0;
+    }
+    .notifications-footer button {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-alt);
+      color: var(--color-text-secondary);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+    .notifications-footer button:hover { background: var(--color-border-light); }
+    .notifications-footer .clear-btn { color: var(--color-danger); }
+    .notifications-footer .clear-btn:hover { background: var(--color-danger-soft); border-color: var(--color-danger); }
+
+
+    /* ═══════════════════════════════════════════
+       MOBILE BOTTOM TAB BAR
+       ═══════════════════════════════════════════ */
+    .mobile-tabbar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-light);
+      box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+      padding: 6px 0 env(safe-area-inset-bottom, 0);
+      justify-content: space-around;
+      align-items: center;
     }
 
-    .notif-item a{
-        color:var(--primary);
-        text-decoration:none;
-        display:block;
-        margin-bottom:5px;
-        word-break:break-word;
+    .mobile-tabbar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 10px;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: var(--color-text-muted);
+      font-size: .65rem;
+      font-weight: 600;
+      transition: color var(--duration-fast) var(--ease-out),
+                  background var(--duration-fast) var(--ease-out);
+      min-width: 56px;
+    }
+    .mobile-tabbar a:hover,
+    .mobile-tabbar a.active { color: var(--color-primary); }
+    .mobile-tabbar a:active { background: var(--color-primary-soft); }
+    .mobile-tabbar .icon { font-size: 1.35rem; }
+
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .nav-links { display: none; }
+      .nav-toggle-btn { display: block; }
     }
 
-    .notif-item small {
-        display:block;
-        color:#666;
-        font-size:12px;
+    @media (max-width: 768px) {
+      .navbar {
+        height: 56px;
+        padding: 0 var(--space-md);
+      }
+      .brand { font-size: 1.1rem; }
+      .brand-logo { height: 30px; }
+
+      .container {
+        padding: var(--space-md);
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+      }
+
+      .mobile-tabbar { display: flex; }
+
+      .notifications-sidebar { width: 100%; max-width: 100%; }
+
+      .flash-band { top: 64px; }
+
+      .nav-dropdown {
+        position: fixed;
+        top: 64px;
+        left: var(--space-md);
+        right: var(--space-md);
+        width: auto;
+      }
     }
 
-    .notif-empty{
-        padding:20px;
-        text-align:center;
-        color:#777;
+
+    /* ═══════════════════════════════════════════
+       SHARED UTILITY COMPONENTS
+       ═══════════════════════════════════════════ */
+
+    /* Card */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--duration-fast) var(--ease-out);
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+    .card--interactive { cursor: pointer; }
+    .card--interactive:active { transform: scale(.985); }
+
+    /* Stat card */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--space-md);
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-card__value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .stat-card__label {
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--color-text-muted);
     }
 
-    .mobile-tabbar{
-        display:none;
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: .875rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn--primary {
+      background: var(--color-primary);
+      color: #fff;
+    }
+    .btn--primary:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-md); }
+    .btn--outline {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1.5px solid var(--color-primary-border);
+    }
+    .btn--outline:hover { background: var(--color-primary-soft); }
+    .btn--danger {
+      background: var(--color-danger);
+      color: #fff;
+    }
+    .btn--danger:hover { background: #dc2626; }
+    .btn--sm { padding: 8px 16px; font-size: .8rem; }
+    .btn--lg { padding: 14px 32px; font-size: 1rem; }
+    .btn--block { width: 100%; }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      line-height: 1.5;
+    }
+    .badge--primary { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+    .badge--success { background: var(--color-success-soft); color: #065f46; }
+    .badge--warning { background: var(--color-warning-soft); color: #92400e; }
+    .badge--danger { background: var(--color-danger-soft); color: #991b1b; }
+
+    /* Section heading */
+    .section-heading {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--space-md);
     }
 
-    @media(max-width:768px){
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-border-light) 25%, #e8ecf1 50%, var(--color-border-light) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
-        .navbar{
-            flex-direction:column;
-            align-items:flex-start;
-            padding:15px;
-        }
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2xl) var(--space-lg);
+      text-align: center;
+      gap: var(--space-sm);
+    }
+    .empty-state__icon { font-size: 3rem; opacity: .5; }
+    .empty-state__title { font-weight: 700; font-size: 1rem; }
+    .empty-state__desc { color: var(--color-text-muted); font-size: .85rem; max-width: 320px; }
 
-        nav{
-            width:100%;
-            margin-top:15px;
-            flex-direction:column;
-            align-items:flex-start;
-            gap:10px;
-        }
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--color-border-light);
+      margin: var(--space-md) 0;
+    }
 
-        nav a{
-            width:100%;
-        }
-
-        .container{
-            padding:20px;
-            margin-bottom:100px;
-        }
-
-        .mobile-tabbar{
-            display:flex;
-            justify-content:space-around;
-            align-items:center;
-            position:fixed;
-            bottom:0;
-            left:0;
-            width:100%;
-            background:var(--panel-bg);
-            border-top:1px solid var(--border-color);
-            box-shadow:0 -2px 12px rgba(0,0,0,.12);
-            padding:10px 0;
-            z-index:999;
-        }
-
-        .mobile-tabbar a{
-            text-decoration:none;
-            color:var(--text-main);
-            font-size:12px;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            padding:4px 0;
-        }
-
-        .mobile-tabbar a:hover,
-        .mobile-tabbar a.active {
-            color:var(--primary);
-        }
-
-        .mobile-tabbar .icon{
-            font-size:20px;
-            margin-bottom:3px;
-        }
-
-        .notif-toggle{
-            width:100%;
-            text-align:left;
-        }
-
-        .notif-dropdown {
-            position:fixed;
-            top:72px;
-            right:12px;
-            left:12px;
-            width:auto;
-            max-width:none;
-            z-index:10000;
-            box-shadow:0 14px 35px rgba(0,0,0,.18);
-        }
+    /* Focus ring */
+    :focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      border-radius: 2px;
     }
   </style>
 </head>
 <body>
-  <div class="navbar">
-    <a class="brand" href="{% url 'accounts:role_redirect' %}">
-      <img src="{% static 'icons/icon-192x192.png' %}" alt="PathCare Kenya" class="brand-logo">
-    Pathcare
+  {# ── NAVBAR ── #}
+  <header class="navbar" role="banner">
+    <a class="brand" href="{% url 'accounts:role_redirect' %}" aria-label="PathCare Kenya home">
+      <img src="{% static 'icons/icon-192x192.png' %}" alt="" class="brand-logo" aria-hidden="true">
+      PathCare
     </a>
-    
-    <!-- Mobile hamburger menu -->
-    <button class="nav-toggle-btn" id="nav-toggle" aria-label="Toggle navigation">☰</button>
-    
-    <!-- Desktop/Tablet Navigation -->
-    <nav class="nav-links" id="nav-links">
+
+    <button class="nav-toggle-btn" id="nav-toggle" aria-label="Open navigation menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    {# Desktop nav #}
+    <nav class="nav-links" id="nav-links" aria-label="Main navigation">
       {% if user.is_authenticated %}
-        {% if user.role == 'super_admin' %}
-          <!-- Dashboard -->
-          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Carrier Management Group -->
-          <div class="nav-group">
-            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
-              <i data-lucide="truck"></i>
-              <span>Carrier Mgmt</span>
-              <span class="chevron">⋮</span>
-            </button>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-header">Carrier Management</div>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_monitoring' %}">
-                <i data-lucide="map-pin"></i><span>Monitoring</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_issue_list' %}">
-                <i data-lucide="message-circle"></i><span>Issues</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_list' %}">
-                <i data-lucide="truck"></i><span>Carriers</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Administration Group -->
-          <div class="nav-group">
-            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
-              <i data-lucide="shield-alert"></i>
-              <span>Admin</span>
-              <span class="chevron">⋮</span>
-            </button>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-header">Administration</div>
-              <a class="nav-dropdown-item" href="{% url 'accounts:user_management' %}">
-                <i data-lucide="users"></i><span>Users</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:client_list' %}">
-                <i data-lucide="briefcase"></i><span>Clients</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:facility_list' %}">
-                <i data-lucide="building"></i><span>Facilities</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Reports -->
-          <a class="nav-link" href="{% url 'tracking:reports_view' %}">
-            <i data-lucide="chart-column"></i><span>Reports</span>
-          </a>
-
-          <!-- Profile -->
-          <a class="nav-link" href="{% url 'accounts:account_index' %}">
-            <i data-lucide="user-round"></i><span>Profile</span>
-          </a>
-
-        {% elif user.role == 'dispatcher' %}
-          <!-- Dashboard -->
-          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Carrier Management Group -->
-          <div class="nav-group">
-            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
-              <i data-lucide="truck"></i>
-              <span>Carriers</span>
-              <span class="chevron">⋮</span>
-            </button>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-header">Carrier Management</div>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_monitoring' %}">
-                <i data-lucide="map-pin"></i><span>Monitoring</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_issue_list' %}">
-                <i data-lucide="message-circle"></i><span>Issues</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:carrier_list' %}">
-                <i data-lucide="truck"></i><span>View Carriers</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Orders & Resources Group -->
-          <div class="nav-group">
-            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
-              <i data-lucide="package"></i>
-              <span>Operations</span>
-              <span class="chevron">⋮</span>
-            </button>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-header">Operations</div>
-              <a class="nav-dropdown-item" href="{% url 'tracking:order_search' %}">
-                <i data-lucide="package-plus"></i><span>Pickup Queue</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:client_list' %}">
-                <i data-lucide="users"></i><span>Clients</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:facility_list' %}">
-                <i data-lucide="building"></i><span>Facilities</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Reports -->
-          <a class="nav-link" href="{% url 'tracking:reports_view' %}">
-            <i data-lucide="chart-column"></i><span>Reports</span>
-          </a>
-
-          <!-- Profile -->
-          <a class="nav-link" href="{% url 'accounts:account_index' %}">
-            <i data-lucide="user-round"></i><span>Profile</span>
-          </a>
-
-        {% elif user.role == 'carrier' %}
-          <!-- Assigned Pickups -->
-          <a class="nav-link" href="{% url 'tracking:carrier_view' %}">
-            <i data-lucide="package-plus"></i><span>Assigned Pickups</span>
-          </a>
-          
-          <!-- Navigation -->
-          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="map-pinned"></i><span>Navigation</span>
-          </a>
-          
-          <!-- Profile -->
-          <a class="nav-link" href="{% url 'accounts:account_index' %}">
-            <i data-lucide="user-round"></i><span>Profile</span>
-          </a>
-
-        {% elif user.role == 'lab_staff' %}
-          <!-- Lab Dashboard -->
-          <a class="nav-link" href="{% url 'tracking:lab_dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Lab Dashboard</span>
-          </a>
-          
-          <!-- Profile -->
-          <a class="nav-link" href="{% url 'accounts:account_index' %}">
-            <i data-lucide="user-round"></i><span>Profile</span>
-          </a>
-
-        {% elif user.role == 'client' %}
-          <!-- Dashboard -->
-          <a class="nav-link" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Orders Group -->
-          <div class="nav-group">
-            <button class="nav-group-toggle" aria-haspopup="true" aria-expanded="false">
-              <i data-lucide="package"></i>
-              <span>Orders</span>
-              <span class="chevron">⋮</span>
-            </button>
-            <div class="nav-dropdown">
-              <div class="nav-dropdown-header">Manage Orders</div>
-              <a class="nav-dropdown-item" href="{% url 'tracking:client_request_pickup' %}">
-                <i data-lucide="package-plus"></i><span>Request Pickup</span>
-              </a>
-              <a class="nav-dropdown-item" href="{% url 'tracking:order_search' %}">
-                <i data-lucide="clipboard-list"></i><span>My Pickups</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Profile -->
-          <a class="nav-link" href="{% url 'accounts:account_index' %}">
-            <i data-lucide="user-round"></i><span>Profile</span>
-          </a>
-        {% endif %}
-
-        {% comment %}Notifications sidebar{% endcomment %}
-        <div class="notifications-icon-wrapper">
-          <button class="notifications-icon-button" id="notif-toggle" aria-label="Toggle notifications">
-            <i data-lucide="bell"></i>
-            <span>Notifications</span>
-            {% if notifications_unread_count %}<span class="notifications-badge">{{ notifications_unread_count }}</span>{% endif %}
-          </button>
-        </div>
-
-        <a class="nav-link nav-link-logout" href="{% url 'accounts:logout' %}"><i data-lucide="log-out"></i><span>Logout</span></a>
+        {% include "tracking/partials/_nav_desktop.html" %}
+        <a class="nav-link nav-link-logout" href="{% url 'accounts:logout' %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+        </a>
       {% else %}
-        <a href="{% url 'accounts:login' %}">Login</a>
+        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
       {% endif %}
     </nav>
-  </div>
 
-  <!-- Mobile Sidebar -->
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
-  <div class="sidebar" id="sidebar">
+    {% if user.is_authenticated %}
+      <div class="notifications-icon-wrapper">
+        <button id="notif-toggle" class="notifications-icon-button" aria-label="Open notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          {% if notifications_unread_count %}
+            <span class="notifications-badge">{{ notifications_unread_count }}</span>
+          {% endif %}
+        </button>
+      </div>
+    {% endif %}
+  </header>
+
+  {# ── MOBILE SIDEBAR ── #}
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Mobile navigation" aria-hidden="true">
     <div class="sidebar-header">
-      <span style="font-weight: bold; color: #333;">Navigation</span>
-      <button class="sidebar-close" id="sidebar-close" aria-label="Close sidebar">✕</button>
+      <span>Navigation</span>
+      <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <nav class="sidebar-nav">
       {% if user.is_authenticated %}
-        {% if user.role == 'super_admin' %}
-          <!-- Dashboard -->
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Carrier Management Group -->
-          <div class="sidebar-nav-group">
-            <button class="sidebar-nav-group-toggle" aria-expanded="false">
-              <span><i data-lucide="truck"></i>Carrier Mgmt</span>
-              <span class="chevron">▼</span>
-            </button>
-            <div class="sidebar-nav-items">
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_monitoring' %}">
-                <i data-lucide="map-pin"></i><span>Monitoring</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_issue_list' %}">
-                <i data-lucide="message-circle"></i><span>Issues</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_list' %}">
-                <i data-lucide="truck"></i><span>Carriers</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Administration Group -->
-          <div class="sidebar-nav-group">
-            <button class="sidebar-nav-group-toggle" aria-expanded="false">
-              <span><i data-lucide="shield-alert"></i>Administration</span>
-              <span class="chevron">▼</span>
-            </button>
-            <div class="sidebar-nav-items">
-              <a class="sidebar-nav-item" href="{% url 'accounts:user_management' %}">
-                <i data-lucide="users"></i><span>Users</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:client_list' %}">
-                <i data-lucide="briefcase"></i><span>Clients</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:facility_list' %}">
-                <i data-lucide="building"></i><span>Facilities</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Reports -->
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:reports_view' %}">
-            <i data-lucide="chart-column"></i><span>Reports</span>
-          </a>
-
-        {% elif user.role == 'dispatcher' %}
-          <!-- Dashboard -->
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Carrier Management Group -->
-          <div class="sidebar-nav-group">
-            <button class="sidebar-nav-group-toggle" aria-expanded="false">
-              <span><i data-lucide="truck"></i>Carriers</span>
-              <span class="chevron">▼</span>
-            </button>
-            <div class="sidebar-nav-items">
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_monitoring' %}">
-                <i data-lucide="map-pin"></i><span>Monitoring</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_issue_list' %}">
-                <i data-lucide="message-circle"></i><span>Issues</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:carrier_list' %}">
-                <i data-lucide="truck"></i><span>View Carriers</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Operations Group -->
-          <div class="sidebar-nav-group">
-            <button class="sidebar-nav-group-toggle" aria-expanded="false">
-              <span><i data-lucide="package"></i>Operations</span>
-              <span class="chevron">▼</span>
-            </button>
-            <div class="sidebar-nav-items">
-              <a class="sidebar-nav-item" href="{% url 'tracking:order_search' %}">
-                <i data-lucide="package-plus"></i><span>Pickup Queue</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:client_list' %}">
-                <i data-lucide="users"></i><span>Clients</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:facility_list' %}">
-                <i data-lucide="building"></i><span>Facilities</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Reports -->
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:reports_view' %}">
-            <i data-lucide="chart-column"></i><span>Reports</span>
-          </a>
-
-        {% elif user.role == 'carrier' %}
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:carrier_view' %}">
-            <i data-lucide="package-plus"></i><span>Assigned Pickups</span>
-          </a>
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="map-pinned"></i><span>Navigation</span>
-          </a>
-
-        {% elif user.role == 'lab_staff' %}
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:lab_dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Lab Dashboard</span>
-          </a>
-
-        {% elif user.role == 'client' %}
-          <a class="sidebar-nav-item-direct" href="{% url 'tracking:dashboard' %}">
-            <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
-          </a>
-
-          <!-- Orders Group -->
-          <div class="sidebar-nav-group">
-            <button class="sidebar-nav-group-toggle" aria-expanded="false">
-              <span><i data-lucide="package"></i>Orders</span>
-              <span class="chevron">▼</span>
-            </button>
-            <div class="sidebar-nav-items">
-              <a class="sidebar-nav-item" href="{% url 'tracking:client_request_pickup' %}">
-                <i data-lucide="package-plus"></i><span>Request Pickup</span>
-              </a>
-              <a class="sidebar-nav-item" href="{% url 'tracking:order_search' %}">
-                <i data-lucide="clipboard-list"></i><span>My Pickups</span>
-              </a>
-            </div>
-          </div>
-        {% endif %}
-
-        <!-- Divider -->
-        <div style="border-bottom: 1px solid #f0f0f0; margin: 10px 0;"></div>
-
-        <!-- Notifications & Profile (always at bottom) -->
-        <button class="sidebar-nav-item-direct" id="sidebar-notif-toggle" style="width: 100%; text-align: left; background: none; border: none; padding: 14px 20px; cursor: pointer;">
-          <i data-lucide="bell"></i>
-          <span>Notifications</span>
-        </button>
-        <a class="sidebar-nav-item-direct" href="{% url 'accounts:account_index' %}">
-          <i data-lucide="user-round"></i><span>Profile</span>
-        </a>
-        <a class="sidebar-nav-item-direct" href="{% url 'accounts:logout' %}" style="color: #ef4444;">
-          <i data-lucide="log-out"></i><span>Logout</span>
-        </a>
+        {% include "tracking/partials/_nav_sidebar.html" %}
       {% endif %}
     </nav>
-  </div>
+  </aside>
 
-  <!-- Notifications Sidebar -->
-  <div class="notifications-overlay" id="notifications-overlay"></div>
-  <div class="notifications-sidebar" id="notifications-sidebar">
+  {# ── NOTIFICATIONS PANEL ── #}
+  <div class="notifications-overlay" id="notifications-overlay" aria-hidden="true"></div>
+  <aside class="notifications-sidebar" id="notifications-sidebar" aria-label="Notifications" aria-hidden="true">
     <div class="notifications-sidebar-header">
       <h2>
-        <i data-lucide="bell"></i>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
         Notifications
         {% if notifications_unread_count %}<span class="notifications-count">{{ notifications_unread_count }}</span>{% endif %}
       </h2>
-      <button class="notifications-sidebar-close" id="notifications-close" aria-label="Close notifications">✕</button>
+      <button class="notifications-sidebar-close" id="notifications-close" aria-label="Close notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    
+
     <div class="notifications-content">
       {% if notifications_list %}
         <div class="notifications-list">
           {% for notification in notifications_list %}
             <div class="notification-item {% if not notification.is_read %}unread{% endif %}" data-pk="{{ notification.pk }}">
-              <div class="notification-indicator"></div>
+              <div class="notification-indicator" aria-hidden="true"></div>
               <div class="notification-content">
                 <a href="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-mark-url="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-next-url="/">
                   <span class="notification-message">{{ notification.message }}</span>
@@ -721,7 +1014,7 @@
         </div>
       {% else %}
         <div class="notifications-empty">
-          <span class="notifications-empty-icon">🔕</span>
+          <span class="notifications-empty-icon" aria-hidden="true">🔕</span>
           <div class="notifications-empty-text">No notifications yet</div>
         </div>
       {% endif %}
@@ -729,16 +1022,17 @@
 
     {% if notifications_list %}
       <div class="notifications-footer">
-        <button class="mark-read-btn">Mark all as read</button>
+        <button class="mark-read-btn">Mark all read</button>
         <button class="clear-btn">Clear all</button>
       </div>
     {% endif %}
-  </div>
+  </aside>
 
-  <!-- flash notification band (auto-hide) -->
+  {# ── FLASH BAND ── #}
   <div id="flash-band" class="flash-band" role="status" aria-live="polite" style="display:none;"></div>
 
-  <div class="container">
+  {# ── MAIN CONTENT ── #}
+  <main class="container" id="main-content">
     {% if messages %}
       <div class="messages">
         {% for message in messages %}
@@ -748,304 +1042,275 @@
     {% endif %}
 
     {% block content %}{% endblock %}
-  </div>
+  </main>
 
+  {# ── MOBILE TAB BAR ── #}
   {% if user.is_authenticated %}
-    <div class="mobile-tabbar" aria-label="Mobile navigation">
+    <nav class="mobile-tabbar" aria-label="Mobile navigation">
       {% if user.role == 'super_admin' or user.role == 'dispatcher' %}
-        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
-        <a href="{% url 'tracking:client_list' %}"><i data-lucide="users"></i><span>Clients</span></a>
-        <a href="{% url 'tracking:carrier_list' %}"><i data-lucide="truck"></i><span>Carriers</span></a>
-        <a href="{% url 'tracking:reports_view' %}"><i data-lucide="chart-column"></i><span>Reports</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
+        <a href="{% url 'tracking:client_list' %}"><span class="icon">👥</span><span>Clients</span></a>
+        <a href="{% url 'tracking:carrier_list' %}"><span class="icon">🚚</span><span>Carriers</span></a>
+        <a href="{% url 'tracking:reports_view' %}"><span class="icon">📈</span><span>Reports</span></a>
       {% elif user.role == 'carrier' %}
-        <a href="{% url 'tracking:carrier_view' %}"><i data-lucide="clipboard-list"></i><span>Pickups</span></a>
-        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="map-pinned"></i><span>Map</span></a>
-        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+        <a href="{% url 'tracking:carrier_view' %}"><span class="icon">📋</span><span>Pickups</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">🗺️</span><span>Map</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
       {% elif user.role == 'lab_staff' %}
-        <a href="{% url 'tracking:lab_dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Lab</span></a>
-        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+        <a href="{% url 'tracking:lab_dashboard' %}"><span class="icon">🧪</span><span>Lab</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
       {% elif user.role == 'client' %}
-        <a href="{% url 'tracking:dashboard' %}"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
-        <a href="{% url 'tracking:client_request_pickup' %}"><i data-lucide="package-plus"></i><span>Request</span></a>
-        <a href="{% url 'tracking:order_search' %}"><i data-lucide="clipboard-list"></i><span>My pickups</span></a>
-        <a href="{% url 'accounts:account_index' %}"><i data-lucide="user-round"></i><span>Profile</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
+        <a href="{% url 'tracking:client_request_pickup' %}"><span class="icon">📦</span><span>Request</span></a>
+        <a href="{% url 'tracking:order_search' %}"><span class="icon">📋</span><span>Pickups</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
       {% endif %}
-      <a href="{% url 'accounts:logout' %}"><i data-lucide="log-out"></i><span>Logout</span></a>
-    </div>
+      <a href="{% url 'accounts:logout' %}"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
   {% endif %}
 
+  {# ── SCRIPTS ── #}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
   {% block extra_js %}{% endblock %}
-  <script>
-    function renderIcons() {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
-    }
-    
-    document.addEventListener('DOMContentLoaded', renderIcons);
-  </script>
   <script src="{% static 'tracking/js/notifications.js' %}"></script>
+
   <script>
-    // Flash band handler: shows first Django message briefly and hides original message block
-    (function(){
-      function ready(fn){ if(document.readyState!='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
-      ready(function(){
-        try{
-          var messagesEl = document.querySelector('.messages');
-          var flash = document.getElementById('flash-band');
-          if(!messagesEl || !flash) return;
+    /* ═══════════════════════════════════════════
+       PATHCARE KENYA — CORE SCRIPTS
+       ═══════════════════════════════════════════ */
+    (function() {
+      'use strict';
 
-          var first = messagesEl.querySelector('.message');
-          if(!first) return;
-          var text = first.textContent.trim();
-          var classes = first.className || '';
+      /* ── Flash band ── */
+      function initFlashBand() {
+        var messagesEl = document.querySelector('.messages');
+        var flash = document.getElementById('flash-band');
+        if (!messagesEl || !flash) return;
 
-          // Determine severity class
-          if(/success/.test(classes)) flash.classList.add('success');
-          else if(/warning/.test(classes)) flash.classList.add('warning');
-          else if(/error|danger/.test(classes)) flash.classList.add('danger');
-          else if(/info/.test(classes)) flash.classList.add('info');
+        var first = messagesEl.querySelector('.message');
+        if (!first) return;
 
-          flash.textContent = text;
-          // show
-          flash.classList.add('show');
-          flash.style.display = '';
+        var text = first.textContent.trim();
+        var cls = first.className || '';
 
-          // auto-hide after 3.2s
-          var hideTimer = setTimeout(function(){
-            flash.classList.remove('show'); flash.classList.add('hide');
-            setTimeout(function(){ flash.style.display='none'; flash.classList.remove('hide'); }, 300);
-          }, 3200);
+        if (/success/.test(cls)) flash.classList.add('success');
+        else if (/warning/.test(cls)) flash.classList.add('warning');
+        else if (/error|danger/.test(cls)) flash.classList.add('danger');
+        else if (/info/.test(cls)) flash.classList.add('info');
 
-          // clicking the band hides it quickly
-          flash.addEventListener('click', function(){ clearTimeout(hideTimer); flash.classList.remove('show'); flash.classList.add('hide'); setTimeout(function(){ flash.style.display='none'; flash.classList.remove('hide'); }, 200); });
+        flash.textContent = text;
+        flash.classList.add('show');
+        flash.style.display = '';
 
-          // hide original messages to avoid duplication
-          messagesEl.style.display = 'none';
-        }catch(e){ console.error('flash band error', e); }
+        var timer = setTimeout(function() {
+          flash.classList.remove('show');
+          flash.classList.add('hide');
+          setTimeout(function() { flash.style.display = 'none'; flash.classList.remove('hide'); }, 300);
+        }, 3500);
+
+        flash.addEventListener('click', function() {
+          clearTimeout(timer);
+          flash.classList.remove('show');
+          flash.classList.add('hide');
+          setTimeout(function() { flash.style.display = 'none'; flash.classList.remove('hide'); }, 200);
+        });
+
+        messagesEl.style.display = 'none';
+      }
+
+      /* ── Sidebar ── */
+      function initSidebar() {
+        var toggle   = document.getElementById('nav-toggle');
+        var sidebar  = document.getElementById('sidebar');
+        var overlay  = document.getElementById('sidebar-overlay');
+        var closeBtn = document.getElementById('sidebar-close');
+        if (!toggle || !sidebar || !overlay || !closeBtn) return;
+
+        function open() {
+          sidebar.classList.add('open');
+          sidebar.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('open');
+          overlay.setAttribute('aria-hidden', 'false');
+          toggle.setAttribute('aria-expanded', 'true');
+          document.body.style.overflow = 'hidden';
+        }
+        function close() {
+          sidebar.classList.remove('open');
+          sidebar.setAttribute('aria-hidden', 'true');
+          overlay.classList.remove('open');
+          overlay.setAttribute('aria-hidden', 'true');
+          toggle.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+
+        toggle.addEventListener('click', open);
+        closeBtn.addEventListener('click', close);
+        overlay.addEventListener('click', close);
+
+        document.querySelectorAll('.sidebar-nav a, .sidebar-nav button.sidebar-nav-item-direct').forEach(function(el) {
+          el.addEventListener('click', function() { close(); });
+        });
+
+        // Ensure the sidebar is always closed after navigation or page refresh.
+        close();
+      }
+
+      /* ── Sidebar accordion groups ── */
+      function initSidebarGroups() {
+        document.querySelectorAll('.sidebar-nav-group-toggle').forEach(function(toggle) {
+          toggle.addEventListener('click', function() {
+            var group = this.closest('.sidebar-nav-group');
+            if (!group) return;
+            var isActive = group.classList.contains('active');
+            group.classList.toggle('active');
+            this.setAttribute('aria-expanded', String(!isActive));
+          });
+        });
+      }
+
+      /* ── Desktop nav groups ── */
+      function initNavGroups() {
+        document.querySelectorAll('.nav-group-toggle').forEach(function(toggle) {
+          toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            var group = this.closest('.nav-group');
+            if (!group) return;
+            var isActive = group.classList.contains('active');
+
+            document.querySelectorAll('.nav-group.active').forEach(function(g) {
+              if (g !== group) { g.classList.remove('active'); g.querySelector('.nav-group-toggle').setAttribute('aria-expanded', 'false'); }
+            });
+
+            group.classList.toggle('active');
+            this.setAttribute('aria-expanded', String(!isActive));
+          });
+        });
+
+        document.addEventListener('click', function(e) {
+          document.querySelectorAll('.nav-group.active').forEach(function(group) {
+            if (!group.contains(e.target)) {
+              group.classList.remove('active');
+              group.querySelector('.nav-group-toggle').setAttribute('aria-expanded', 'false');
+            }
+          });
+        });
+      }
+
+      /* ── Notifications panel ── */
+      function initNotifications() {
+        var panel   = document.getElementById('notifications-sidebar');
+        var overlay = document.getElementById('notifications-overlay');
+        var close   = document.getElementById('notifications-close');
+        var bell    = document.getElementById('notif-toggle');
+        var sidebarBell = document.getElementById('sidebar-notif-toggle');
+        if (!panel || !overlay || !close) return;
+
+        function open() {
+          panel.classList.add('open');
+          panel.setAttribute('aria-hidden', 'false');
+          overlay.classList.add('open');
+          overlay.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        }
+        function closePanel() {
+          panel.classList.remove('open');
+          panel.setAttribute('aria-hidden', 'true');
+          overlay.classList.remove('open');
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+
+        if (bell) bell.addEventListener('click', open);
+        if (sidebarBell) {
+          sidebarBell.addEventListener('click', function() {
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) { sidebar.classList.remove('open'); sidebar.setAttribute('aria-hidden', 'true'); }
+            var sOverlay = document.getElementById('sidebar-overlay');
+            if (sOverlay) { sOverlay.classList.remove('open'); sOverlay.setAttribute('aria-hidden', 'true'); }
+            document.body.style.overflow = 'hidden';
+            setTimeout(open, 200);
+          });
+        }
+        close.addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+        document.querySelectorAll('.notification-item a').forEach(function(link) {
+          link.addEventListener('click', function() { closePanel(); });
+        });
+
+        /* Mark all read */
+        var markBtn = document.querySelector('.mark-read-btn');
+        if (markBtn) {
+          markBtn.addEventListener('click', function() {
+            var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+            var csrfVal = csrf ? csrf.value : (document.cookie.split('; ').find(function(r) { return r.startsWith('csrftoken='); }) || '').split('=')[1] || '';
+            fetch('{% url "tracking:mark_all_notifications_read" %}', {
+              method: 'POST', headers: { 'X-CSRFToken': csrfVal }
+            }).then(function(r) { return r.json(); }).then(function(data) {
+              if (data.success) {
+                document.querySelectorAll('.notification-item.unread').forEach(function(item) {
+                  item.classList.remove('unread');
+                });
+                var footer = document.querySelector('.notifications-footer');
+                if (footer) footer.style.display = 'none';
+              }
+            }).catch(function(e) { console.error(e); });
+          });
+        }
+
+        /* Clear all */
+        var clearBtn = document.querySelector('.clear-btn');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function() {
+            if (!confirm('Clear all notifications?')) return;
+            var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+            var csrfVal = csrf ? csrf.value : (document.cookie.split('; ').find(function(r) { return r.startsWith('csrftoken='); }) || '').split('=')[1] || '';
+            fetch('{% url "tracking:clear_all_notifications" %}', {
+              method: 'POST', headers: { 'X-CSRFToken': csrfVal }
+            }).then(function(r) { return r.json(); }).then(function(data) {
+              if (data.success) {
+                var content = document.querySelector('.notifications-content');
+                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications yet</div></div>';
+                var footer = document.querySelector('.notifications-footer');
+                if (footer) footer.remove();
+                var badge = document.querySelector('.notifications-badge');
+                if (badge) badge.remove();
+              }
+            }).catch(function(e) { console.error(e); });
+          });
+        }
+      }
+
+      /* ── Active tab bar link ── */
+      function highlightActiveTab() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.mobile-tabbar a').forEach(function(a) {
+          if (a.getAttribute('href') && path.startsWith(a.getAttribute('href'))) {
+            a.classList.add('active');
+          }
+        });
+      }
+
+      /* ── Bootstrap ── */
+      document.addEventListener('DOMContentLoaded', function() {
+        initFlashBand();
+        initSidebar();
+        initSidebarGroups();
+        initNavGroups();
+        initNotifications();
+        highlightActiveTab();
       });
     })();
   </script>
 
-  <!-- Service Worker Registration -->
+  {# ── Service Worker ── #}
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('{% static "service-worker.js" %}')
-          .then(function(registration) {
-            console.log('Service Worker registered:', registration);
-          })
-          .catch(function(error) {
-            console.log('Service Worker registration failed:', error);
-          });
+          .then(function(reg) { console.log('SW registered:', reg.scope); })
+          .catch(function(err) { console.log('SW failed:', err); });
       });
     }
-  </script>
-
-  <!-- Navigation Script -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Desktop Dropdown Navigation
-      const navGroups = document.querySelectorAll('.nav-group');
-      navGroups.forEach(group => {
-        const toggle = group.querySelector('.nav-group-toggle');
-        const dropdown = group.querySelector('.nav-dropdown');
-
-        if (!toggle || !dropdown) return;
-
-        // Click to toggle
-        toggle.addEventListener('click', function(e) {
-          e.preventDefault();
-          const isActive = group.classList.contains('active');
-          
-          // Close all other groups
-          document.querySelectorAll('.nav-group.active').forEach(activeGroup => {
-            if (activeGroup !== group) {
-              activeGroup.classList.remove('active');
-            }
-          });
-
-          // Toggle current group
-          group.classList.toggle('active');
-          toggle.setAttribute('aria-expanded', !isActive);
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-          if (!group.contains(e.target)) {
-            group.classList.remove('active');
-            toggle.setAttribute('aria-expanded', 'false');
-          }
-        });
-
-        // Close dropdown when item is clicked
-        dropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
-          item.addEventListener('click', function() {
-            group.classList.remove('active');
-            toggle.setAttribute('aria-expanded', 'false');
-          });
-        });
-      });
-
-      // Mobile Sidebar Navigation
-      const navToggle = document.getElementById('nav-toggle');
-      const sidebar = document.getElementById('sidebar');
-      const sidebarOverlay = document.getElementById('sidebar-overlay');
-      const sidebarClose = document.getElementById('sidebar-close');
-
-      if (navToggle && sidebar) {
-        // Open sidebar
-        navToggle.addEventListener('click', function() {
-          sidebar.classList.add('open');
-          sidebarOverlay.classList.add('open');
-          document.body.style.overflow = 'hidden';
-          renderIcons(); // Render lucide icons for sidebar
-        });
-
-        // Close sidebar
-        function closeSidebar() {
-          sidebar.classList.remove('open');
-          sidebarOverlay.classList.remove('open');
-          document.body.style.overflow = 'auto';
-        }
-
-        sidebarClose.addEventListener('click', closeSidebar);
-        sidebarOverlay.addEventListener('click', closeSidebar);
-
-        // Close sidebar when a nav link is clicked
-        document.querySelectorAll('.sidebar-nav-item, .sidebar-nav-item-direct').forEach(link => {
-          link.addEventListener('click', function() {
-            closeSidebar();
-          });
-        });
-      }
-
-      // Sidebar group toggles
-      const sidebarGroups = document.querySelectorAll('.sidebar-nav-group');
-      sidebarGroups.forEach(group => {
-        const toggle = group.querySelector('.sidebar-nav-group-toggle');
-        const items = group.querySelector('.sidebar-nav-items');
-
-        if (!toggle || !items) return;
-
-        toggle.addEventListener('click', function(e) {
-          e.preventDefault();
-          const isActive = group.classList.contains('active');
-          group.classList.toggle('active');
-          toggle.setAttribute('aria-expanded', !isActive);
-        });
-      });
-
-      // Notifications Sidebar
-      const notifToggle = document.getElementById('notif-toggle');
-      const sidebarNotifToggle = document.getElementById('sidebar-notif-toggle');
-      const notificationsSidebar = document.getElementById('notifications-sidebar');
-      const notificationsOverlay = document.getElementById('notifications-overlay');
-      const notificationsClose = document.getElementById('notifications-close');
-
-      if (notificationsSidebar) {
-        // Open notifications sidebar
-        function openNotifications() {
-          notificationsSidebar.classList.add('open');
-          notificationsOverlay.classList.add('open');
-          document.body.style.overflow = 'hidden';
-          renderIcons(); // Render lucide icons for notifications sidebar
-        }
-
-        // Close notifications sidebar
-        function closeNotifications() {
-          notificationsSidebar.classList.remove('open');
-          notificationsOverlay.classList.remove('open');
-          document.body.style.overflow = 'auto';
-        }
-
-        // Toggle buttons
-        if (notifToggle) {
-          notifToggle.addEventListener('click', openNotifications);
-        }
-
-        if (sidebarNotifToggle) {
-          sidebarNotifToggle.addEventListener('click', function() {
-            closeNotifications();
-            if (sidebar) closeSidebar();
-            setTimeout(openNotifications, 300);
-          });
-        }
-
-        // Close button
-        notificationsClose.addEventListener('click', closeNotifications);
-        notificationsOverlay.addEventListener('click', closeNotifications);
-
-        // Close when notification item is clicked
-        document.querySelectorAll('.notification-item a').forEach(link => {
-          link.addEventListener('click', function() {
-            closeNotifications();
-          });
-        });
-
-        // Mark all as read button
-        const markAllBtn = document.querySelector('.mark-read-btn');
-        if (markAllBtn) {
-          markAllBtn.addEventListener('click', function() {
-            fetch('{% url "tracking:mark_all_notifications_read" %}', {
-              method: 'POST',
-              headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                               document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                // Update all unread items to read
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                  item.classList.remove('unread');
-                  const indicator = item.querySelector('.notification-indicator');
-                  if (indicator) indicator.style.background = '#d0d0d0';
-                });
-                // Hide the action buttons
-                const footer = document.querySelector('.notifications-footer');
-                if (footer) footer.style.display = 'none';
-              }
-            })
-            .catch(error => console.error('Error marking notifications as read:', error));
-          });
-        }
-
-        // Clear all button
-        const clearBtn = document.querySelector('.clear-btn');
-        if (clearBtn) {
-          clearBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear all notifications?')) {
-              fetch('{% url "tracking:clear_all_notifications" %}', {
-                method: 'POST',
-                headers: {
-                  'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
-                }
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                  // Clear the notifications list
-                  const content = document.querySelector('.notifications-content');
-                  const footer = document.querySelector('.notifications-footer');
-                  content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon">🔕</span><div class="notifications-empty-text">No notifications yet</div></div>';
-                  if (footer) footer.remove();
-                  
-                  // Update badge
-                  const badge = document.querySelector('.notifications-badge');
-                  if (badge) badge.remove();
-                }
-              })
-              .catch(error => console.error('Error clearing notifications:', error));
-            }
-          });
-        }
-      }
-    });
   </script>
 </body>
 </html>

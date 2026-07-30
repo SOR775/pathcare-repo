@@ -5,8 +5,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "theme_color": "#1e3a8a",
-  "background_color": "#ffffff",
+  "theme_color": "#0d9488",
+  "background_color": "#f8fafc",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -43,13 +43,13 @@
       "src": "/static/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/static/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/static/icons/icon-512x512.png",
@@ -58,17 +58,5 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["healthcare", "medical", "productivity"],
-  "screenshots": [
-    {
-      "src": "/static/icons/screenshot-1.png",
-      "sizes": "540x720",
-      "type": "image/png"
-    },
-    {
-      "src": "/static/icons/screenshot-2.png",
-      "sizes": "540x720",
-      "type": "image/png"
-    }
-  ]
+  "categories": ["healthcare", "medical", "productivity"]
 }

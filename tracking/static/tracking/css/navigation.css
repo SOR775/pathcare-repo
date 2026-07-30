@@ -183,11 +183,12 @@
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 2000;
   overflow-y: auto;
-  animation: slideIn 0.3s ease;
+  animation: none;
 }
 
 .sidebar.open {
-  display: block;
+  display: flex;
+  animation: slideIn 0.3s ease;
 }
 
 @keyframes slideIn {
@@ -410,14 +411,62 @@
   }
 
   .sidebar {
-    width: 100%;
-    max-width: 280px;
+    width: min(100%, 320px);
+    max-width: 320px;
+  }
+
+  .sidebar-nav-item,
+  .sidebar-nav-item-direct,
+  .sidebar-nav-group-toggle {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 
 /* Hover reveal for desktop dropdowns */
 .nav-group:hover .nav-dropdown {
   display: block;
+}
+
+/* Mobile navigation overrides to avoid overflow and improve spacing */
+@media (max-width: 900px) {
+  .nav-links {
+    display: none !important;
+  }
+
+  .nav-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .nav-group-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 14px 14px;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .nav-toggle-btn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Badge styling */

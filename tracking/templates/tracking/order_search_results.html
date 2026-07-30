@@ -1,76 +1,115 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Order Search Results{% endblock %}
+{% block title %}Order Search — PathCare Kenya{% endblock %}
 
 {% block content %}
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  .search-form {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: var(--space-md);
+  }
+  .search-form input[type="search"] {
+    flex: 2 1 280px; padding: 10px 14px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); color: var(--color-text);
+    font: inherit; font-size: .875rem;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .search-form input[type="search"]:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .search-form select {
+    flex: 1 1 180px; padding: 10px 14px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); color: var(--color-text);
+    font: inherit; font-size: .875rem; cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .search-form select:focus { outline: none; border-color: var(--color-primary); }
+
+  .search-summary {
+    font-size: .82rem; color: var(--color-text-secondary);
+    padding: 10px 14px; border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    margin-bottom: var(--space-md);
+  }
+  .search-summary strong { color: var(--color-text); }
+
+  .search-table td { vertical-align: middle; }
+  .search-table td a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+
+  .pagination {
+    display: flex; align-items: center; justify-content: center;
+    gap: var(--space-md); padding: var(--space-md) 0 0;
+    font-size: .85rem; color: var(--color-text-secondary);
+  }
+  .pagination a {
+    padding: 8px 16px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-border); text-decoration: none;
+    color: var(--color-text); font-weight: 600; font-size: .82rem;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .pagination a:hover { border-color: var(--color-primary); color: var(--color-primary); }
+</style>
+
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Search</p>
-      <h2>Order search results</h2>
-    </div>
+    <div><p class="eyebrow">Search</p><h2>Order Search Results</h2></div>
   </div>
 
-  <div class="filter-panel">
-    <form method="get" class="search-filter-form">
-      <input type="search" name="q" placeholder="Search orders by reference, client, contact, carrier" value="{{ query|default:'' }}">
-      <select name="status">
-        <option value="">All statuses</option>
-        {% for status_code, status_label in statuses %}
-          <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
-        {% endfor %}
-      </select>
-      <button type="submit" class="button primary">Filter</button>
-    </form>
-    <div class="filter-summary">
-      <p><strong>{{ results|length }}</strong> orders found matching <strong>{{ query|default:'all' }}</strong> and status <strong>{{ status_filter|default:'All' }}</strong>.</p>
-    </div>
+  <form method="get" class="search-form">
+    <input type="search" name="q" placeholder="Search by reference, client, contact, carrier…" value="{{ query|default:'' }}">
+    <select name="status">
+      <option value="">All Statuses</option>
+      {% for code, label in statuses %}
+        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn--primary btn--sm">Filter</button>
+  </form>
+
+  <div class="search-summary">
+    <strong>{{ results|length }}</strong> order{{ results|length|pluralize }} found matching <strong>{{ query|default:'all' }}</strong> — status: <strong>{{ status_filter|default:'All' }}</strong>
   </div>
 
-  <div class="details-grid">
-    <div class="detail-card">
-      <p>Query: <strong>{{ query }}</strong></p>
-      <p>Status: <strong>{{ status_filter|default:'All' }}</strong></p>
-      {% if results %}
-        <table>
-          <thead>
+  {% if results %}
+    <div class="table-card">
+      <table class="search-table">
+        <thead><tr><th>Reference</th><th>Client</th><th>Contact</th><th>Carrier</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for order in results %}
             <tr>
-              <th>Reference</th>
-              <th>Client</th>
-              <th>Pickup contact</th>
-              <th>Carrier</th>
-              <th>Status</th>
-              <th>Action</th>
+              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
+              <td>{{ order.client.name }}</td>
+              <td>{{ order.requestor_name|default:order.client.contact_name|default:"—" }}<br><small style="color:var(--color-text-muted);">{{ order.requestor_phone|default:order.client.contact_phone|default:"—" }}</small></td>
+              <td>{{ order.carrier.display_name|default:"—" }}</td>
+              <td>{{ order.get_status_display }}</td>
+              <td><a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">Open</a></td>
             </tr>
-          </thead>
-          <tbody>
-            {% for order in results %}
-              <tr>
-                <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
-                <td>{{ order.client.name }}</td>
-                <td>{{ order.requestor_name|default:order.client.contact_name|default:"—" }} / {{ order.requestor_phone|default:order.client.contact_phone|default:"—" }}</td>
-                <td>{% if order.carrier %}{{ order.carrier.display_name }}{% else %}—{% endif %}</td>
-                <td>{{ order.get_status_display }}</td>
-                <td><a href="{% url 'tracking:order_detail' order.pk %}">Open</a></td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% if page_obj.has_other_pages %}
-          <div class="pagination">
-            {% if page_obj.has_previous %}
-              <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
-            {% endif %}
-            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-              <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
-            {% endif %}
-          </div>
-        {% endif %}
-      {% else %}
-        <p class="empty-state">No orders matched your query.</p>
-      {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-  </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">🔍</span>
+      <div class="empty-state__title">No Results</div>
+      <div class="empty-state__desc">No orders matched your search. Try a different query or status filter.</div>
+    </div>
+  {% endif %}
 </section>
 {% endblock %}

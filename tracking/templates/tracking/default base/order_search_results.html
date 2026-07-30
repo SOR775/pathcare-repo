@@ -1,0 +1,76 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Order Search Results{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Search</p>
+      <h2>Order search results</h2>
+    </div>
+  </div>
+
+  <div class="filter-panel">
+    <form method="get" class="search-filter-form">
+      <input type="search" name="q" placeholder="Search orders by reference, client, contact, carrier" value="{{ query|default:'' }}">
+      <select name="status">
+        <option value="">All statuses</option>
+        {% for status_code, status_label in statuses %}
+          <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="button primary">Filter</button>
+    </form>
+    <div class="filter-summary">
+      <p><strong>{{ results|length }}</strong> orders found matching <strong>{{ query|default:'all' }}</strong> and status <strong>{{ status_filter|default:'All' }}</strong>.</p>
+    </div>
+  </div>
+
+  <div class="details-grid">
+    <div class="detail-card">
+      <p>Query: <strong>{{ query }}</strong></p>
+      <p>Status: <strong>{{ status_filter|default:'All' }}</strong></p>
+      {% if results %}
+        <table>
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Client</th>
+              <th>Pickup contact</th>
+              <th>Carrier</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in results %}
+              <tr>
+                <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
+                <td>{{ order.client.name }}</td>
+                <td>{{ order.requestor_name|default:order.client.contact_name|default:"—" }} / {{ order.requestor_phone|default:order.client.contact_phone|default:"—" }}</td>
+                <td>{% if order.carrier %}{{ order.carrier.display_name }}{% else %}—{% endif %}</td>
+                <td>{{ order.get_status_display }}</td>
+                <td><a href="{% url 'tracking:order_detail' order.pk %}">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if page_obj.has_other_pages %}
+          <div class="pagination">
+            {% if page_obj.has_previous %}
+              <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>
+            {% endif %}
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+              <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next →</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="empty-state">No orders matched your query.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

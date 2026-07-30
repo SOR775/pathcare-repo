@@ -1,0 +1,43 @@
+{% extends "tracking/base.html" %}
+{% block title %}Log in - Pathcare{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media (max-width: 480px) {
+    .login-panel {
+      padding: 28px 20px !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+  <div class="panel login-panel" style="width: 100%; max-width: 400px; padding: 36px 40px; box-shadow: var(--shadow-lg);">
+    <div style="text-align: center; margin-bottom: 28px;">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #047857); margin: 0 auto 16px;"></div>
+      <p class="eyebrow" style="margin-bottom: 4px;">Pathcare tracking</p>
+      <h2 style="margin: 0; font-size: 20px;">Welcome back</h2>
+      <p class="muted" style="margin-top: 6px; font-size: 13.5px;">Log in to manage pickups and deliveries</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="message error" style="margin-bottom: 20px;">Incorrect username or password.</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="field-group" style="margin-bottom: 18px;">
+        <label for="id_username">Username</label>
+        <input type="text" name="username" id="id_username" required autofocus>
+      </div>
+      <div class="field-group" style="margin-bottom: 24px;">
+        <label for="id_password">Password</label>
+        <input type="password" name="password" id="id_password" required>
+      </div>
+      <button type="submit" class="button primary" style="width:100%; justify-content: center; padding: 11px;">Log in</button>
+      <input type="hidden" name="next" value="{{ next }}">
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carriers - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Carriers</p>
+    <h1>Carrier fleet overview</h1>
+    <p>Manage carrier accounts and see who's available, on a job, or offline.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Onboarding</p>
+      <h2>Add a carrier</h2>
+    </div>
+  </div>
+  <form method="post" action="{% url 'tracking:carrier_create' %}">
+    {% csrf_token %}
+    <div class="field"><label>Username</label>{{ form.username }}</div>
+    <div class="field"><label>Password</label>{{ form.password }}</div>
+    <div class="field"><label>First name</label>{{ form.first_name }}</div>
+    <div class="field"><label>Last name</label>{{ form.last_name }}</div>
+    <div class="field"><label>Phone</label>{{ form.phone }}</div>
+    <div class="field"><label>Vehicle type</label>{{ form.vehicle_type }}</div>
+    <div class="field"><label>Vehicle plate</label>{{ form.vehicle_plate }}</div>
+    <button type="submit" class="btn">Add carrier</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Carrier records</p>
+      <h2>All carriers</h2>
+    </div>
+  </div>
+  {% if carriers %}
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for carrier in carriers %}
+          <tr>
+            <td>{{ carrier }}</td>
+            <td>{{ carrier.phone }}</td>
+            <td>{{ carrier.vehicle_display }}</td>
+            <td><span class="badge badge-{{ carrier.status }}">{{ carrier.get_status_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No carriers yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

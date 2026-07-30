@@ -1,0 +1,791 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carrier Dashboard — PathCare Kenya{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ═══════════════════════════════════════════
+     CARRIER VIEW
+     ═══════════════════════════════════════════ */
+
+  /* ── Layout ── */
+  .carrier-layout {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 900px) { .carrier-layout { grid-template-columns: 1fr; } }
+
+  /* ── Panel base ── */
+  .panel-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+  }
+
+  /* ── Left sidebar ── */
+  .carrier-sidebar { display: flex; flex-direction: column; gap: var(--space-md); }
+
+  .carrier-profile {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-md); flex-wrap: wrap;
+  }
+  .carrier-profile h3 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+  .carrier-profile .eyebrow {
+    font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--color-text-muted);
+  }
+
+  .gps-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: var(--radius-full);
+    font-size: .75rem; font-weight: 700; white-space: nowrap;
+  }
+  .gps-badge--active { background: var(--color-success-soft); color: #065f46; }
+  .gps-badge--offline { background: var(--color-danger-soft); color: #991b1b; }
+  .gps-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .gps-badge--active .gps-dot { background: var(--color-success); animation: pulse-dot 1.5s infinite; }
+  .gps-badge--offline .gps-dot { background: var(--color-danger); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+  .stat-tiles { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .stat-tile {
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+  }
+  .stat-tile strong { display: block; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; }
+  .stat-tile small { font-size: .72rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+
+  .status-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .status-item {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 10px 12px; border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+  }
+  .status-item .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot--active { background: var(--color-success); }
+  .status-dot--warning { background: var(--color-warning); }
+  .status-dot--offline { background: var(--color-danger); }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex; gap: 6px; margin-bottom: var(--space-lg);
+    padding: 4px; border-radius: var(--radius-lg);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 16px; border-radius: var(--radius-md);
+    background: transparent; border: none; color: var(--color-text-secondary);
+    font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .tab-btn.active {
+    background: var(--color-surface); color: var(--color-text);
+    box-shadow: var(--shadow-sm);
+  }
+  .tab-btn:not(.active):hover { color: var(--color-text); }
+
+  .tab-panel.hidden { display: none; }
+
+  /* ── Active pickup card ── */
+  .pickup-hero {
+    position: relative; overflow: hidden;
+    padding: var(--space-lg); border-radius: var(--radius-lg);
+    background: var(--color-surface); border: 1px solid var(--color-border);
+  }
+  .pickup-hero::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: var(--color-primary-soft); pointer-events: none; opacity: .6;
+  }
+  .pickup-hero-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--space-md); margin-bottom: var(--space-lg);
+    position: relative; z-index: 1;
+  }
+  .pickup-hero-header h2 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+  .pickup-hero-body { position: relative; z-index: 1; }
+
+  .pickup-meta-row {
+    display: grid; grid-template-columns: 1fr auto; gap: var(--space-lg);
+    margin-bottom: var(--space-md);
+  }
+  @media (max-width: 500px) { .pickup-meta-row { grid-template-columns: 1fr; } }
+  .pickup-meta-row strong { display: block; font-size: 1.1rem; margin-bottom: 2px; }
+  .pickup-meta-row p { margin: 0; font-size: .85rem; color: var(--color-text-secondary); }
+
+  /* ── Journey progress ── */
+  .journey-steps {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 4px; overflow-x: auto; padding: var(--space-md) 0;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .journey-steps::-webkit-scrollbar { display: none; }
+
+  .journey-step {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    min-width: 80px; flex-shrink: 0; gap: 8px; position: relative;
+    padding: 10px 8px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light); background: var(--color-surface-alt);
+  }
+  .journey-step::after {
+    content: ''; position: absolute; top: 24px; left: 100%;
+    width: calc(0px + 4px); height: 2px; background: var(--color-border);
+    z-index: 0;
+  }
+  .journey-step:last-child::after { display: none; }
+
+  .journey-step.completed,
+  .journey-step.active { border-color: var(--color-success); background: var(--color-success-soft); }
+  .journey-step.upcoming { opacity: .55; }
+
+  .step-badge {
+    width: 36px; height: 36px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: .85rem;
+    border: 2px solid var(--color-border); background: var(--color-surface);
+    position: relative; z-index: 1;
+  }
+  .journey-step.completed .step-badge,
+  .journey-step.active .step-badge {
+    background: var(--color-success); color: #fff; border-color: var(--color-success);
+  }
+  .step-label { font-size: .65rem; font-weight: 600; color: var(--color-text-muted); line-height: 1.2; }
+  .journey-step.completed .step-label,
+  .journey-step.active .step-label { color: #065f46; }
+
+  .journey-legend {
+    display: flex; gap: var(--space-md); font-size: .72rem; color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+  .journey-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); }
+
+  /* ── Map ── */
+  #carrier-route-map {
+    width: 100%; height: 50vh; min-height: 360px; max-height: 560px;
+    border-radius: var(--radius-md); overflow: hidden;
+    border: 1px solid var(--color-border);
+  }
+
+  /* ── Route guidance ── */
+  .guidance-card {
+    padding: var(--space-md); border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light); background: var(--color-surface-alt);
+    margin-top: var(--space-md);
+  }
+  .guidance-header {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--space-md); margin-bottom: var(--space-sm); flex-wrap: wrap;
+  }
+  .guidance-list { padding-left: 1.2rem; margin: var(--space-sm) 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .guidance-list li { font-size: .85rem; line-height: 1.5; }
+
+  /* ── Metrics grid ── */
+  .pickup-metrics {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  @media (max-width: 500px) { .pickup-metrics { grid-template-columns: 1fr; } }
+  .pickup-metric {
+    text-align: center; padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+  }
+  .pickup-metric strong { display: block; font-size: 1.25rem; font-weight: 700; }
+  .pickup-metric small { font-size: .7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+
+  /* ── Actions ── */
+  .pickup-actions {
+    display: flex; gap: var(--space-sm); margin-top: var(--space-md); flex-wrap: wrap;
+  }
+  .pickup-actions .btn { flex: 1; min-width: 140px; }
+
+  /* ── Pickup list cards ── */
+  .pickup-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+  .pickup-card {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-md); padding: var(--space-md);
+    border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+    background: var(--color-surface); cursor: pointer; flex-wrap: wrap;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .pickup-card:hover { border-color: var(--color-primary-border); }
+  .pickup-card.selected { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+  .pickup-card strong { display: block; font-size: .9rem; margin-bottom: 2px; }
+  .pickup-card p { margin: 0; font-size: .8rem; color: var(--color-text-secondary); }
+
+  /* ── Issue form ── */
+  .issue-card { padding: var(--space-lg); }
+  .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-md); }
+  .form-field label { font-size: .8rem; font-weight: 600; color: var(--color-text-secondary); }
+  .form-field textarea, .form-field select {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .875rem;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .form-field textarea:focus, .form-field select:focus {
+    outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  .issue-history { margin-top: var(--space-lg); }
+  .issue-item {
+    padding: var(--space-md); border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light); background: var(--color-surface-alt);
+    margin-bottom: 8px;
+  }
+  .issue-item strong { display: block; margin-bottom: 4px; font-size: .85rem; }
+  .issue-item p { margin: 0; font-size: .8rem; color: var(--color-text-secondary); }
+  .issue-item small { font-size: .7rem; color: var(--color-text-muted); }
+
+  /* ── Sticky pickup footer ── */
+  #pickup-footer {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--color-surface); border-top: 1px solid var(--color-border);
+    padding: 10px var(--space-md); display: none; z-index: 998;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  }
+  #pickup-footer .footer-inner {
+    display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;
+  }
+  #pickup-footer .footer-stats { display: flex; gap: var(--space-lg); flex: 1; }
+  #pickup-footer .footer-stats > div { text-align: center; }
+  #pickup-footer .footer-stats strong { display: block; font-size: 1rem; }
+  #pickup-footer .footer-stats small { font-size: .65rem; color: var(--color-text-muted); }
+  #pickup-footer .footer-actions { display: flex; gap: 8px; }
+
+  /* ── Section header ── */
+  .section-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-sm);
+  }
+  .section-row h3 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+
+  /* ── Chip ── */
+  .chip {
+    display: inline-flex; align-items: center; padding: 4px 12px;
+    border-radius: var(--radius-full); font-size: .72rem; font-weight: 700;
+    background: var(--color-surface-alt); color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-light); white-space: nowrap;
+  }
+  .chip--pending { background: var(--color-warning-soft); color: #92400e; border-color: #fde68a; }
+  .chip--active { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+  .chip--success { background: var(--color-success-soft); color: #065f46; }
+
+  @media (max-width: 768px) {
+    #pickup-footer { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0) + 70px); }
+  }
+  @media (max-width: 500px) {
+    .pickup-hero-header { flex-direction: column; }
+    .guidance-header { flex-direction: column; align-items: stretch; }
+    .pickup-actions { flex-direction: column; }
+    .pickup-actions .btn { min-width: 0; }
+    #pickup-footer .footer-inner { flex-direction: column; align-items: stretch; }
+    #pickup-footer .footer-actions { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="carrier-layout">
+  {# ── LEFT SIDEBAR ── #}
+  <aside class="carrier-sidebar">
+    <div class="panel-card">
+      <div class="carrier-profile">
+        <div>
+          <p class="eyebrow">Today's Summary</p>
+          <h3>Carrier Dashboard</h3>
+        </div>
+        <span class="gps-badge {% if gps_active %}gps-badge--active{% else %}gps-badge--offline{% endif %}">
+          <span class="gps-dot"></span>{{ gps_active|yesno:"GPS Active,GPS Offline" }}
+        </span>
+      </div>
+
+      <div class="stat-tiles" style="margin-top: var(--space-md);">
+        <div class="stat-tile"><strong>{{ total_pickups }}</strong><small>Total Pickups</small></div>
+        <div class="stat-tile"><strong>{{ total_samples }}</strong><small>Total Samples</small></div>
+        <div class="stat-tile"><strong>{{ completed_pickups }}/{{ total_pickups }}</strong><small>Completed</small></div>
+      </div>
+
+      <div style="margin-top: var(--space-md);">
+        <h4 style="font-size:.85rem;font-weight:700;margin:0 0 10px 0;">Status</h4>
+        <ul class="status-list">
+          <li class="status-item">
+            <span><span class="status-dot {% if gps_active %}status-dot--active{% else %}status-dot--offline{% endif %}" style="margin-right:8px;display:inline-block;"></span>GPS</span>
+            <strong style="font-size:.8rem;">{{ gps_active|yesno:"Active,Offline" }}</strong>
+          </li>
+          <li class="status-item">
+            <span><span class="status-dot {% if connected %}status-dot--active{% else %}status-dot--warning{% endif %}" style="margin-right:8px;display:inline-block;"></span>Connected</span>
+            <strong style="font-size:.8rem;">{{ connected|yesno:"Yes,No" }}</strong>
+          </li>
+          <li class="status-item">
+            <span><span class="status-dot status-dot--active" style="margin-right:8px;display:inline-block;"></span>Temperature</span>
+            <strong style="font-size:.8rem;">4°C — Normal</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div style="display:grid;gap:8px;margin-top:var(--space-md);">
+        <a class="btn btn--primary btn--block" href="#carrier-route-map">Navigate to Pickup</a>
+        <a class="btn btn--outline btn--block" href="#upcoming-pickups">See Upcoming</a>
+      </div>
+    </div>
+  </aside>
+
+  {# ── MAIN CONTENT ── #}
+  <main>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="pickup-tab">Active Pickup</button>
+      <button class="tab-btn" data-tab="issues-tab">Report Issue</button>
+    </div>
+
+    {# ── Pickup tab ── #}
+    <div class="tab-panel" id="pickup-tab">
+      <div class="pickup-hero">
+        {% if next_pickup_order or lab_return_order %}
+          <div class="pickup-hero-header">
+            <div>
+              <p class="eyebrow" style="margin:0 0 6px 0;">{% if lab_return_order %}Return to Lab{% else %}Active Pickup{% endif %}</p>
+              <h2>{% if lab_return_order %}{{ lab_return_order.client.name }}{% else %}{{ next_pickup_order.client.name }}{% endif %}</h2>
+              <p style="margin:4px 0 0;font-size:.8rem;color:var(--color-text-muted);">{% if lab_return_order %}{{ lab_return_order.reference_code }}{% else %}{{ next_pickup_order.reference_code }}{% endif %}</p>
+            </div>
+            <span class="badge badge--warning">{% if lab_return_order %}Route to Lab{% else %}In Progress{% endif %}</span>
+          </div>
+
+          {# Journey progress #}
+          <div style="margin-bottom: var(--space-lg);">
+            <h4 style="font-size:.85rem;font-weight:700;margin:0 0 10px 0;">Journey Progress</h4>
+            <div class="journey-steps" id="journey-progress-list" {% if active_order %}data-order-id="{{ active_order.id }}" data-current-status="{{ active_order.status }}"{% endif %}>
+              {% for step in journey_steps %}
+              <div class="journey-step upcoming" data-step-key="{{ step.key }}">
+                <div class="step-badge">{{ forloop.counter }}</div>
+                <div class="step-label">{{ step.label }}</div>
+              </div>
+              {% empty %}
+              <div class="journey-step upcoming" data-step-key="assigned"><div class="step-badge">1</div><div class="step-label">Requested</div></div>
+              <div class="journey-step upcoming" data-step-key="accepted"><div class="step-badge">2</div><div class="step-label">Assigned</div></div>
+              <div class="journey-step upcoming" data-step-key="en_route_client"><div class="step-badge">3</div><div class="step-label">En Route</div></div>
+              <div class="journey-step upcoming" data-step-key="at_client"><div class="step-badge">4</div><div class="step-label">Arrived</div></div>
+              <div class="journey-step upcoming" data-step-key="picked_up"><div class="step-badge">5</div><div class="step-label">Collected</div></div>
+              <div class="journey-step upcoming" data-step-key="in_transit"><div class="step-badge">6</div><div class="step-label">To Lab</div></div>
+              <div class="journey-step upcoming" data-step-key="delivered"><div class="step-badge">7</div><div class="step-label">Delivered</div></div>
+              {% endfor %}
+            </div>
+            <div class="journey-legend">
+              <span><span class="legend-dot"></span> Completed / Active</span>
+              <span>Upcoming</span>
+            </div>
+          </div>
+
+          <div class="pickup-hero-body">
+            <div class="pickup-meta-row">
+              <div>
+                <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin:0 0 4px;">{% if lab_return_order %}Destination{% else %}Location{% endif %}</p>
+                <strong>{% if lab_return_order %}{{ lab_return_order.client.name }}{% else %}{{ next_pickup_order.client.name }}{% endif %}</strong>
+                <p>{% if lab_return_order %}Route to the laboratory{% else %}{{ next_pickup_order.client.address }}{% endif %}</p>
+              </div>
+              <div style="text-align:right;">
+                <p style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin:0 0 4px;">Distance &amp; ETA</p>
+                {% if next_pickup_distance_km %}
+                  <strong>{{ next_pickup_distance_km|floatformat:1 }} km</strong>
+                  <p>ETA: {{ next_pickup_eta_minutes }} min</p>
+                {% else %}
+                  <strong>—</strong>
+                  <p>Distance unavailable</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div id="carrier-route-map"></div>
+
+            <div class="guidance-card">
+              <div class="guidance-header">
+                <h4 style="font-size:.85rem;font-weight:700;margin:0;">Route Guidance</h4>
+                <a class="btn btn--sm btn--outline" id="open-route-maps" href="#" target="_blank" rel="noopener">Open in Maps</a>
+              </div>
+              <p id="route-status" style="font-size:.8rem;color:var(--color-text-secondary);margin:0 0 8px;">
+                {% if lab_return_order %}Preparing turn-by-turn route to the lab.{% else %}Preparing turn-by-turn route to client.{% endif %}
+              </p>
+              <p id="route-summary" style="font-size:.82rem;font-weight:700;margin:0 0 4px;">Best Route</p>
+              <p id="next-step" style="font-size:.78rem;color:var(--color-text-muted);margin:0;">Finding the quickest path…</p>
+              {% if lab_return_order %}<span style="display:inline-block;margin-top:8px;font-size:.72rem;font-weight:700;color:var(--color-primary);">📍 Lab Destination</span>{% endif %}
+              <ol class="guidance-list" id="route-guidance-list"></ol>
+            </div>
+
+            <div class="pickup-metrics">
+              <div class="pickup-metric"><strong>{{ next_pickup_order.samples.count }}</strong><small>Samples</small></div>
+              <div class="pickup-metric"><strong>4°C</strong><small>Temperature</small></div>
+              <div class="pickup-metric"><strong>✓</strong><small>Compliant</small></div>
+            </div>
+
+            <div class="pickup-actions">
+              <button class="btn btn--primary" id="start-live-tracking">Start Live Tracking</button>
+              <a class="btn btn--outline" href="{% if lab_return_order %}{% url 'tracking:order_detail' lab_return_order.pk %}{% else %}{% url 'tracking:order_detail' next_pickup_order.pk %}{% endif %}">View Details</a>
+              {% if not lab_return_order and next_pickup_order and next_pickup_order.status != 'picked_up' %}
+                <a class="btn btn--outline" href="{% url 'tracking:order_detail' next_pickup_order.pk %}">Confirm Pickup</a>
+              {% endif %}
+            </div>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <span class="empty-state__icon" aria-hidden="true">📋</span>
+            <div class="empty-state__title">No Active Pickup</div>
+            <div class="empty-state__desc">You have no active pickup in progress right now.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Issues tab ── #}
+    <div class="tab-panel hidden" id="issues-tab">
+      <div class="panel-card issue-card">
+        <h3 style="font-size:1rem;font-weight:700;margin:0 0 4px;">Report an Issue</h3>
+        <p style="font-size:.8rem;color:var(--color-text-muted);margin:0 0 var(--space-md);">Submit incidents like accidents, delays, or other delivery issues for dispatcher review.</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="issue_submit" value="1">
+          <div class="form-field">
+            {{ issue_form.category.label_tag }}
+            {{ issue_form.category }}
+          </div>
+          <div class="form-field">
+            {{ issue_form.description.label_tag }}
+            {{ issue_form.description }}
+          </div>
+          {{ issue_form.order }}
+          <button class="btn btn--primary" type="submit">Submit Issue Report</button>
+        </form>
+
+        <div class="issue-history">
+          <h4 style="font-size:.9rem;font-weight:700;margin:0 0 12px;">Recent Reports</h4>
+          {% if carrier_issues %}
+            {% for issue in carrier_issues %}
+              <div class="issue-item">
+                <strong><a href="{% url 'tracking:carrier_issue_detail' issue.pk %}" style="color:var(--color-text);">{{ issue.get_category_display }} — {{ issue.get_status_display }}</a></strong>
+                <p>{{ issue.description|truncatechars:120 }}</p>
+                <small>Reported {{ issue.created_at|timesince }} ago{% if issue.order %} · {{ issue.order.reference_code }}{% endif %}</small>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="font-size:.8rem;color:var(--color-text-muted);">No issue reports yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── Available pickups section ── #}
+    <section id="upcoming-pickups" style="margin-top:var(--space-lg);">
+      <div class="section-row">
+        <div>
+          <p class="eyebrow" style="margin:0 0 4px;">Available Pickups</p>
+          <h3>Available Pickups</h3>
+        </div>
+        <span class="chip">{{ available_orders|length }} available</span>
+      </div>
+
+      <div class="pickup-list">
+        {% if available_orders %}
+          {% for order in available_orders %}
+            <div class="pickup-card" data-order-id="{{ order.pk }}"
+                 data-samples="{{ order.samples.count }}"
+                 data-distance="{% if order.distance_km %}{{ order.distance_km|floatformat:1 }}{% endif %}"
+                 data-eta="{% if order.eta_minutes %}{{ order.eta_minutes }}{% endif %}"
+                 data-lat="{{ order.latitude }}" data-lng="{{ order.longitude }}"
+                 data-address="{{ order.client.address|escapejs }}" data-reference="{{ order.reference_code }}">
+              <div>
+                <strong>{{ order.reference_code }} — {{ order.client.name }}</strong>
+                <p>{{ order.get_priority_display }} · Pending Assignment</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:.78rem;color:var(--color-text-muted);">{{ order.samples.count }} samples</span>
+                <span class="chip chip--pending">Pending</span>
+                <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">View</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p style="font-size:.8rem;color:var(--color-text-muted);padding:var(--space-lg);text-align:center;">No unassigned pickups available.</p>
+        {% endif %}
+      </div>
+
+      <div class="section-row" style="margin-top:var(--space-lg);">
+        <div>
+          <p class="eyebrow" style="margin:0 0 4px;">Upcoming Pickups</p>
+          <h3>My Assigned Pickups</h3>
+        </div>
+        <span class="chip">{{ orders|length }} total</span>
+      </div>
+
+      <div class="pickup-list">
+        {% if orders %}
+          {% for order in orders %}
+            {% if not next_pickup_order or order.pk != next_pickup_order.pk %}
+              <div class="pickup-card">
+                <div>
+                  <strong>{{ order.reference_code }} — {{ order.client.name }}</strong>
+                  <p>{{ order.get_priority_display }} · {{ order.get_status_display }}</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:.78rem;color:var(--color-text-muted);">{{ order.samples.count }} samples</span>
+                  <span class="chip chip--active">{{ order.get_status_display }}</span>
+                  <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">Open</a>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <p style="font-size:.8rem;color:var(--color-text-muted);padding:var(--space-lg);text-align:center;">No assigned orders yet.</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    'use strict';
+
+    /* ── Utility ── */
+    function fmtDist(d) { return d ? d + ' km away' : '—'; }
+    function fmtETA(m) {
+      if (!m) return '—';
+      var t = new Date(); t.setMinutes(t.getMinutes() + parseInt(m, 10));
+      return String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0');
+    }
+
+    /* ── Sticky pickup footer ── */
+    var stickyFooter = null;
+    function ensureFooter() {
+      if (stickyFooter) return stickyFooter;
+      stickyFooter = document.createElement('div');
+      stickyFooter.id = 'pickup-footer';
+      stickyFooter.innerHTML =
+        '<div class="footer-inner">' +
+          '<div class="footer-stats">' +
+            '<div><strong id="pf-samples">—</strong><small>Samples</small></div>' +
+            '<div><strong id="pf-distance">—</strong><small>Distance</small></div>' +
+            '<div><strong id="pf-eta">—</strong><small>ETA</small></div>' +
+          '</div>' +
+          '<div class="footer-actions">' +
+            '<button id="pf-navigate" class="btn btn--primary btn--sm">Navigate</button>' +
+            '<button id="pf-contact" class="btn btn--outline btn--sm">Contact</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(stickyFooter);
+      return stickyFooter;
+    }
+
+    function showFooter(card) {
+      var f = ensureFooter();
+      document.getElementById('pf-samples').textContent = card.getAttribute('data-samples') || '—';
+      document.getElementById('pf-distance').textContent = fmtDist(card.getAttribute('data-distance'));
+      document.getElementById('pf-eta').textContent = fmtETA(card.getAttribute('data-eta'));
+
+      f.style.display = 'block';
+      var lat = card.getAttribute('data-lat'), lng = card.getAttribute('data-lng');
+
+      document.getElementById('pf-navigate').onclick = function() {
+        if (lat && lng) window.open('https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng, '_blank');
+        else alert('Location not available');
+      };
+      document.getElementById('pf-contact').onclick = function() {
+        alert('Facility: ' + card.getAttribute('data-reference') + '\n' + card.getAttribute('data-address'));
+      };
+    }
+
+    document.addEventListener('click', function(e) {
+      var card = e.target.closest('.pickup-card');
+      if (!card) return;
+      document.querySelectorAll('.pickup-card').forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      showFooter(card);
+    });
+
+    /* ── Journey progress ── */
+    function updateJourney(status) {
+      var list = document.getElementById('journey-progress-list');
+      if (!list || !status) return;
+      var order = ['assigned','accepted','en_route_client','at_client','picked_up','in_transit','delivered'];
+      if (['received','completed'].indexOf(status) !== -1) status = 'delivered';
+      var idx = order.indexOf(status);
+      if (idx === -1) return;
+
+      Array.prototype.forEach.call(list.querySelectorAll('[data-step-key]'), function(el) {
+        var si = order.indexOf(el.getAttribute('data-step-key'));
+        el.classList.remove('completed','active','upcoming');
+        if (si < idx) el.classList.add('completed');
+        else if (si === idx) el.classList.add('active');
+        else el.classList.add('upcoming');
+      });
+    }
+
+    window.onCarrierOrderStatusUpdate = function(payload) {
+      var list = document.getElementById('journey-progress-list');
+      if (!list || !payload || !payload.status) return;
+      if (list.getAttribute('data-order-id') && list.getAttribute('data-order-id') !== payload.order_id) return;
+      updateJourney(payload.status);
+    };
+
+    /* ── Tabs ── */
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.add('hidden'); });
+        btn.classList.add('active');
+        var target = document.getElementById(btn.dataset.tab);
+        if (target) target.classList.remove('hidden');
+      });
+    });
+
+    /* ── Map + Route ── */
+    document.addEventListener('DOMContentLoaded', function() {
+      var list = document.getElementById('journey-progress-list');
+      if (list) updateJourney(list.getAttribute('data-current-status'));
+
+      var mapEl = document.getElementById('carrier-route-map');
+      if (!mapEl) return;
+
+      var map = L.map('carrier-route-map');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      var routeStatus = document.getElementById('route-status');
+      var routeSummary = document.getElementById('route-summary');
+      var nextStep = document.getElementById('next-step');
+      var guidanceList = document.getElementById('route-guidance-list');
+      var openMaps = document.getElementById('open-route-maps');
+      var startBtn = document.getElementById('start-live-tracking');
+      var tracking = false, watchId = null;
+      var carrierMarker = null, pickupMarker = null, routeLine = null;
+
+      {% if carrier_location %}
+        var carrierLat = {{ carrier_location.latitude }};
+        var carrierLng = {{ carrier_location.longitude }};
+      {% else %}
+        var carrierLat = null, carrierLng = null;
+      {% endif %}
+
+      {% if lab_return_order %}
+        var pickupLat = {{ lab_location.latitude }};
+        var pickupLng = {{ lab_location.longitude }};
+        var destLabel = 'Laboratory';
+      {% elif next_pickup_order and next_pickup_order.latitude is not None %}
+        var pickupLat = {{ next_pickup_order.latitude }};
+        var pickupLng = {{ next_pickup_order.longitude }};
+        var destLabel = 'Client Location';
+      {% else %}
+        var pickupLat = null, pickupLng = null;
+        var destLabel = 'Destination';
+      {% endif %}
+
+      function postLocation(lat, lng) {
+        var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+        fetch('{% url "tracking:update_carrier_location" %}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf ? csrf.value : '' },
+          body: JSON.stringify({ latitude: lat, longitude: lng })
+        }).catch(function() {});
+      }
+
+      function renderRoute(clat, clng) {
+        if (pickupLat == null || pickupLng == null) return;
+        carrierLat = clat; carrierLng = clng;
+
+        if (carrierMarker) carrierMarker.setLatLng([clat, clng]);
+        else carrierMarker = L.marker([clat, clng]).addTo(map).bindPopup('Your location');
+
+        if (routeLine) map.removeLayer(routeLine);
+
+        var url = 'https://router.project-osrm.org/route/v1/driving/' + clng + ',' + clat + ';' + pickupLng + ',' + pickupLat + '?overview=full&geometries=geojson&steps=true&alternatives=true';
+
+        if (routeStatus) routeStatus.textContent = 'Finding the quickest road path…';
+        if (routeSummary) routeSummary.textContent = 'Best Route';
+        if (nextStep) nextStep.textContent = 'Calculating from your current location…';
+
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+          if (!data.routes || !data.routes.length) throw new Error('No route');
+          var best = data.routes.reduce(function(a, b) { return b.duration < a.duration ? b : a; });
+
+          routeLine = L.geoJSON(best.geometry, {
+            style: { color: '#059669', weight: 5, opacity: .9 }
+          }).addTo(map);
+
+          if (routeStatus) routeStatus.textContent = 'Fastest route · ' + Math.round(best.duration / 60) + ' min · ' + (best.distance / 1000).toFixed(1) + ' km';
+          if (guidanceList) {
+            guidanceList.innerHTML = '';
+            var steps = best.legs && best.legs[0] ? best.legs[0].steps : [];
+            steps.slice(0, 5).forEach(function(s) {
+              var li = document.createElement('li');
+              li.textContent = (s.maneuver && s.maneuver.instruction) || s.name || 'Continue';
+              guidanceList.appendChild(li);
+            });
+          }
+          if (nextStep && best.legs && best.legs[0] && best.legs[0].steps[0]) {
+            var first = best.legs[0].steps[0];
+            nextStep.textContent = 'Next: ' + ((first.maneuver && first.maneuver.instruction) || first.name || 'Continue');
+          }
+
+          var b = L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds();
+          if (b.isValid()) map.fitBounds(b, { padding: [40, 40] });
+        }).catch(function() {
+          if (routeStatus) routeStatus.textContent = 'Route guidance unavailable. Use the map button for directions.';
+          if (nextStep) nextStep.textContent = 'Open Google Maps or Waze for turn-by-turn guidance.';
+          routeLine = L.polyline([[clat, clng], [pickupLat, pickupLng]], { color: '#c8102e', weight: 4, opacity: .75, dashArray: '8 4' }).addTo(map);
+          map.fitBounds(L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds(), { padding: [40, 40] });
+        });
+      }
+
+      function updateLive(lat, lng) {
+        renderRoute(lat, lng);
+        if (routeStatus) routeStatus.textContent = 'Live GPS active. Updating route guidance.';
+      }
+
+      function startTracking() {
+        if (!navigator.geolocation) {
+          if (routeStatus) routeStatus.textContent = 'GPS not available in this browser.';
+          return;
+        }
+        if (tracking) return;
+        tracking = true;
+        if (startBtn) { startBtn.textContent = 'Tracking live…'; startBtn.disabled = true; }
+
+        watchId = navigator.geolocation.watchPosition(function(pos) {
+          postLocation(pos.coords.latitude, pos.coords.longitude);
+          updateLive(pos.coords.latitude, pos.coords.longitude);
+        }, function() {
+          if (routeStatus) routeStatus.textContent = 'GPS permission denied. Use the pinned client location.';
+        }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
+      }
+
+      if (startBtn) startBtn.addEventListener('click', startTracking);
+
+      if (pickupLat != null && pickupLng != null) {
+        pickupMarker = L.marker([pickupLat, pickupLng]).addTo(map).bindPopup(destLabel);
+        var gmaps = 'https://www.google.com/maps/dir/?api=1&destination=' + pickupLat + ',' + pickupLng + '&travelmode=driving';
+
+        if (carrierLat != null && carrierLng != null) {
+          gmaps += '&origin=' + carrierLat + ',' + carrierLng;
+          carrierMarker = L.marker([carrierLat, carrierLng]).addTo(map).bindPopup('Your location');
+          if (openMaps) openMaps.href = gmaps;
+          renderRoute(carrierLat, carrierLng);
+        } else {
+          map.setView([pickupLat, pickupLng], 13);
+          pickupMarker.openPopup();
+          if (openMaps) openMaps.href = gmaps;
+          if (routeStatus) routeStatus.textContent = 'GPS not available yet. Use the map button for directions.';
+        }
+      } else {
+        map.setView([-1.2921, 36.8219], 10);
+      }
+    });
+  })();
+</script>
+{% endblock %}

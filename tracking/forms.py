@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Carrier, CarrierIssue, CarrierIssueReply, Client, Order, Sample
+from .models import Carrier, CarrierIssue, CarrierIssueReply, Client, Order, Sample, Vehicle
 from core.models import Facility
 
 User = get_user_model()
@@ -37,11 +37,20 @@ class CarrierForm(forms.Form):
             first_name=self.cleaned_data.get("first_name", ""),
             last_name=self.cleaned_data.get("last_name", ""),
         )
+        vehicle_type = self.cleaned_data.get("vehicle_type", "")
+        vehicle_plate = self.cleaned_data.get("vehicle_plate", "")
+        vehicle = None
+        if vehicle_type or vehicle_plate:
+            vehicle = Vehicle.objects.create(
+                vehicle_type=vehicle_type,
+                vehicle_plate=vehicle_plate,
+            )
         return Carrier.objects.create(
             user=user,
             phone=self.cleaned_data["phone"],
-            vehicle_type=self.cleaned_data.get("vehicle_type", ""),
-            vehicle_plate=self.cleaned_data.get("vehicle_plate", ""),
+            vehicle=vehicle,
+            vehicle_type=vehicle_type,
+            vehicle_plate=vehicle_plate,
         )
 
 

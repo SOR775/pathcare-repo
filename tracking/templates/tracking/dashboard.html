@@ -1,254 +1,374 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Dashboard - Pathcare Kenya{% endblock %}
+{% block title %}Dashboard — PathCare Kenya{% endblock %}
 
 {% block content %}
 <style>
-  /* Localized Live Tracking Dashboard Styles with Dark Mode Variables */
-  .sidebar-panel {
-    background-color: var(--panel-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 1.25rem;
-  }
-  .sidebar-panel h3 {
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: var(--text-main);
-  }
-  .legend {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-  .legend-badge {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    display: inline-block;
-  }
-  .badge-schedule { background-color: var(--success); }
-  .badge-delayed { background-color: var(--warning); }
-  .badge-alert { background-color: var(--danger); }
-  .badge-pickup { background-color: var(--primary); }
+  /* ═══════════════════════════════════════════
+     DASHBOARD
+     ═══════════════════════════════════════════ */
 
-  .carrier-status-list {
-    display: grid;
-    gap: 10px;
+  /* ── Overflow guard ── */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* ── Hero card ── */
+  .hero-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
   }
-  .carrier-card {
-    border: 1px solid var(--border-color);
+  .hero-card .eyebrow {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted); margin: 0 0 6px;
+  }
+  .hero-card h1 {
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px;
+  }
+  .hero-card p { font-size: .875rem; color: var(--color-text-secondary); margin: 0 0 8px; }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  .hero-stats > div,
+  .hero-stats > a {
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-light);
     border-radius: var(--radius-md);
-    padding: 0.75rem 1rem;
-    display: grid;
-    gap: 4px;
-    background-color: var(--bg-primary);
+    padding: 14px 12px;
+    text-align: left;
+    text-decoration: none;
+    color: var(--color-text);
   }
-  .carrier-card strong {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--text-main);
+  .hero-stats strong {
+    display: block; font-size: 1.35rem; font-weight: 800;
+    letter-spacing: -0.02em; color: var(--color-text); margin-bottom: 2px;
   }
-  .carrier-card small {
-    color: var(--text-muted);
-    font-size: 0.8rem;
+  .hero-stats span {
+    font-size: .65rem; color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: .04em;
   }
-  .carrier-card .status-pill {
-    margin-top: 4px;
-    font-size: 0.75rem;
+  .hero-stats > a.btn--primary {
+    background: var(--color-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .85rem; padding: 14px 12px;
   }
-  .client-banner, .role-banner {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-top: 0.5rem;
-    margin-right: 0.5rem;
+  @media (max-width: 500px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
   }
-  .client-banner {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+
+  .role-badge {
+    display: inline-block; padding: 4px 12px; border-radius: var(--radius-full);
+    font-size: .7rem; font-weight: 700; margin-top: 4px; margin-right: 6px;
+    background: var(--color-primary-soft); color: var(--color-primary-ink);
   }
-  .role-banner {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+
+  /* ── Panel ── */
+  .panel {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--space-md); margin-bottom: var(--space-md); flex-wrap: wrap;
+  }
+  .panel-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  .panel-header .eyebrow {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted); margin: 0 0 4px;
+  }
+
+  /* ── Action grid ── */
+  .action-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-sm);
+  }
+  .action-card {
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    text-decoration: none; color: var(--color-text); font-weight: 600; font-size: .85rem;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .action-card:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+  @media (max-width: 500px) { .action-grid { grid-template-columns: 1fr 1fr; } }
+
+  /* ── Alert cards ── */
+  .alert-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-sm);
+  }
+  @media (max-width: 500px) { .alert-grid { grid-template-columns: 1fr; } }
+  .alert-card {
+    padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+  }
+  .alert-card h3 { font-size: .85rem; font-weight: 700; margin: 0 0 4px; }
+  .alert-card p { font-size: .8rem; color: var(--color-text-secondary); margin: 0; }
+  .alert-card.primary { background: var(--color-primary-soft); border-color: var(--color-primary-border); }
+  .alert-card.success { background: var(--color-success-soft); border-color: #a7f3d0; }
+  .alert-card.warning { background: var(--color-warning-soft); border-color: #fde68a; }
+  .alert-card.danger { background: var(--color-danger-soft); border-color: #fecaca; }
+  .alert-card.muted { background: var(--color-surface-alt); border-color: var(--color-border-light); }
+
+  /* ── Tables ── */
+  .table-card {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+  }
+  .table-card table {
+    width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 600px;
+  }
+  .table-card th {
+    text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--color-border);
+    font-size: .68rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--color-text-muted); white-space: nowrap;
+  }
+  .table-card td {
+    padding: 10px 12px; border-bottom: 1px solid var(--color-border-light);
+    white-space: nowrap;
+  }
+  .table-card tr:hover td { background: var(--color-surface-alt); }
+  .table-card ul {
+    list-style: none; padding: 0; margin: 0;
+  }
+  .table-card ul li {
+    padding: 10px 12px; border-bottom: 1px solid var(--color-border-light);
+    font-size: .85rem;
+  }
+  .table-card ul li:last-child { border-bottom: none; }
+
+  /* ── Status pill ── */
+  .status-pill {
+    font-size: .7rem; font-weight: 700; padding: 3px 10px;
+    border-radius: var(--radius-full); white-space: nowrap;
+  }
+  .status-pill.success { background: var(--color-success-soft); color: #065f46; }
+  .status-pill.warning { background: var(--color-warning-soft); color: #92400e; }
+  .status-pill.danger { background: var(--color-danger-soft); color: #991b1b; }
+  .status-pill.primary { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+
+  /* ── Custody timeline ── */
+  .custody-timeline { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 20px; }
+  .custody-timeline::before {
+    content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
+    width: 2px; background: var(--color-border);
+  }
+  .custody-event {
+    display: flex; gap: var(--space-md); padding: var(--space-md) 0;
+    position: relative;
+  }
+  .custody-event:last-child { padding-bottom: 0; }
+  .custody-icon {
+    width: 36px; height: 36px; border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-surface-alt); border: 2px solid var(--color-border);
+    font-size: 1rem; flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .custody-event.success .custody-icon { background: var(--color-success-soft); border-color: var(--color-success); }
+  .custody-event.danger .custody-icon { background: var(--color-danger-soft); border-color: var(--color-danger); }
+  .custody-event.warning .custody-icon { background: var(--color-warning-soft); border-color: var(--color-warning); }
+  .custody-details { flex: 1; min-width: 0; }
+  .custody-details strong { display: block; font-size: .85rem; margin-bottom: 2px; }
+  .custody-details p { font-size: .78rem; color: var(--color-text-secondary); margin: 0; }
+  .custody-details small { font-size: .7rem; color: var(--color-text-muted); display: block; margin-top: 4px; }
+  .custody-meta { display: inline-block; font-size: .7rem; background: var(--color-surface-alt); padding: 2px 8px; border-radius: var(--radius-sm); margin: 4px 4px 0 0; }
+  .custody-event.hidden { display: none; }
+  .show-more-wrap { text-align: center; padding: var(--space-sm) 0 0; font-size: .8rem; }
+  .show-more-link { color: var(--color-primary); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+  /* ── Activity ── */
+  .activity-list { display: flex; flex-direction: column; gap: 0; }
+  .activity-item { padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border-light); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-item strong { display: block; font-size: .85rem; }
+  .activity-item p { font-size: .78rem; color: var(--color-text-secondary); margin: 2px 0; }
+  .activity-item small { font-size: .7rem; color: var(--color-text-muted); }
+
+  /* ── Filter bar ── */
+  .filter-form select {
+    padding: 8px 14px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); background: var(--color-surface);
+    color: var(--color-text); font: inherit; font-size: .82rem; cursor: pointer;
+  }
+
+  /* ── Map sidebar ── */
+  .operations-map-grid {
+    display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md);
+  }
+  @media (max-width: 900px) { .operations-map-grid { grid-template-columns: 1fr; } }
+
+  .map-card {
+    border-radius: var(--radius-md); overflow: hidden;
+    border: 1px solid var(--color-border); min-height: 360px;
+  }
+  #carrier-map { width: 100%; height: 100%; min-height: 360px; }
+
+  .map-sidebar { display: flex; flex-direction: column; gap: var(--space-sm); }
+  .map-intro p { font-size: .82rem; color: var(--color-text-secondary); margin: 0 0 var(--space-sm); }
+
+  .sidebar-panel {
+    background: var(--color-surface); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md); padding: var(--space-md);
+  }
+  .sidebar-panel h3 { font-size: .85rem; font-weight: 700; margin: 0 0 10px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--color-text-secondary); }
+  .legend-badge { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  .carrier-status-list { display: flex; flex-direction: column; gap: 8px; }
+  .carrier-card {
+    border: 1px solid var(--color-border-light); border-radius: var(--radius-md);
+    padding: 10px 12px; background: var(--color-surface-alt); cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .carrier-card:hover { border-color: var(--color-primary-border); }
+  .carrier-card strong { display: block; font-size: .82rem; margin-bottom: 2px; }
+  .carrier-card small { font-size: .7rem; color: var(--color-text-muted); display: block; }
+
+  /* ── Carrier home ── */
+  .carrier-home { padding: 4px 0 12px; }
+  .carrier-topline {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+  }
+  .carrier-eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: 2px; }
+  .carrier-name { font-size: 1.2rem; font-weight: 700; margin: 0 0 2px; }
+  .carrier-vehicle { font-size: .82rem; color: var(--color-text-secondary); }
+  .duty-badge {
+    background: var(--color-primary-soft); color: var(--color-primary-ink);
+    font-size: .7rem; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-full); white-space: nowrap;
+  }
+  .carrier-stat-row {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;
+  }
+  .carrier-stat {
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md); padding: 12px;
+  }
+  .carrier-stat strong { display: block; font-size: 1.35rem; font-weight: 800; }
+  .carrier-stat span { font-size: .68rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .active-pickup-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
+    padding: 14px 16px; margin-bottom: 16px; text-decoration: none;
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .active-pickup-card:active { transform: scale(.98); }
+  .active-pickup-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em; opacity: .85; margin-bottom: 2px; }
+  .active-pickup-client { font-size: .9rem; font-weight: 700; }
+  .queue-label { font-size: .78rem; font-weight: 700; color: var(--color-text-muted); margin-bottom: 8px; }
+  .carrier-queue { display: flex; flex-direction: column; gap: 8px; }
+  .queue-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md); padding: 12px 14px; text-decoration: none; color: var(--color-text);
+  }
+  .queue-client { font-size: .85rem; font-weight: 700; margin: 0; }
+  .queue-meta { font-size: .72rem; color: var(--color-text-muted); margin: 2px 0 0; }
+  .queue-time {
+    background: var(--color-surface); color: var(--color-text);
+    font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm); white-space: nowrap;
+  }
+
+  /* ── Mobile only classes ── */
+  @media (max-width: 768px) {
+    .container { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)); }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .action-grid { grid-template-columns: repeat(2, 1fr); }
+    .operations-map-grid { grid-template-columns: 1fr; }
+    .panel-header { flex-direction: column; }
+  }
+
+  @media (max-width: 500px) {
+    .hero-stats { grid-template-columns: repeat(2, 1fr); }
+    .action-grid { grid-template-columns: 1fr 1fr; }
+    .hero-stats strong { font-size: 1.15rem; }
   }
 </style>
+
 <div class="hero-card">
   <div>
-    <p class="eyebrow">Operational overview</p>
-    <h1>Sample logistics control center</h1>
-    <p>Welcome back{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}. Use your dashboard to access the tools and analytics that matter for your role.</p>
-    {% if user_client %}
-      <p class="client-banner">{{ user_client.name }}</p>
-    {% endif %}
-    {% if role %}
-      <p class="role-banner">Signed in as {{ role }}</p>
-    {% endif %}
+    <p class="eyebrow">Operational Overview</p>
+    <h1>Sample Logistics Control Center</h1>
+    <p>Welcome back{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}. Your dashboard for sample tracking and logistics management.</p>
+    {% if user_client %}<span class="role-badge">{{ user_client.name }}</span>{% endif %}
+    {% if role %}<span class="role-badge">Signed in as {{ role }}</span>{% endif %}
   </div>
+
   <div class="hero-stats">
     {% if role == "Client" %}
-      <a class="button primary" href="{% url 'tracking:client_request_pickup' %}">Request pickup</a>
+      <a class="btn btn--primary btn--block" href="{% url 'tracking:client_request_pickup' %}" style="grid-column: 1 / -1;">Request Pickup</a>
     {% endif %}
+
     {% if role == "Super Admin" %}
-      <div>
-        <strong>{{ user_counts.total_users|default:0 }}</strong>
-        <span>Total users</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.active_orders|default:0 }}</strong>
-        <span>Active orders</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.completed_deliveries|default:0 }}</strong>
-        <span>Completed deliveries</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.pending_pickups|default:0 }}</strong>
-        <span>Pending pickups</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.samples_in_transit|default:0 }}</strong>
-        <span>Samples in transit</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.delayed_deliveries|default:0 }}</strong>
-        <span>Delayed deliveries</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.active_carriers|default:0 }}</strong>
-        <span>Active carriers</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.registered_clients|default:0 }}</strong>
-        <span>Registered clients</span>
-      </div>
-      <div>
-        <strong>{{ user_counts.total_facilities|default:0 }}</strong>
-        <span>Active facilities</span>
-      </div>
+      <div><strong>{{ user_counts.total_users|default:0 }}</strong><span>Total Users</span></div>
+      <div><strong>{{ user_counts.active_orders|default:0 }}</strong><span>Active Orders</span></div>
+      <div><strong>{{ user_counts.completed_deliveries|default:0 }}</strong><span>Completed</span></div>
+      <div><strong>{{ user_counts.pending_pickups|default:0 }}</strong><span>Pending</span></div>
+      <div><strong>{{ user_counts.samples_in_transit|default:0 }}</strong><span>In Transit</span></div>
+      <div><strong>{{ user_counts.delayed_deliveries|default:0 }}</strong><span>Delayed</span></div>
+      <div><strong>{{ user_counts.active_carriers|default:0 }}</strong><span>Carriers</span></div>
+      <div><strong>{{ user_counts.registered_clients|default:0 }}</strong><span>Clients</span></div>
+      <div><strong>{{ user_counts.total_facilities|default:0 }}</strong><span>Facilities</span></div>
     {% elif role == "Dispatcher" %}
-      <div>
-        <strong>{{ dispatcher_context.pickup_requests_today|default:0 }}</strong>
-        <span>Pickup requests today</span>
-      </div>
-      <div>
-        <strong>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</strong>
-        <span>Orders awaiting assignment</span>
-      </div>
-      <div>
-        <strong>{{ dispatcher_context.active_deliveries|default:0 }}</strong>
-        <span>Active deliveries</span>
-      </div>
-      <div>
-        <strong>{{ dispatcher_context.orders_in_transit|default:0 }}</strong>
-        <span>Orders in transit</span>
-      </div>
-      <div>
-        <strong>{{ dispatcher_context.delayed_orders|default:0 }}</strong>
-        <span>Delayed orders</span>
-      </div>
-      <div>
-        <strong>{{ dispatcher_context.completed_today|default:0 }}</strong>
-        <span>Completed today</span>
-      </div>
+      <div><strong>{{ dispatcher_context.pickup_requests_today|default:0 }}</strong><span>Requests Today</span></div>
+      <div><strong>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</strong><span>Awaiting</span></div>
+      <div><strong>{{ dispatcher_context.active_deliveries|default:0 }}</strong><span>Active</span></div>
+      <div><strong>{{ dispatcher_context.orders_in_transit|default:0 }}</strong><span>In Transit</span></div>
+      <div><strong>{{ dispatcher_context.delayed_orders|default:0 }}</strong><span>Delayed</span></div>
+      <div><strong>{{ dispatcher_context.completed_today|default:0 }}</strong><span>Done Today</span></div>
     {% elif role == "Carrier" %}
-      <div>
-        <strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong>
-        <span>Assigned orders</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.completed_today|default:0 }}</strong>
-        <span>Completed today</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.pending_pickups|default:0 }}</strong>
-        <span>Pending pickups</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.pending_deliveries|default:0 }}</strong>
-        <span>Pending deliveries</span>
-      </div>
+      <div><strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong><span>Assigned</span></div>
+      <div><strong>{{ carrier_context.completed_today|default:0 }}</strong><span>Done Today</span></div>
+      <div><strong>{{ carrier_context.pending_pickups|default:0 }}</strong><span>Pending</span></div>
+      <div><strong>{{ carrier_context.pending_deliveries|default:0 }}</strong><span>To Deliver</span></div>
     {% elif role == "Client" %}
-      <div>
-        <strong>{{ client_context.pickup_requests|default:0 }}</strong>
-        <span>Pickup requests</span>
-      </div>
-      <div>
-        <strong>{{ client_context.active_orders|default:0 }}</strong>
-        <span>Active orders</span>
-      </div>
-      <div>
-        <strong>{{ client_context.delivered_samples|default:0 }}</strong>
-        <span>Delivered samples</span>
-      </div>
-      <div>
-        <strong>{{ client_context.recent_orders.count|default:0 }}</strong>
-        <span>Recent orders</span>
-      </div>
+      <div><strong>{{ client_context.pickup_requests|default:0 }}</strong><span>Requests</span></div>
+      <div><strong>{{ client_context.active_orders|default:0 }}</strong><span>Active</span></div>
+      <div><strong>{{ client_context.delivered_samples|default:0 }}</strong><span>Delivered</span></div>
+      <div><strong>{{ client_context.recent_orders.count|default:0 }}</strong><span>Recent</span></div>
     {% else %}
-      <div>
-        <strong>{{ counts.pending }}</strong>
-        <span>Pending</span>
-      </div>
-      <div>
-        <strong>{{ counts.assigned }}</strong>
-        <span>Assigned</span>
-      </div>
-      <div>
-        <strong>{{ counts.in_transit }}</strong>
-        <span>In transit</span>
-      </div>
-      <div>
-        <strong>{{ counts.delivered }}</strong>
-        <span>Delivered</span>
-      </div>
+      <div><strong>{{ counts.pending }}</strong><span>Pending</span></div>
+      <div><strong>{{ counts.assigned }}</strong><span>Assigned</span></div>
+      <div><strong>{{ counts.in_transit }}</strong><span>In Transit</span></div>
+      <div><strong>{{ counts.delivered }}</strong><span>Delivered</span></div>
     {% endif %}
   </div>
 </div>
 
 {% include "tracking/workflow_visual.html" %}
 
+{# ═══ SUPER ADMIN ═══ #}
 {% if role == "Super Admin" %}
+
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Quick actions</p>
-      <h2>Administration</h2>
-    </div>
+    <div><p class="eyebrow">Quick Actions</p><h2>Administration</h2></div>
   </div>
   <div class="action-grid">
     <a class="action-card" href="{% url 'accounts:user_management' %}">Add User</a>
     <a class="action-card" href="{% url 'tracking:order_create' %}">Create Order</a>
     <a class="action-card" href="{% url 'tracking:client_list' %}">Register Client</a>
     <a class="action-card" href="{% url 'tracking:carrier_create' %}">Register Carrier</a>
-    <a class="action-card" href="{% url 'tracking:reports_view' %}">Generate Reports</a>
-    <a class="action-card" href="{% url 'accounts:account_index' %}">View Audit Logs</a>
+    <a class="action-card" href="{% url 'tracking:reports_view' %}">Reports</a>
+    <a class="action-card" href="{% url 'accounts:account_index' %}">Audit Logs</a>
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Carriers</p>
-      <h2>Recent carriers</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Carriers</p><h2>Recent Carriers</h2></div></div>
   <div class="table-card">
     <ul>
       {% for c in dispatcher_context.recent_carriers %}
         <li>{% if c.user %}{{ c }}{% else %}Unnamed carrier{% endif %}</li>
-      {% empty %}
-        <li>No carriers found</li>
-      {% endfor %}
+      {% empty %}<li>No carriers found</li>{% endfor %}
     </ul>
   </div>
 </section>
@@ -256,30 +376,15 @@
 {% if dispatcher_context.facilities %}
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Facilities</p>
-      <h2>Pickup facilities ({{ dispatcher_context.facilities.count }})</h2>
-    </div>
-    <a class="button secondary" href="/admin/core/facility/">Manage facilities →</a>
+    <div><p class="eyebrow">Facilities</p><h2>Pickup Facilities ({{ dispatcher_context.facilities.count }})</h2></div>
+    <a class="btn btn--sm btn--outline" href="/admin/core/facility/">Manage</a>
   </div>
   <div class="table-card">
     <table>
-      <thead>
-        <tr>
-          <th>Facility Name</th>
-          <th>Address</th>
-          <th>Contact</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Name</th><th>Address</th><th>Contact</th><th>Status</th></tr></thead>
       <tbody>
-        {% for facility in dispatcher_context.facilities %}
-          <tr>
-            <td><strong>{{ facility.name }}</strong></td>
-            <td>{{ facility.address }}</td>
-            <td>{{ facility.contact_phone }}</td>
-            <td><span class="status-pill success">Active</span></td>
-          </tr>
+        {% for f in dispatcher_context.facilities %}
+          <tr><td><strong>{{ f.name }}</strong></td><td>{{ f.address }}</td><td>{{ f.contact_phone }}</td><td><span class="status-pill success">Active</span></td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -288,175 +393,74 @@
 {% endif %}
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Reports shortcut</p>
-      <h2>Operational reporting</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Reports</p><h2>Operational Reporting</h2></div></div>
   <div class="alert-grid">
-    <div class="alert-card primary">
-      <h3>Live reports</h3>
-      <p>Filter orders by status and export a CSV snapshot from the reports page.</p>
-    </div>
-    <div class="alert-card success">
-      <h3>Open reports</h3>
-      <p><a href="{% url 'tracking:reports_view' %}">Go to reports</a></p>
-    </div>
-  </div>
-</section>
-
-
-<section class="panel alert-panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Alerts</p>
-      <h2>System alerts</h2>
-    </div>
-  </div>
-  <div class="alert-grid">
-    <div class="alert-card warning">
-      <h3>Delayed samples</h3>
-      <p>{{ user_counts.delayed_deliveries|default:0 }} delayed orders need attention.</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Unassigned orders</h3>
-      <p>{{ user_counts.pending_pickups|default:0 }} pickup requests are unassigned.</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Inactive carriers</h3>
-      <p>{{ user_counts.active_carriers|default:0 }} active carriers available.</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Expiring accounts</h3>
-      <p>Check users awaiting review or reactivation.</p>
-    </div>
+    <div class="alert-card primary"><h3>Live Reports</h3><p>Filter orders by status and export CSV from the reports page.</p></div>
+    <div class="alert-card success"><h3>Open Reports</h3><p><a href="{% url 'tracking:reports_view' %}">Go to reports →</a></p></div>
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Recent activity</p>
-      <h2>System audit feed</h2>
-    </div>
+  <div class="panel-header"><div><p class="eyebrow">Alerts</p><h2>System Alerts</h2></div></div>
+  <div class="alert-grid">
+    <div class="alert-card warning"><h3>Delayed Samples</h3><p>{{ user_counts.delayed_deliveries|default:0 }} delayed orders need attention.</p></div>
+    <div class="alert-card warning"><h3>Unassigned</h3><p>{{ user_counts.pending_pickups|default:0 }} pickup requests are unassigned.</p></div>
+    <div class="alert-card warning"><h3>Carriers</h3><p>{{ user_counts.active_carriers|default:0 }} active carriers available.</p></div>
+    <div class="alert-card warning"><h3>Accounts</h3><p>Check users awaiting review or reactivation.</p></div>
   </div>
+</section>
+
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Activity</p><h2>System Audit Feed</h2></div></div>
   <div class="activity-list">
     {% for event in dispatcher_context.recent_activity %}
-      <div class="activity-item">
-        <strong>{{ event.get_event_type_display }}</strong>
-        <p>{{ event.notes|default:"No details" }}</p>
-        <small>{{ event.timestamp|date:"M d, Y H:i" }}</small>
-      </div>
-    {% empty %}
-      <p class="empty-state">No recent activity yet.</p>
-    {% endfor %}
+      <div class="activity-item"><strong>{{ event.get_event_type_display }}</strong><p>{{ event.notes|default:"No details" }}</p><small>{{ event.timestamp|date:"M d, Y H:i" }}</small></div>
+    {% empty %}<p class="empty-state">No recent activity.</p>{% endfor %}
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Chain of custody</p>
-      <h2>Recent events & tracking</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Recent Events &amp; Tracking</h2></div></div>
   <div class="custody-timeline">
     {% if dispatcher_context.custody_events %}
       {% for event in dispatcher_context.custody_events %}
         <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}">
           <div class="custody-icon">
-            {% if event.event_type == 'order_created' %}📋
-            {% elif event.event_type == 'request_approved' %}✓
-            {% elif event.event_type == 'carrier_assigned' %}🚚
-            {% elif event.event_type == 'started_to_client' %}🛫
-            {% elif event.event_type == 'arrived_at_client' %}📍
-            {% elif event.event_type == 'picked_up' %}📦
-            {% elif event.event_type == 'departed' %}🛬
-            {% elif event.event_type == 'delivered' or event.event_type == 'received' %}✓
-            {% elif event.event_type == 'completed' %}🎉
-            {% elif event.event_type == 'exception' %}⚠️
-            {% elif event.event_type == 'temp_check' %}🌡️
-            {% else %}📌{% endif %}
+            {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
           </div>
           <div class="custody-details">
             <strong>{{ event.get_event_type_display }}</strong>
             <p>{{ event.notes|default:"No additional notes" }}</p>
-            {% if event.order %}
-              <span class="custody-meta">
-                <span>Order: {{ event.order.reference_code }}</span>
-              </span>
-            {% endif %}
-            {% if event.temperature_celsius %}
-              <span class="custody-meta">
-                <span>🌡️ Temp: {{ event.temperature_celsius }}°C</span>
-              </span>
-            {% endif %}
-            {% if event.actor %}
-              <small>by {{ event.actor.get_full_name|default:event.actor.username }} • {{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% else %}
-              <small>{{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% endif %}
+            {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
+            {% if event.temperature_celsius %}<span class="custody-meta">🌡️ Temp: {{ event.temperature_celsius }}°C</span>{% endif %}
+            <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
           </div>
         </div>
       {% endfor %}
-    {% else %}
-      <p class="empty-state">No custody events recorded yet.</p>
-    {% endif %}
+    {% else %}<p class="empty-state">No custody events recorded yet.</p>{% endif %}
   </div>
 </section>
 
+{# ═══ DISPATCHER ═══ #}
 {% elif role == "Dispatcher" %}
-<section class="panel alert-panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Dispatch queue</p>
-      <h2>Operations summary</h2>
-    </div>
-  </div>
+
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Dispatch Queue</p><h2>Operations Summary</h2></div></div>
   <div class="alert-grid">
-    <div class="alert-card primary">
-      <h3>New pickup requests</h3>
-      <p>{{ dispatcher_context.pickup_requests_today|default:0 }}</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Pending review</h3>
-      <p>{{ dispatcher_context.orders_pending_review|default:0 }}</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Waiting for assignment</h3>
-      <p>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</p>
-    </div>
-    <div class="alert-card danger">
-      <h3>Delayed orders</h3>
-      <p>{{ dispatcher_context.delayed_orders|default:0 }}</p>
-    </div>
-    <div class="alert-card primary">
-      <h3>Reports</h3>
-      <p><a href="{% url 'tracking:reports_view' %}">Open reports</a></p>
-    </div>
+    <div class="alert-card primary"><h3>New Requests</h3><p>{{ dispatcher_context.pickup_requests_today|default:0 }}</p></div>
+    <div class="alert-card warning"><h3>Pending Review</h3><p>{{ dispatcher_context.orders_pending_review|default:0 }}</p></div>
+    <div class="alert-card warning"><h3>Awaiting Assignment</h3><p>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</p></div>
+    <div class="alert-card danger"><h3>Delayed</h3><p>{{ dispatcher_context.delayed_orders|default:0 }}</p></div>
+    <div class="alert-card primary"><h3>Reports</h3><p><a href="{% url 'tracking:reports_view' %}">Open reports →</a></p></div>
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Dispatch queue</p>
-      <h2>Pending orders</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Dispatch Queue</p><h2>Pending Orders</h2></div></div>
   {% if dispatcher_context.dispatch_queue %}
     <div class="table-card">
       <table>
-        <thead>
-          <tr>
-            <th>Order</th>
-            <th>Client</th>
-            <th>Pickup</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Order</th><th>Client</th><th>Pickup</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>
           {% for order in dispatcher_context.dispatch_queue %}
             <tr>
@@ -465,24 +469,21 @@
               <td>{{ order.requested_pickup_time|date:"M d, Y H:i"|default:"—" }}</td>
               <td>{{ order.get_status_display }}</td>
               <td>
-                <div style="display:flex; gap:0.35rem; flex-wrap:wrap; align-items:center;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   {% if order.status == 'pending_review' %}
                     <form method="post" action="{% url 'tracking:order_approve_request' order.pk %}" style="margin:0;">
-                      {% csrf_token %}
-                      <button class="button secondary" type="submit" style="padding:0.45rem 0.65rem; font-size:0.82rem;">Approve</button>
+                      {% csrf_token %}<button class="btn btn--sm btn--outline" type="submit">Approve</button>
                     </form>
                     <form method="post" action="{% url 'tracking:order_auto_assign' order.pk %}" style="margin:0;">
-                      {% csrf_token %}
-                      <button class="button" type="submit" style="padding:0.45rem 0.65rem; font-size:0.82rem;">Auto assign</button>
+                      {% csrf_token %}<button class="btn btn--sm btn--primary" type="submit">Auto Assign</button>
                     </form>
                   {% elif order.status == 'pending' %}
                     <form method="post" action="{% url 'tracking:order_auto_assign' order.pk %}" style="margin:0;">
-                      {% csrf_token %}
-                      <button class="button" type="submit" style="padding:0.45rem 0.65rem; font-size:0.82rem;">Auto assign</button>
+                      {% csrf_token %}<button class="btn btn--sm btn--primary" type="submit">Auto Assign</button>
                     </form>
-                    <a class="button secondary" href="{% url 'tracking:order_detail' order.pk %}" style="padding:0.45rem 0.65rem; font-size:0.82rem;">View</a>
+                    <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">View</a>
                   {% else %}
-                    <a class="button secondary" href="{% url 'tracking:order_detail' order.pk %}" style="padding:0.45rem 0.65rem; font-size:0.82rem;">View</a>
+                    <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">View</a>
                   {% endif %}
                 </div>
               </td>
@@ -491,380 +492,187 @@
         </tbody>
       </table>
     </div>
-  {% else %}
-    <p class="empty-state">No pending pickup orders available right now.</p>
-  {% endif %}
+  {% else %}<p class="empty-state">No pending pickup orders available right now.</p>{% endif %}
 </section>
 
 <section class="panel">
-  <div class="panel-header" style="align-items:center; justify-content:space-between; display:flex; gap:1rem;">
-    <div>
-      <p class="eyebrow">Live tracking</p>
-      <h2>Operations map</h2>
-    </div>
-    <a class="button primary" href="{% url 'tracking:carrier_monitoring' %}">Open full monitoring</a>
+  <div class="panel-header">
+    <div><p class="eyebrow">Live Tracking</p><h2>Operations Map</h2></div>
+    <a class="btn btn--sm btn--primary" href="{% url 'tracking:carrier_monitoring' %}">Full Monitoring</a>
   </div>
-  <div class="map-intro">
-    <p class="muted">Monitor active carriers, live routes, and operational status in one dashboard.</p>
-  </div>
+  <div class="map-intro"><p>Monitor active carriers, live routes, and operational status.</p></div>
   <div class="operations-map-grid">
-    <div class="map-card">
-      <div id="carrier-map"></div>
-    </div>
+    <div class="map-card"><div id="carrier-map"></div></div>
     <aside class="map-sidebar">
       <div class="sidebar-panel">
-        <h3>Live vehicles</h3>
+        <h3>Live Vehicles</h3>
         <div class="legend">
-          <div class="legend-item"><span class="legend-badge badge-schedule"></span>On schedule</div>
-          <div class="legend-item"><span class="legend-badge badge-delayed"></span>Delayed</div>
-          <div class="legend-item"><span class="legend-badge badge-alert"></span>Stopped / Alert</div>
-          <div class="legend-item"><span class="legend-badge badge-pickup"></span>Heading to pickup</div>
+          <div class="legend-item"><span class="legend-badge" style="background:#22c55e;"></span> On schedule</div>
+          <div class="legend-item"><span class="legend-badge" style="background:#f59e0b;"></span> Delayed</div>
+          <div class="legend-item"><span class="legend-badge" style="background:#ef4444;"></span> Stopped / Alert</div>
+          <div class="legend-item"><span class="legend-badge" style="background:var(--color-primary);"></span> To pickup</div>
         </div>
-        <div id="carrier-status-list" class="carrier-status-list">
-          <p class="empty-state">Loading active carriers...</p>
-        </div>
+        <div id="carrier-status-list" class="carrier-status-list"><p class="empty-state">Loading active carriers…</p></div>
       </div>
     </aside>
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Carrier availability</p>
-      <h2>Field status</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Carrier Availability</p><h2>Field Status</h2></div></div>
   <div class="alert-grid">
-    <div class="alert-card success">
-      <h3>Available carriers</h3>
-      <p>{{ dispatcher_context.available_carriers|default:0 }}</p>
-    </div>
-    <div class="alert-card warning">
-      <h3>Busy carriers</h3>
-      <p>{{ dispatcher_context.busy_carriers|default:0 }}</p>
-    </div>
-    <div class="alert-card muted">
-      <h3>Offline carriers</h3>
-      <p>{{ dispatcher_context.offline_carriers|default:0 }}</p>
-    </div>
+    <div class="alert-card success"><h3>Available</h3><p>{{ dispatcher_context.available_carriers|default:0 }}</p></div>
+    <div class="alert-card warning"><h3>Busy</h3><p>{{ dispatcher_context.busy_carriers|default:0 }}</p></div>
+    <div class="alert-card muted"><h3>Offline</h3><p>{{ dispatcher_context.offline_carriers|default:0 }}</p></div>
   </div>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Carriers</p>
-      <h2>Recent carriers</h2>
-    </div>
-  </div>
-  <div class="table-card">
-    <ul>
-      {% for c in dispatcher_context.recent_carriers %}
-        <li>{% if c.user %}{{ c }}{% else %}Unnamed carrier{% endif %}</li>
-      {% empty %}
-        <li>No carriers found</li>
-      {% endfor %}
-    </ul>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Today's schedule</p>
-      <h2>Upcoming pickups</h2>
-    </div>
-  </div>
+  <div class="panel-header"><div><p class="eyebrow">Today's Schedule</p><h2>Upcoming Pickups</h2></div></div>
   {% if dispatcher_context.today_schedule %}
     <div class="table-card">
       <table>
-        <thead><tr><th>Order</th><th>Client</th><th>Pickup time</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order</th><th>Client</th><th>Pickup Time</th><th>Status</th></tr></thead>
         <tbody>
           {% for order in dispatcher_context.today_schedule %}
-            <tr>
-              <td>{{ order.reference_code }}</td>
-              <td>{{ order.client.name }}</td>
-              <td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td>
-              <td>{{ order.get_status_display }}</td>
-            </tr>
+            <tr><td>{{ order.reference_code }}</td><td>{{ order.client.name }}</td><td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td><td>{{ order.get_status_display }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  {% else %}
-    <p class="empty-state">No pickups scheduled for today.</p>
-  {% endif %}
+  {% else %}<p class="empty-state">No pickups scheduled for today.</p>{% endif %}
 </section>
 
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Chain of custody</p>
-      <h2>Recent tracking events</h2>
-    </div>
-  </div>
-  <div class="custody-timeline">
-    {% if dispatcher_context.custody_events %}
-      {% for event in dispatcher_context.custody_events %}
-        <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}">
-          <div class="custody-icon">
-            {% if event.event_type == 'order_created' %}📋
-            {% elif event.event_type == 'request_approved' %}✓
-            {% elif event.event_type == 'carrier_assigned' %}🚚
-            {% elif event.event_type == 'started_to_client' %}🛫
-            {% elif event.event_type == 'arrived_at_client' %}📍
-            {% elif event.event_type == 'picked_up' %}📦
-            {% elif event.event_type == 'departed' %}🛬
-            {% elif event.event_type == 'delivered' or event.event_type == 'received' %}✓
-            {% elif event.event_type == 'completed' %}🎉
-            {% elif event.event_type == 'exception' %}⚠️
-            {% elif event.event_type == 'temp_check' %}🌡️
-            {% else %}📌{% endif %}
-          </div>
-          <div class="custody-details">
-            <strong>{{ event.get_event_type_display }}</strong>
-            <p>{{ event.notes|default:"No additional notes" }}</p>
-            {% if event.order %}
-              <span class="custody-meta">
-                <span>Order: {{ event.order.reference_code }}</span>
-              </span>
-            {% endif %}
-            {% if event.temperature_celsius %}
-              <span class="custody-meta">
-                <span>🌡️ Temp: {{ event.temperature_celsius }}°C</span>
-              </span>
-            {% endif %}
-            {% if event.actor %}
-              <small>by {{ event.actor.get_full_name|default:event.actor.username }} • {{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% else %}
-              <small>{{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p class="empty-state">No custody events recorded yet.</p>
-    {% endif %}
-  </div>
-</section>
-
+{# ═══ CARRIER ═══ #}
 {% elif role == "Carrier" %}
-<section class="panel">
-  <div class="hero-card">
-    <div>
-      <p class="eyebrow">Welcome back</p>
-      <h1>{{ user.get_full_name|default:user.username }}</h1>
-      <p>{{ carrier_context.carrier.vehicle_type|default:"Vehicle pending" }} {{ carrier_context.carrier.vehicle_plate|default:"" }}</p>
-    </div>
-    <div class="hero-stats">
-      <div>
-        <strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong>
-        <span>Assigned orders</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.completed_today|default:0 }}</strong>
-        <span>Completed today</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.pending_pickups|default:0 }}</strong>
-        <span>Pending pickups</span>
-      </div>
-      <div>
-        <strong>{{ carrier_context.pending_deliveries|default:0 }}</strong>
-        <span>Pending deliveries</span>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="panel">
-  <div class="panel-header">
+<div class="carrier-home">
+  <div class="carrier-topline">
     <div>
-      <p class="eyebrow">My assignments</p>
-      <h2>Active orders</h2>
+      <p class="carrier-eyebrow">Today's Route</p>
+      <h1 class="carrier-name">{{ user.get_full_name|default:user.username }}</h1>
+      <p class="carrier-vehicle">{{ carrier_context.carrier.vehicle_display }}</p>
     </div>
+    <span class="duty-badge">On Duty</span>
   </div>
-  {% if carrier_context.assigned_orders %}
-    <div class="table-card">
-      <table>
-        <thead><tr><th>Order</th><th>Client</th><th>Priority</th><th>Status</th><th>Pickup time</th></tr></thead>
-        <tbody>
-          {% for order in carrier_context.assigned_orders %}
-            <tr>
-              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
-              <td>{{ order.client.name }}</td>
-              <td>{{ order.get_priority_display }}</td>
-              <td>{{ order.get_status_display }}</td>
-              <td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}
-    <p class="empty-state">No active assignments yet.</p>
-  {% endif %}
-</section>
 
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Chain of custody</p>
-      <h2>Your recent activity</h2>
-    </div>
+  <div class="carrier-stat-row">
+    <div class="carrier-stat"><strong>{{ carrier_context.completed_today|default:0 }}</strong><span>Completed</span></div>
+    <div class="carrier-stat"><strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong><span>Remaining</span></div>
   </div>
-  <div class="custody-timeline" id="recent-activity-carrier">
-    {% if carrier_context.custody_events %}
-      {% for event in carrier_context.custody_events %}
-        <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
-          <div class="custody-icon">
-            {% if event.event_type == 'order_created' %}📋
-            {% elif event.event_type == 'request_approved' %}✓
-            {% elif event.event_type == 'carrier_assigned' %}🚚
-            {% elif event.event_type == 'started_to_client' %}🛫
-            {% elif event.event_type == 'arrived_at_client' %}📍
-            {% elif event.event_type == 'picked_up' %}📦
-            {% elif event.event_type == 'departed' %}🛬
-            {% elif event.event_type == 'delivered' or event.event_type == 'received' %}✓
-            {% elif event.event_type == 'completed' %}🎉
-            {% elif event.event_type == 'exception' %}⚠️
-            {% elif event.event_type == 'temp_check' %}🌡️
-            {% else %}📌{% endif %}
-          </div>
-          <div class="custody-details">
-            <strong>{{ event.get_event_type_display }}</strong>
-            <p>{{ event.notes|default:"No additional notes" }}</p>
-            {% if event.order %}
-              <span class="custody-meta">
-                <span>Order: {{ event.order.reference_code }}</span>
-              </span>
-            {% endif %}
-            {% if event.temperature_celsius %}
-              <span class="custody-meta">
-                <span>🌡️ Temp: {{ event.temperature_celsius }}°C</span>
-              </span>
-            {% endif %}
-            {% if event.actor %}
-              <small>by {{ event.actor.get_full_name|default:event.actor.username }} • {{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% else %}
-              <small>{{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-      {% if carrier_context.custody_events|length > 3 %}
-        <p class="show-more-wrap">
-          <a href="#" class="show-more-link" data-target="recent-activity-carrier">See more</a>
-          <small>({{ carrier_context.custody_events|length }} events)</small>
-        </p>
-      {% endif %}
-    {% else %}
-      <p class="empty-state">No custody events recorded yet.</p>
+
+  {% with active_order=carrier_context.assigned_orders|first %}
+    {% if active_order %}
+      <a href="{% url 'tracking:order_detail' active_order.pk %}" class="active-pickup-card">
+        <div><p class="active-pickup-label">Active Pickup</p><p class="active-pickup-client">{{ active_order.client.name }} · {{ active_order.reference_code }}</p></div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </a>
     {% endif %}
-  </div>
-</section>
+  {% endwith %}
 
-{% elif role == "Client" %}
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Recent orders</p>
-      <h2>Your pickup requests</h2>
-    </div>
+  <p class="queue-label">Up Next</p>
+  <div class="carrier-queue">
+    {% for order in carrier_context.assigned_orders|slice:"1:" %}
+      <a href="{% url 'tracking:order_detail' order.pk %}" class="queue-card">
+        <div><p class="queue-client">{{ order.client.name }}</p><p class="queue-meta">{{ order.reference_code }} · {{ order.get_priority_display }}</p></div>
+        <span class="queue-time">{{ order.requested_pickup_time|date:"g:i A" }}</span>
+      </a>
+    {% empty %}<p class="empty-state">No more pickups queued.</p>{% endfor %}
   </div>
+</div>
+
+{# ═══ CLIENT ═══ #}
+{% elif role == "Client" %}
+
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Recent Orders</p><h2>Your Pickup Requests</h2></div></div>
   {% if client_context.recent_orders %}
     <div class="table-card">
       <table>
         <thead><tr><th>Order</th><th>Collection</th><th>Status</th><th>Carrier</th></tr></thead>
         <tbody>
           {% for order in client_context.recent_orders %}
-            <tr>
-              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
-              <td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td>
-              <td>{{ order.get_status_display }}</td>
-              <td>{{ order.carrier|default:"Unassigned" }}</td>
-            </tr>
+            <tr><td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td><td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td><td>{{ order.get_status_display }}</td><td>{{ order.carrier|default:"Unassigned" }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  {% else %}
-    <p class="empty-state">No recent orders to show.</p>
-  {% endif %}
-</section>
-
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Chain of custody</p>
-      <h2>Your order tracking</h2>
-    </div>
-  </div>
-  <div class="custody-timeline" id="recent-activity-client">
-    {% if client_context.custody_events %}
-      {% for event in client_context.custody_events %}
-        <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
-          <div class="custody-icon">
-            {% if event.event_type == 'order_created' %}📋
-            {% elif event.event_type == 'request_approved' %}✓
-            {% elif event.event_type == 'carrier_assigned' %}🚚
-            {% elif event.event_type == 'started_to_client' %}🛫
-            {% elif event.event_type == 'arrived_at_client' %}📍
-            {% elif event.event_type == 'picked_up' %}📦
-            {% elif event.event_type == 'departed' %}🛬
-            {% elif event.event_type == 'delivered' or event.event_type == 'received' %}✓
-            {% elif event.event_type == 'completed' %}🎉
-            {% elif event.event_type == 'exception' %}⚠️
-            {% elif event.event_type == 'temp_check' %}🌡️
-            {% else %}📌{% endif %}
-          </div>
-          <div class="custody-details">
-            <strong>{{ event.get_event_type_display }}</strong>
-            <p>{{ event.notes|default:"No additional notes" }}</p>
-            {% if event.order %}
-              <span class="custody-meta">
-                <span>Order: {{ event.order.reference_code }}</span>
-              </span>
-            {% endif %}
-            {% if event.temperature_celsius %}
-              <span class="custody-meta">
-                <span>🌡️ Temp: {{ event.temperature_celsius }}°C</span>
-              </span>
-            {% endif %}
-            {% if event.actor %}
-              <small>by {{ event.actor.get_full_name|default:event.actor.username }} • {{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% else %}
-              <small>{{ event.timestamp|date:"M d, Y H:i" }}</small>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-      {% if client_context.custody_events|length > 3 %}
-        <p class="show-more-wrap">
-          <a href="#" class="show-more-link" data-target="recent-activity-client">See more</a>
-          <small>({{ client_context.custody_events|length }} events)</small>
-        </p>
-      {% endif %}
-    {% else %}
-      <p class="empty-state">No custody events recorded for your orders yet.</p>
-    {% endif %}
-  </div>
+  {% else %}<p class="empty-state">No recent orders to show.</p>{% endif %}
 </section>
 
 {% endif %}
 
+{# ═══ Custody timeline for Carrier ═══ #}
+{% if role == "Carrier" and carrier_context.custody_events %}
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Recent Activity</h2></div></div>
+  <div class="custody-timeline" id="recent-activity-carrier">
+    {% for event in carrier_context.custody_events %}
+      <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
+        <div class="custody-icon">
+          {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
+        </div>
+        <div class="custody-details">
+          <strong>{{ event.get_event_type_display }}</strong>
+          <p>{{ event.notes|default:"No additional notes" }}</p>
+          {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
+          {% if event.temperature_celsius %}<span class="custody-meta">🌡️ {{ event.temperature_celsius }}°C</span>{% endif %}
+          <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
+        </div>
+      </div>
+    {% endfor %}
+    {% if carrier_context.custody_events|length > 3 %}
+      <div class="show-more-wrap"><a href="#" class="show-more-link" data-target="recent-activity-carrier">See more</a> <small>({{ carrier_context.custody_events|length }} events)</small></div>
+    {% endif %}
+  </div>
+</section>
+{% elif role == "Carrier" %}
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Recent Activity</h2></div></div>
+  <p class="empty-state">No custody events recorded yet.</p>
+</section>
+{% endif %}
+
+{# ═══ Custody timeline for Client ═══ #}
+{% if role == "Client" and client_context.custody_events %}
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Order Tracking</h2></div></div>
+  <div class="custody-timeline" id="recent-activity-client">
+    {% for event in client_context.custody_events %}
+      <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
+        <div class="custody-icon">
+          {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
+        </div>
+        <div class="custody-details">
+          <strong>{{ event.get_event_type_display }}</strong>
+          <p>{{ event.notes|default:"No additional notes" }}</p>
+          {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
+          {% if event.temperature_celsius %}<span class="custody-meta">🌡️ {{ event.temperature_celsius }}°C</span>{% endif %}
+          <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
+        </div>
+      </div>
+    {% endfor %}
+    {% if client_context.custody_events|length > 3 %}
+      <div class="show-more-wrap"><a href="#" class="show-more-link" data-target="recent-activity-client">See more</a> <small>({{ client_context.custody_events|length }} events)</small></div>
+    {% endif %}
+  </div>
+</section>
+{% elif role == "Client" %}
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Order Tracking</h2></div></div>
+  <p class="empty-state">No custody events recorded for your orders yet.</p>
+</section>
+{% endif %}
+
+{# ═══ SHARED: Orders table for Admin & Dispatcher ═══ #}
 {% if role == "Super Admin" or role == "Dispatcher" %}
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Live queue</p>
-      <h2>Current orders</h2>
-    </div>
+    <div><p class="eyebrow">Live Queue</p><h2>Current Orders</h2></div>
     <form method="get" class="filter-form">
-      <label for="status" class="sr-only">Filter status</label>
+      <label for="status" style="position:absolute;width:1px;height:1px;overflow:hidden;">Filter status</label>
       <select id="status" name="status" onchange="this.form.submit()">
-        <option value="">All statuses</option>
+        <option value="">All Statuses</option>
         {% for value, label in statuses %}
           <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
@@ -875,16 +683,7 @@
   {% if orders %}
     <div class="table-card">
       <table>
-        <thead>
-          <tr>
-            <th>Reference</th>
-            <th>Client</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Carrier</th>
-            <th>Created</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Reference</th><th>Client</th><th>Priority</th><th>Status</th><th>Carrier</th><th>Created</th></tr></thead>
         <tbody>
           {% for order in orders %}
             <tr>
@@ -899,9 +698,7 @@
         </tbody>
       </table>
     </div>
-  {% else %}
-    <p class="empty-state">No orders are currently in the queue. Create a new pickup request to begin the workflow.</p>
-  {% endif %}
+  {% else %}<p class="empty-state">No orders in queue. Create a new pickup request to begin.</p>{% endif %}
 </section>
 {% endif %}
 
@@ -909,151 +706,86 @@
 
 {% block extra_js %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  (function() {
+    'use strict';
+
+    /* ── Carrier map (Dispatcher / Super Admin) ── */
     {% if role == "Dispatcher" or role == "Super Admin" %}
-      var carrierMapEl = document.getElementById('carrier-map');
-      if (carrierMapEl) {
-        var labLat = {{ lab_location.latitude }};
-        var labLng = {{ lab_location.longitude }};
-        var carrierMap = L.map('carrier-map').setView([labLat, labLng], 8);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(carrierMap);
+    (function() {
+      var mapEl = document.getElementById('carrier-map');
+      if (!mapEl) return;
 
-        var carrierLayer = L.layerGroup().addTo(carrierMap);
-        var routeLayer = L.layerGroup().addTo(carrierMap);
-        var carrierStatusList = document.getElementById('carrier-status-list');
+      var labLat = {{ lab_location.latitude }};
+      var labLng = {{ lab_location.longitude }};
+      var m = L.map('carrier-map').setView([labLat, labLng], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OSM', maxZoom: 19
+      }).addTo(m);
 
-        function createCarrierMarker(carrier) {
-          var color = '#22c55e';
-          if (carrier.status === 'Delayed') {
-            color = '#f59e0b';
-          } else if (carrier.status === 'Stopped' || carrier.status === 'Alert') {
-            color = '#ef4444';
-          } else if (carrier.status === 'Heading to pickup') {
-            color = '#C8102E';
-          }
+      var layer = L.layerGroup().addTo(m);
+      var routes = L.layerGroup().addTo(m);
+      var list = document.getElementById('carrier-status-list');
 
-          return L.circleMarker([carrier.latitude, carrier.longitude], {
-            radius: 10,
-            fillColor: color,
-            color: '#ffffff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9,
-          }).bindPopup(
-            '<strong>' + carrier.name + '</strong><br>' +
-            'Order: ' + (carrier.order || 'N/A') + '<br>' +
-            'Status: ' + carrier.status + '<br>' +
-            'Last update: ' + (carrier.last_location_update || 'unknown')
-          );
-        }
-
-        function updateCarrierStatusPanel(data) {
-          if (!carrierStatusList) {
-            return;
-          }
-          carrierStatusList.innerHTML = '';
-
-          if (!data.carriers || !data.carriers.length) {
-            carrierStatusList.innerHTML = '<p class="empty-state">No active carriers available.</p>';
-            return;
-          }
-
-          data.carriers.forEach(function (carrier) {
-            var statusClass = 'success';
-            if (carrier.status === 'Delayed') {
-              statusClass = 'warning';
-            } else if (carrier.status === 'Stopped' || carrier.status === 'Alert') {
-              statusClass = 'danger';
-            }
-
-            var carrierCard = document.createElement('div');
-            carrierCard.className = 'carrier-card';
-            carrierCard.innerHTML =
-              '<strong>' + carrier.name + '</strong>' +
-              '<small>Order: ' + (carrier.order || 'N/A') + '</small>' +
-              '<small>Last update: ' + (carrier.last_location_update || 'unknown') + '</small>' +
-              '<span class="status-pill ' + statusClass + '">' + carrier.status + '</span>';
-
-            carrierCard.addEventListener('click', function () {
-              carrierMap.setView([carrier.latitude, carrier.longitude], 12, { animate: true });
-            });
-
-            carrierStatusList.appendChild(carrierCard);
-          });
-        }
-
-        function drawCarrierRoutes(data) {
-          routeLayer.clearLayers();
-          if (!data.carriers) {
-            return;
-          }
-
-          data.carriers.forEach(function (carrier) {
-            if (carrier.route && carrier.route.length > 1) {
-              L.polyline(carrier.route, { color: '#C8102E', weight: 3, opacity: 0.65 }).addTo(routeLayer);
-            }
-          });
-        }
-
-        function refreshCarrierPositions() {
-          if (carrierMap) {
-            carrierMap.invalidateSize();
-          }
-
-          fetch('{% url "tracking:carrier_positions" %}')
-            .then(function (response) { return response.json(); })
-            .then(function (data) {
-              carrierLayer.clearLayers();
-              routeLayer.clearLayers();
-              if (!data.carriers || !data.carriers.length) {
-                updateCarrierStatusPanel(data);
-                return;
-              }
-
-              updateCarrierStatusPanel(data);
-              drawCarrierRoutes(data);
-
-              data.carriers.forEach(function (carrier) {
-                if (carrier.latitude == null || carrier.longitude == null) {
-                  return;
-                }
-                createCarrierMarker(carrier).addTo(carrierLayer);
-              });
-            })
-            .catch(function (error) {
-              console.warn('Carrier positions load failed', error);
-            });
-        }
-
-        setTimeout(function () {
-          carrierMap.invalidateSize();
-          refreshCarrierPositions();
-        }, 50);
-        setInterval(refreshCarrierPositions, 15000);
+      function colorFor(s) {
+        if (s === 'Delayed') return '#f59e0b';
+        if (s === 'Stopped' || s === 'Alert') return '#ef4444';
+        if (s === 'Heading to pickup') return '#0d9488';
+        return '#22c55e';
       }
+      function pillFor(s) {
+        if (s === 'Delayed') return 'warning';
+        if (s === 'Stopped' || s === 'Alert') return 'danger';
+        return 'success';
+      }
+
+      function renderList(data) {
+        if (!list) return;
+        list.innerHTML = '';
+        if (!data.carriers || !data.carriers.length) {
+          list.innerHTML = '<p class="empty-state">No active carriers.</p>'; return;
+        }
+        data.carriers.forEach(function(c) {
+          var card = document.createElement('div');
+          card.className = 'carrier-card';
+          card.innerHTML = '<strong>' + c.name + '</strong><small>Order: ' + (c.order || 'N/A') + '</small><small>Updated: ' + (c.last_location_update || 'unknown') + '</small><span class="status-pill ' + pillFor(c.status) + '">' + c.status + '</span>';
+          card.addEventListener('click', function() { if (c.latitude != null) m.setView([c.latitude, c.longitude], 12, { animate: true }); });
+          list.appendChild(card);
+        });
+      }
+
+      function refresh() {
+        m.invalidateSize();
+        fetch('{% url "tracking:carrier_positions" %}').then(function(r) { return r.json(); }).then(function(d) {
+          layer.clearLayers(); routes.clearLayers();
+          renderList(d);
+          if (!d.carriers) return;
+          d.carriers.forEach(function(c) {
+            if (c.route && c.route.length > 1) L.polyline(c.route, { color: '#c8102e', weight: 3, opacity: .6, dashArray: '6 3' }).addTo(routes);
+            if (c.latitude == null) return;
+            L.circleMarker([c.latitude, c.longitude], { radius: 10, fillColor: colorFor(c.status), color: '#fff', weight: 2, fillOpacity: .9 })
+              .addTo(layer).bindPopup('<strong>' + c.name + '</strong><br>Order: ' + (c.order || 'N/A') + '<br>Status: ' + c.status);
+          });
+        }).catch(function(e) { console.warn('Map load failed', e); });
+      }
+
+      setTimeout(function() { m.invalidateSize(); refresh(); }, 100);
+      setInterval(refresh, 15000);
+    })();
     {% endif %}
 
-    var showMoreLinks = document.querySelectorAll('.show-more-link');
-    showMoreLinks.forEach(function(link) {
-      link.addEventListener('click', function(event) {
-        event.preventDefault();
-        var targetId = link.getAttribute('data-target');
-        var container = document.getElementById(targetId);
-        if (!container) return;
-
-        var collapsibleItems = container.querySelectorAll('.collapsible-event');
-        if (!collapsibleItems.length) return;
-
-        var isCollapsed = collapsibleItems[0].classList.contains('hidden');
-        collapsibleItems.forEach(function(item) {
-          item.classList.toggle('hidden', !isCollapsed);
-        });
-
-        link.textContent = isCollapsed ? 'See less' : 'See more';
+    /* ── Show more ── */
+    document.querySelectorAll('.show-more-link').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var c = document.getElementById(link.getAttribute('data-target'));
+        if (!c) return;
+        var items = c.querySelectorAll('.collapsible-event');
+        if (!items.length) return;
+        var collapsed = items[0].classList.contains('hidden');
+        items.forEach(function(el) { el.classList.toggle('hidden', !collapsed); });
+        link.textContent = collapsed ? 'See less' : 'See more';
       });
     });
-  });
+  })();
 </script>
 {% endblock %}

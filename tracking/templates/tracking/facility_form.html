@@ -1,55 +1,121 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility - Pathcare{% endblock %}
+{% block title %}{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility — PathCare Kenya{% endblock %}
 
 {% block content %}
-<section class="panel">
-  <div class="panel-header">
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-grid .field-group {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .form-grid .field-group.full { grid-column: 1 / -1; }
+
+  .form-grid label {
+    font-size: .78rem; font-weight: 600; color: var(--color-text-secondary);
+  }
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .875rem;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .form-grid input:focus,
+  .form-grid select:focus,
+  .form-grid textarea:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .form-grid input[type="checkbox"] {
+    width: auto; padding: 0; accent-color: var(--color-primary);
+  }
+  .form-grid small {
+    font-size: .7rem; color: var(--color-text-muted);
+  }
+
+  .field-errors {
+    font-size: .72rem; color: var(--color-danger);
+    list-style: none; padding: 0;
+  }
+
+  .form-tip {
+    grid-column: 1 / -1;
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-info-soft); border: 1px solid #bfdbfe;
+    font-size: .82rem; color: #1e40af; margin: 0;
+  }
+  .form-tip strong { color: #1e40af; }
+
+  .form-actions {
+    grid-column: 1 / -1; display: flex; gap: 10px; margin-top: var(--space-sm);
+  }
+  @media (max-width: 500px) { .form-actions { flex-direction: column; } }
+
+  .checkbox-row {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+  }
+  .checkbox-row label {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: .85rem; font-weight: 500; color: var(--color-text);
+  }
+</style>
+
+<div class="hero-card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
     <div>
       <p class="eyebrow">Configuration</p>
-      <h2>{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility</h2>
+      <h1>{% if action == "Update" %}Edit{% else %}Add{% endif %} Facility</h1>
+      <p>{% if action == "Update" %}Update facility details and contact information.{% else %}Register a new pickup facility with location and contact details.{% endif %}</p>
     </div>
-    <a href="{% url 'tracking:facility_list' %}" class="button secondary">← Back to facilities</a>
+    <a href="{% url 'tracking:facility_list' %}" class="btn btn--outline btn--sm">← Back to Facilities</a>
   </div>
-</section>
+</div>
 
 <section class="panel">
   <form method="post" class="form-grid" novalidate>
     {% csrf_token %}
 
-    <div class="field-group" style="grid-column: 1 / -1;">
+    <div class="field-group full">
       <label for="id_name">Facility Name *</label>
       {{ form.name }}
       {% if form.name.errors %}<div class="field-errors">{{ form.name.errors }}</div>{% endif %}
-      <small class="muted">The name of the facility (e.g., "City Medical Center")</small>
+      <small>The name of the facility (e.g. "City Medical Center")</small>
     </div>
 
-    <div class="field-group" style="grid-column: 1 / -1;">
+    <div class="field-group full">
       <label for="id_address">Address *</label>
       {{ form.address }}
       {% if form.address.errors %}<div class="field-errors">{{ form.address.errors }}</div>{% endif %}
-      <small class="muted">Physical location of the facility</small>
+      <small>Physical location of the facility</small>
     </div>
 
     <div class="field-group">
       <label for="id_latitude">Latitude (GPS)</label>
       {{ form.latitude }}
       {% if form.latitude.errors %}<div class="field-errors">{{ form.latitude.errors }}</div>{% endif %}
-      <small class="muted">e.g., -1.2921</small>
+      <small>e.g. -1.2921</small>
     </div>
 
     <div class="field-group">
       <label for="id_longitude">Longitude (GPS)</label>
       {{ form.longitude }}
       {% if form.longitude.errors %}<div class="field-errors">{{ form.longitude.errors }}</div>{% endif %}
-      <small class="muted">e.g., 36.8219</small>
+      <small>e.g. 36.8219</small>
     </div>
 
-    <div style="grid-column: 1 / -1; background: #f9f9f9; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
-      <p style="margin: 0; color: #666; font-size: 0.95rem;">
-        <strong>💡 Tip:</strong> GPS coordinates are used for calculating distances and ETAs to the main lab. You can use Google Maps to find coordinates.
-      </p>
-    </div>
+    <p class="form-tip"><strong>💡 Tip:</strong> GPS coordinates are used for calculating distances and ETAs. Use Google Maps to find coordinates.</p>
 
     <div class="field-group">
       <label for="id_contact_name">Contact Person</label>
@@ -69,20 +135,19 @@
       {% if form.contact_email.errors %}<div class="field-errors">{{ form.contact_email.errors }}</div>{% endif %}
     </div>
 
-    <div class="field-group" style="grid-column: 1 / -1;">
+    <div class="checkbox-row">
       <label>
         {{ form.is_active }}
         <span>Active facility</span>
       </label>
       {% if form.is_active.errors %}<div class="field-errors">{{ form.is_active.errors }}</div>{% endif %}
-      <small class="muted">Uncheck to disable this facility from appearing in client pickup requests</small>
     </div>
 
-    <div style="grid-column: 1 / -1; display: flex; gap: 1rem; margin-top: 1.5rem;">
-      <button type="submit" class="button primary">
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary btn--lg">
         {% if action == "Update" %}Update Facility{% else %}Create Facility{% endif %}
       </button>
-      <a href="{% url 'tracking:facility_list' %}" class="button secondary">Cancel</a>
+      <a href="{% url 'tracking:facility_list' %}" class="btn btn--outline btn--lg">Cancel</a>
     </div>
   </form>
 </section>

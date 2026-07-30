@@ -1,63 +1,114 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Carriers - Pathcare Kenya{% endblock %}
+{% block title %}Carriers — PathCare Kenya{% endblock %}
 
 {% block content %}
+<style>
+  /* ── Overflow guard ── */
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* ── Carrier form ── */
+  .carrier-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-md);
+    align-items: start;
+  }
+  .carrier-form .field {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .carrier-form label {
+    font-size: .78rem; font-weight: 600; color: var(--color-text-secondary);
+  }
+  .carrier-form input,
+  .carrier-form select {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .875rem;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .carrier-form input:focus,
+  .carrier-form select:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .carrier-form button[type="submit"] {
+    grid-column: 1 / -1; justify-self: start;
+  }
+  @media (max-width: 600px) {
+    .carrier-form { grid-template-columns: 1fr; }
+    .carrier-form button[type="submit"] { width: 100%; }
+  }
+
+  /* ── Carrier table badges ── */
+  .carrier-status {
+    display: inline-block; padding: 4px 12px; border-radius: var(--radius-full);
+    font-size: .68rem; font-weight: 700; white-space: nowrap;
+  }
+  .carrier-status.available { background: var(--color-success-soft); color: #065f46; }
+  .carrier-status.on_duty,
+  .carrier-status.on_job { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+  .carrier-status.offline { background: var(--color-surface-alt); color: var(--color-text-muted); }
+</style>
+
 <div class="hero-card">
   <div>
     <p class="eyebrow">Carriers</p>
-    <h1>Carrier fleet overview</h1>
+    <h1>Carrier Fleet Overview</h1>
     <p>Manage carrier accounts and see who's available, on a job, or offline.</p>
   </div>
 </div>
 
+{# ── Add carrier form ── #}
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Onboarding</p>
-      <h2>Add a carrier</h2>
-    </div>
+    <div><p class="eyebrow">Onboarding</p><h2>Add a Carrier</h2></div>
   </div>
-  <form method="post" action="{% url 'tracking:carrier_create' %}">
+
+  <form method="post" action="{% url 'tracking:carrier_create' %}" class="carrier-form" novalidate>
     {% csrf_token %}
     <div class="field"><label>Username</label>{{ form.username }}</div>
     <div class="field"><label>Password</label>{{ form.password }}</div>
-    <div class="field"><label>First name</label>{{ form.first_name }}</div>
-    <div class="field"><label>Last name</label>{{ form.last_name }}</div>
+    <div class="field"><label>First Name</label>{{ form.first_name }}</div>
+    <div class="field"><label>Last Name</label>{{ form.last_name }}</div>
     <div class="field"><label>Phone</label>{{ form.phone }}</div>
-    <div class="field"><label>Vehicle type</label>{{ form.vehicle_type }}</div>
-    <div class="field"><label>Vehicle plate</label>{{ form.vehicle_plate }}</div>
-    <button type="submit" class="btn">Add carrier</button>
+    <div class="field"><label>Vehicle Type</label>{{ form.vehicle_type }}</div>
+    <div class="field"><label>Vehicle Plate</label>{{ form.vehicle_plate }}</div>
+    <button type="submit" class="btn btn--primary">Add Carrier</button>
   </form>
 </section>
 
+{# ── Carrier list ── #}
 <section class="panel">
   <div class="panel-header">
-    <div>
-      <p class="eyebrow">Carrier records</p>
-      <h2>All carriers</h2>
-    </div>
+    <div><p class="eyebrow">Carrier Records</p><h2>All Carriers</h2></div>
   </div>
+
   {% if carriers %}
     <div class="table-card">
       <table>
-        <thead>
-          <tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Status</th></tr>
-        </thead>
+        <thead><tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Status</th></tr></thead>
         <tbody>
           {% for carrier in carriers %}
-          <tr>
-            <td>{{ carrier }}</td>
-            <td>{{ carrier.phone }}</td>
-            <td>{{ carrier.vehicle_type }} {{ carrier.vehicle_plate }}</td>
-            <td><span class="badge badge-{{ carrier.status }}">{{ carrier.get_status_display }}</span></td>
-          </tr>
+            <tr>
+              <td><strong>{{ carrier }}</strong></td>
+              <td>{{ carrier.phone }}</td>
+              <td>{{ carrier.vehicle_display }}</td>
+              <td><span class="carrier-status {{ carrier.status|lower }}">{{ carrier.get_status_display }}</span></td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   {% else %}
-    <p class="empty-state">No carriers yet.</p>
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">🚚</span>
+      <div class="empty-state__title">No Carriers Yet</div>
+      <div class="empty-state__desc">No carriers have been registered. Use the form above to add the first one.</div>
+    </div>
   {% endif %}
 </section>
 {% endblock %}

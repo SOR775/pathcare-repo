@@ -1,61 +1,119 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Issue details - Pathcare Kenya{% endblock %}
+{% block title %}{{ issue.get_category_display }} — PathCare Kenya{% endblock %}
 
 {% block content %}
-<div class="hero-card compact">
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  .issue-meta {
+    display: flex; justify-content: space-between; gap: var(--space-lg);
+    flex-wrap: wrap; align-items: flex-start;
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    margin-bottom: var(--space-lg);
+  }
+  .issue-meta h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+  .issue-meta .eyebrow {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted); margin: 0 0 4px;
+  }
+
+  .issue-description {
+    padding: var(--space-md); border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light); margin-bottom: var(--space-lg);
+  }
+  .issue-description strong { font-size: .85rem; display: block; margin-bottom: 6px; }
+  .issue-description p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+
+  .conversation-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+  .conversation-item {
+    padding: var(--space-md); border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light); background: var(--color-surface-alt);
+  }
+  .conversation-header {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--space-sm); margin-bottom: 6px; flex-wrap: wrap;
+  }
+  .conversation-header strong { font-size: .85rem; }
+  .conversation-header small { font-size: .7rem; color: var(--color-text-muted); }
+  .conversation-item p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+
+  .reply-form textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md); background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .875rem;
+    resize: vertical; min-height: 100px;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .reply-form textarea:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .reply-form label { font-size: .8rem; font-weight: 600; display: block; margin-bottom: 6px; }
+</style>
+
+<div class="hero-card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
+    <div style="min-width:0;">
+      <p class="eyebrow">Issue Conversation</p>
+      <h1>{{ issue.get_category_display }} Issue</h1>
+      <p>Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · {{ issue.order.reference_code }}{% endif %}</p>
+    </div>
+    <a class="btn btn--outline btn--sm" href="{% url 'tracking:carrier_issue_list' %}">← Back to Issues</a>
+  </div>
+</div>
+
+{# ── Status & description ── #}
+<div class="issue-meta">
   <div>
-    <p class="eyebrow">Issue conversation</p>
-    <h1>{{ issue.get_category_display }} issue</h1>
-    <p class="muted">Carrier: {{ issue.carrier.display_name }}{% if issue.order %} · Order {{ issue.order.reference_code }}{% endif %}</p>
+    <p class="eyebrow">Status</p>
+    <h2>{{ issue.get_status_display }}</h2>
   </div>
-  <div class="hero-actions">
-    <a class="button secondary" href="{% url 'tracking:carrier_issue_list' %}">Back to issues</a>
-  </div>
-</div>
-
-<div class="issue-report-card">
-  <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
-    <div>
-      <p class="eyebrow">Status</p>
-      <h2 style="margin:0;">{{ issue.get_status_display }}</h2>
-    </div>
-    <div>
-      <p class="eyebrow">Reported</p>
-      <p style="margin:0;">{{ issue.created_at|timesince }} ago</p>
-    </div>
-  </div>
-  <div style="margin-top:1rem;">
-    <strong>Description</strong>
-    <p style="margin:0.5rem 0 0 0;">{{ issue.description|linebreaksbr }}</p>
+  <div>
+    <p class="eyebrow">Reported</p>
+    <p style="margin:0;font-size:.85rem;">{{ issue.created_at|timesince }} ago</p>
   </div>
 </div>
 
-<div class="issue-report-card" style="margin-top:1rem;">
-  <h3>Conversation</h3>
+<div class="issue-description">
+  <strong>Description</strong>
+  <p>{{ issue.description|linebreaksbr }}</p>
+</div>
+
+{# ── Conversation ── #}
+<section class="panel">
+  <div class="panel-header"><h2 style="font-size:1rem;font-weight:700;margin:0;">Conversation</h2></div>
+
   {% if issue.replies.all %}
-    {% for reply in issue.replies.all %}
-      <div class="issue-history-item" style="margin-bottom:1rem;">
-        <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
-        <small>{{ reply.created_at|date:"M d, Y H:i" }}</small>
-        <p style="margin:0.75rem 0 0 0;">{{ reply.message|linebreaksbr }}</p>
-      </div>
-    {% endfor %}
-  {% else %}
-    <p class="muted">No conversation yet. Use the form below to reply.</p>
-  {% endif %}
-</div>
-
-<div class="issue-report-card" style="margin-top:1rem;">
-  <h3>Post a reply</h3>
-  <form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="reply_submit" value="1" />
-    <div class="form-field">
-      {{ reply_form.message.label_tag }}
-      {{ reply_form.message }}
+    <div class="conversation-list">
+      {% for reply in issue.replies.all %}
+        <div class="conversation-item">
+          <div class="conversation-header">
+            <strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong>
+            <small>{{ reply.created_at|date:"M d, Y H:i" }}</small>
+          </div>
+          <p>{{ reply.message|linebreaksbr }}</p>
+        </div>
+      {% endfor %}
     </div>
-    <button class="button primary" type="submit">Send response</button>
+  {% else %}
+    <p style="font-size:.82rem;color:var(--color-text-muted);">No conversation yet. Use the form below to reply.</p>
+  {% endif %}
+</section>
+
+{# ── Reply form ── #}
+<section class="panel">
+  <div class="panel-header"><h2 style="font-size:1rem;font-weight:700;margin:0;">Post a Reply</h2></div>
+
+  <form method="post" class="reply-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="reply_submit" value="1">
+    <label for="{{ reply_form.message.id_for_label }}">Your Message</label>
+    {{ reply_form.message }}
+    <div style="margin-top:12px;">
+      <button class="btn btn--primary" type="submit">Send Response</button>
+    </div>
   </form>
-</div>
+</section>
 {% endblock %}

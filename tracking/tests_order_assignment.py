@@ -71,3 +71,68 @@ class CarrierAssignmentTests(TestCase):
         carrier.refresh_from_db()
         self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(carrier.status, Carrier.Status.AVAILABLE)
+
+    def test_cannot_reassign_order_once_assigned(self):
+        dispatcher = get_user_model().objects.create_user(
+            username="dispatcher-reassign",
+            password="secret123",
+            role="dispatcher",
+        )
+        client = Client.objects.create(name="Reassign Clinic", contact_phone="0712345678", address="Nairobi")
+        carrier1 = Carrier.objects.create(phone="0755555555", status=Carrier.Status.AVAILABLE)
+        carrier2 = Carrier.objects.create(phone="0766666666", status=Carrier.Status.AVAILABLE)
+        order = Order.objects.create(client=client, priority=Order.Priority.URGENT)
+
+        self.client.login(username="dispatcher-reassign", password="secret123")
+        self.client.post(
+            reverse("tracking:order_assign_carrier", kwargs={"pk": order.pk}),
+            {"carrier": carrier1.pk},
+            follow=True,
+        )
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.ASSIGNED)
+        self.assertEqual(order.carrier, carrier1)
+
+        response = self.client.post(
+            reverse("tracking:order_assign_carrier", kwargs={"pk": order.pk}),
+            {"carrier": carrier2.pk},
+            follow=True,
+        )
+        order.refresh_from_db()
+        response_content = response.content.decode()
+
+        self.assertEqual(order.carrier, carrier1)
+        self.assertEqual(order.status, Order.Status.ASSIGNED)
+        self.assertContains(response, "Order cannot be assigned because it is already assigned or in progress.")
+        self.assertNotIn(str(carrier2.pk), response_content)
+
+    def test_auto_assign_does_not_reassign_already_assigned_order(self):
+        dispatcher = get_user_model().objects.create_user(
+            username="dispatcher-auto-reassign",
+            password="secret123",
+            role="dispatcher",
+        )
+        client = Client.objects.create(name="Auto Reassign Clinic", contact_phone="0712345678", address="Nairobi")
+        carrier1 = Carrier.objects.create(phone="0755555555", status=Carrier.Status.AVAILABLE)
+        carrier2 = Carrier.objects.create(phone="0766666666", status=Carrier.Status.AVAILABLE)
+        order = Order.objects.create(client=client, priority=Order.Priority.URGENT)
+
+        self.client.login(username="dispatcher-auto-reassign", password="secret123")
+        self.client.post(
+            reverse("tracking:order_assign_carrier", kwargs={"pk": order.pk}),
+            {"carrier": carrier1.pk},
+            follow=True,
+        )
+        order.refresh_from_db()
+        self.assertEqual(order.carrier, carrier1)
+
+        response = self.client.post(
+            reverse("tracking:order_auto_assign", kwargs={"pk": order.pk}),
+            follow=True,
+        )
+        order.refresh_from_db()
+
+        self.assertEqual(order.carrier, carrier1)
+        self.assertEqual(order.status, Order.Status.ASSIGNED)
+        self.assertContains(response, "Order cannot be assigned because it is already assigned or in progress.")
+    

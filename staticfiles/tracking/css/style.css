@@ -13,6 +13,31 @@
   border-width: 0;
 }
 
+/* Additional mobile readability fixes for carrier & client pages */
+@media (max-width: 768px) {
+  .monitoring-hero, .monitoring-hero *,
+  .monitoring-summary-card, .monitoring-summary-card *,
+  .carrier-card, .carrier-card *,
+  .hero-card, .hero-card *,
+  .notifications-sidebar, .notifications-sidebar * {
+    color: var(--text-main) !important;
+  }
+
+  .client-banner, .role-banner { color: var(--text-main) !important; }
+
+  /* Preserve dark map tooltip legibility */
+  .carrier-map-tooltip, .carrier-map-tooltip * { color: var(--text-inverse) !important; }
+}
+
+/* Ensure readable content inside common panels, cards, and notification containers.
+   Keep hero-card and explicitly dark headers untouched. */
+.panel, .panel * , .mobile-card, .mobile-card * , .table-card, .table-card * , .upcoming-card, .upcoming-card *, .tracking-card, .tracking-card *,
+.sidebar-panel, .sidebar-panel *, .panel-block, .panel-block *, .monitoring-summary-card, .monitoring-summary-card *, .monitoring-hero, .monitoring-hero *,
+.carrier-card, .carrier-card *, .notifications-sidebar, .notifications-sidebar *, .notification-item, .notification-item * {
+  color: var(--text-main) !important;
+}
+.table-card a, .panel a, .notifications-sidebar a { color: var(--primary) !important; }
+
 .hidden {
   display: none !important;
 }
@@ -484,10 +509,7 @@ body {
   gap: 0.5rem;
 }
 
-.brand::before {
-  content: "🧪";
-  font-size: 1.4rem;
-}
+
 
 .navbar nav {
   display: flex;
@@ -1160,5 +1182,171 @@ tr:hover td {
   .mobile-tabbar .icon {
     font-size: 1.25rem;
     margin-bottom: 0.25rem;
+  }
+}
+
+
+
+/* ============================================================
+   MOBILE DASHBOARD POLISH
+   Add this at the END of style.css (it overrides earlier rules
+   at the same breakpoints via source order + specificity).
+   Nothing here touches desktop styles above 640px.
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  /* --- Hero card: from "shrunk desktop banner" to "status card" --- */
+  .hero-card {
+    background: var(--panel-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 1.1rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .hero-card .eyebrow {
+    color: var(--primary);
+  }
+
+  .hero-card h1 {
+    font-size: 1.15rem;
+    color: var(--text-main);
+  }
+
+  .hero-card p {
+    color: var(--text-muted);
+    opacity: 1;
+    font-size: 0.88rem;
+  }
+
+  .hero-card .button.primary {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+
+  /* --- Stat tiles: flat metric cards instead of glass tiles --- */
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .hero-stats > div {
+    background: var(--bg-secondary);
+    border: none;
+    backdrop-filter: none;
+    padding: 0.85rem 0.75rem;
+    border-radius: var(--radius-md);
+    text-align: left;
+  }
+
+  .hero-stats > div:hover {
+    transform: none;
+  }
+
+  .hero-stats strong {
+    font-size: 1.35rem;
+    color: var(--text-main);
+  }
+
+  .hero-stats span {
+    color: var(--text-muted);
+    opacity: 1;
+    font-size: 0.68rem;
+  }
+
+  /* --- Action / alert grids: compact cards, not desktop tiles --- */
+  .action-grid, .alert-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .action-card, .alert-card {
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-md);
+    border-left-width: 3px;
+    box-shadow: none;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .action-card {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .alert-card h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .alert-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* --- Panels: tighter padding, still card-like --- */
+  .panel {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+  }
+
+  .panel-header h2 {
+    font-size: 1rem;
+  }
+
+  .panel-header .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  /* --- Table rows as real cards on mobile, not just bordered rows --- */
+  .table-card table tbody tr {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  .table-card table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-card table tbody tr td {
+    border-bottom: none;
+    padding: 0.3rem 0;
+    background: transparent;
+    font-size: 0.85rem;
+  }
+
+  .table-card table tbody tr td:first-child {
+    font-weight: 600;
+  }
+
+  .table-card {
+    border: none;
+    background: transparent;
+  }
+
+  /* --- Status pills: slightly smaller so they don't dominate a card row --- */
+  .status-pill {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  /* --- Custody timeline: align with card language --- */
+  .custody-event {
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.9rem;
   }
 }

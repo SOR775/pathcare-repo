@@ -268,6 +268,153 @@
     });
   }
 
+  function buildWebSocketUrl() {
+    var protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return protocol + '://' + window.location.host + '/ws/notifications/';
+  }
+
+  function formatStatusDisplay(status) {
+    var map = {
+      pending_review: 'Pending review',
+      pending: 'Pending assignment',
+      assigned: 'Assigned to carrier',
+      accepted: 'Accepted by carrier',
+      en_route_client: 'En route to client',
+      at_client: 'Arrived at client',
+      picked_up: 'Picked up',
+      in_transit: 'In transit',
+      delivered: 'Delivered to lab',
+      received: 'Received at lab',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    };
+    return map[status] || status.replace(/_/g, ' ');
+  }
+
+  function statusClass(status) {
+    if (status === 'delivered' || status === 'received' || status === 'completed') {
+      return 'success';
+    }
+    if (status === 'cancelled') {
+      return 'danger';
+    }
+    if (status === 'assigned' || status === 'accepted' || status === 'en_route_client' || status === 'at_client' || status === 'picked_up' || status === 'in_transit') {
+      return 'warning';
+    }
+    return '';
+  }
+
+  function updateOrderStatusDisplay(orderId, status) {
+    var root = document.getElementById('order-detail-root');
+    if (!root || root.dataset.orderId !== orderId) return;
+
+    var pill = document.getElementById('order-status-pill');
+    if (!pill) return;
+
+    pill.textContent = formatStatusDisplay(status);
+    pill.className = 'status-pill ' + statusClass(status);
+  }
+
+  function insertNotificationItem(notification) {
+    var notifDropdown = document.querySelector('.notif-dropdown');
+    if (!notifDropdown) return;
+
+    var listDiv = notifDropdown.querySelector('.notif-list');
+    if (!listDiv) {
+      listDiv = document.createElement('div');
+      listDiv.className = 'notif-list';
+      notifDropdown.appendChild(listDiv);
+    }
+
+    var item = document.createElement('div');
+    item.className = 'notif-item unread';
+    item.dataset.pk = notification.pk;
+
+    var markUrl = notification.mark_url || '#';
+    item.innerHTML = `
+      <a href="#" data-mark-url="${markUrl}" data-next-url="/" tabindex="0">${escapeHtml(notification.message)}</a>
+      <small>just now</small>
+    `;
+
+    listDiv.prepend(item);
+    attachMarkReadListeners(item);
+  }
+
+  function updateSidebarNotificationCount(count) {
+    var badge = document.querySelector('.notifications-badge');
+    if (badge) {
+      badge.textContent = count;
+    }
+    var countLabel = document.querySelector('.notifications-count');
+    if (countLabel) {
+      countLabel.textContent = count;
+    }
+  }
+
+  function handleNotificationEvent(payload) {
+    if (!payload) return;
+    var notification = payload.notification;
+    if (!notification) return;
+
+    updateBadge(payload.unread);
+    updateSidebarNotificationCount(payload.unread);
+    insertNotificationItem(notification);
+    knownNotifIds.add(notification.pk);
+    showToast(notification.message, 'info', 6000);
+  }
+
+  function handleOrderEvent(payload) {
+    if (!payload) return;
+    updateOrderStatusDisplay(payload.order_id, payload.status);
+    if (typeof window.onCarrierOrderStatusUpdate === 'function') {
+      window.onCarrierOrderStatusUpdate(payload);
+    }
+    showToast('Order ' + payload.reference_code + ' status updated to ' + formatStatusDisplay(payload.status), 'success', 5000);
+  }
+
+  function initWebSocket() {
+    if (!window.WebSocket) {
+      return;
+    }
+
+    var socket;
+    try {
+      socket = new WebSocket(buildWebSocketUrl());
+    } catch (err) {
+      console.warn('[Pathcare] WebSocket unavailable:', err);
+      return;
+    }
+
+    socket.addEventListener('open', function () {
+      console.info('[Pathcare] WebSocket connected');
+    });
+
+    socket.addEventListener('message', function (event) {
+      try {
+        var data = JSON.parse(event.data);
+      } catch (err) {
+        return;
+      }
+      if (!data || !data.type || !data.payload) {
+        return;
+      }
+      if (data.type === 'notification.new') {
+        handleNotificationEvent(data.payload);
+      }
+      if (data.type === 'order.update') {
+        handleOrderEvent(data.payload);
+      }
+    });
+
+    socket.addEventListener('close', function () {
+      console.warn('[Pathcare] WebSocket closed, falling back to polling');
+    });
+
+    socket.addEventListener('error', function (err) {
+      console.warn('[Pathcare] WebSocket error', err);
+    });
+  }
+
   /* ── Bootstrap on DOM ready ────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
     ensureToastContainer();
@@ -305,9 +452,7 @@
     // Initial poll (fires immediately), then every 10 seconds
     pollNotifications();
     setInterval(pollNotifications, 10000);
-
-    // restore the user's scroll position after a reload or redirect
-    restoreScrollPosition();
+      initWebSocket();
 
     // Show any Django messages as toasts too
     document.querySelectorAll('.message').forEach(function (msg) {
