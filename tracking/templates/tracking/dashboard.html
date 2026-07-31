@@ -4,326 +4,138 @@
 
 {% block content %}
 <style>
-  /* ═══════════════════════════════════════════
-     DASHBOARD
-     ═══════════════════════════════════════════ */
-
-  /* ── Overflow guard ── */
   html, body { overflow-x: hidden; max-width: 100vw; }
 
-  /* ── Hero card ── */
   .hero-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
-    box-shadow: var(--shadow-sm);
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm);
   }
-  .hero-card .eyebrow {
-    font-size: .72rem; text-transform: uppercase; letter-spacing: .05em;
-    color: var(--color-text-muted); margin: 0 0 6px;
-  }
-  .hero-card h1 {
-    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px;
-  }
-  .hero-card p { font-size: .875rem; color: var(--color-text-secondary); margin: 0 0 8px; }
+  .hero-card .eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin: 0 0 6px; }
+  .hero-card h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .hero-card p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; }
 
   .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: var(--space-sm);
-    margin-top: var(--space-md);
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-sm); margin-top: var(--space-md);
   }
-  .hero-stats > div,
-  .hero-stats > a {
-    background: var(--color-surface-alt);
-    border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md);
-    padding: 14px 12px;
-    text-align: left;
-    text-decoration: none;
-    color: var(--color-text);
-  }
-  .hero-stats strong {
-    display: block; font-size: 1.35rem; font-weight: 800;
-    letter-spacing: -0.02em; color: var(--color-text); margin-bottom: 2px;
-  }
-  .hero-stats span {
-    font-size: .65rem; color: var(--color-text-muted);
-    text-transform: uppercase; letter-spacing: .04em;
-  }
-  .hero-stats > a.btn--primary {
-    background: var(--color-primary); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .85rem; padding: 14px 12px;
-  }
-  @media (max-width: 500px) {
-    .hero-stats { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  .role-badge {
-    display: inline-block; padding: 4px 12px; border-radius: var(--radius-full);
-    font-size: .7rem; font-weight: 700; margin-top: 4px; margin-right: 6px;
-    background: var(--color-primary-soft); color: var(--color-primary-ink);
-  }
-
-  /* ── Panel ── */
-  .panel {
-    background: var(--color-surface); border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg); padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
-  }
-  .panel-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: var(--space-md); margin-bottom: var(--space-md); flex-wrap: wrap;
-  }
-  .panel-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; }
-  .panel-header .eyebrow {
-    font-size: .7rem; text-transform: uppercase; letter-spacing: .05em;
-    color: var(--color-text-muted); margin: 0 0 4px;
-  }
-
-  /* ── Action grid ── */
-  .action-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--space-sm);
-  }
-  .action-card {
-    display: flex; align-items: center; justify-content: center;
-    padding: 16px; border-radius: var(--radius-md);
+  .hero-stats > div, .hero-stats > a {
     background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
-    text-decoration: none; color: var(--color-text); font-weight: 600; font-size: .85rem;
-    transition: all var(--duration-fast) var(--ease-out);
+    border-radius: var(--radius-md); padding: 12px; text-decoration: none; color: var(--color-text);
   }
-  .action-card:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
-  @media (max-width: 500px) { .action-grid { grid-template-columns: 1fr 1fr; } }
+  .hero-stats strong { display: block; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+  .hero-stats span { font-size: .62rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .hero-stats > a.btn--primary { background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .role-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-full); font-size: .68rem; font-weight: 700; background: var(--color-primary-soft); color: var(--color-primary-ink); margin-right: 6px; }
 
-  /* ── Alert cards ── */
-  .alert-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--space-sm);
-  }
-  @media (max-width: 500px) { .alert-grid { grid-template-columns: 1fr; } }
-  .alert-card {
-    padding: var(--space-md); border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
-  }
-  .alert-card h3 { font-size: .85rem; font-weight: 700; margin: 0 0 4px; }
-  .alert-card p { font-size: .8rem; color: var(--color-text-secondary); margin: 0; }
-  .alert-card.primary { background: var(--color-primary-soft); border-color: var(--color-primary-border); }
-  .alert-card.success { background: var(--color-success-soft); border-color: #a7f3d0; }
-  .alert-card.warning { background: var(--color-warning-soft); border-color: #fde68a; }
-  .alert-card.danger { background: var(--color-danger-soft); border-color: #fecaca; }
-  .alert-card.muted { background: var(--color-surface-alt); border-color: var(--color-border-light); }
+  /* ── Dashboard grid ── */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-bottom: var(--space-lg); }
+  @media (max-width: 800px) { .dash-grid { grid-template-columns: 1fr; } }
 
-  /* ── Tables ── */
-  .table-card {
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+  /* ── Collapsible section ── */
+  .section-card {
+    background: var(--color-surface); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg); overflow: hidden;
   }
-  .table-card table {
-    width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 600px;
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px var(--space-lg); cursor: pointer; user-select: none;
+    transition: background var(--duration-fast) var(--ease-out);
   }
-  .table-card th {
-    text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--color-border);
-    font-size: .68rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .05em; color: var(--color-text-muted); white-space: nowrap;
-  }
-  .table-card td {
-    padding: 10px 12px; border-bottom: 1px solid var(--color-border-light);
-    white-space: nowrap;
-  }
-  .table-card tr:hover td { background: var(--color-surface-alt); }
-  .table-card ul {
-    list-style: none; padding: 0; margin: 0;
-  }
-  .table-card ul li {
-    padding: 10px 12px; border-bottom: 1px solid var(--color-border-light);
-    font-size: .85rem;
-  }
-  .table-card ul li:last-child { border-bottom: none; }
+  .section-header:hover { background: var(--color-surface-alt); }
+  .section-header h3 { font-size: .88rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .section-header .count { font-size: .68rem; font-weight: 600; color: var(--color-text-muted); }
+  .section-header .chevron { font-size: .7rem; color: var(--color-text-muted); transition: transform var(--duration-fast) var(--ease-out); }
+  .section-card.open .section-header .chevron { transform: rotate(180deg); }
+  .section-body { padding: 0 var(--space-lg) var(--space-lg); display: none; }
+  .section-card.open .section-body { display: block; }
 
-  /* ── Status pill ── */
-  .status-pill {
-    font-size: .7rem; font-weight: 700; padding: 3px 10px;
-    border-radius: var(--radius-full); white-space: nowrap;
+  /* ── Compact lists inside sections ── */
+  .compact-list { display: flex; flex-direction: column; gap: 0; }
+  .compact-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-border-light); gap: 12px; }
+  .compact-item:last-child { border-bottom: none; }
+  .compact-item strong { font-size: .82rem; font-weight: 600; }
+  .compact-item small { font-size: .7rem; color: var(--color-text-muted); }
+  .compact-item a { color: var(--color-primary); font-weight: 600; text-decoration: none; font-size: .78rem; }
+
+  .see-all { display: block; text-align: center; padding: 6px 0 0; font-size: .75rem; font-weight: 600; color: var(--color-text-muted); text-decoration: none; }
+  .see-all:hover { color: var(--color-primary); }
+
+  /* ── Alert row ── */
+  .alert-row {
+    display: flex; gap: 8px; margin-bottom: var(--space-md); flex-wrap: wrap;
   }
+  .alert-pill {
+    flex: 1; min-width: 140px; padding: 12px; border-radius: var(--radius-md);
+    display: flex; flex-direction: column; gap: 2px; text-decoration: none;
+  }
+  .alert-pill strong { font-size: 1.1rem; font-weight: 800; }
+  .alert-pill small { font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }
+  .alert-pill.warning { background: var(--color-warning-soft); color: #92400e; border: 1px solid #fde68a; }
+  .alert-pill.danger { background: var(--color-danger-soft); color: #991b1b; border: 1px solid #fecaca; }
+  .alert-pill.primary { background: var(--color-primary-soft); color: var(--color-primary-ink); border: 1px solid var(--color-primary-border); }
+
+  /* ── Status pills ── */
+  .status-pill { font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); white-space: nowrap; }
   .status-pill.success { background: var(--color-success-soft); color: #065f46; }
   .status-pill.warning { background: var(--color-warning-soft); color: #92400e; }
   .status-pill.danger { background: var(--color-danger-soft); color: #991b1b; }
-  .status-pill.primary { background: var(--color-primary-soft); color: var(--color-primary-ink); }
-
-  /* ── Custody timeline ── */
-  .custody-timeline { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 20px; }
-  .custody-timeline::before {
-    content: ''; position: absolute; left: 11px; top: 0; bottom: 0;
-    width: 2px; background: var(--color-border);
-  }
-  .custody-event {
-    display: flex; gap: var(--space-md); padding: var(--space-md) 0;
-    position: relative;
-  }
-  .custody-event:last-child { padding-bottom: 0; }
-  .custody-icon {
-    width: 36px; height: 36px; border-radius: var(--radius-full);
-    display: flex; align-items: center; justify-content: center;
-    background: var(--color-surface-alt); border: 2px solid var(--color-border);
-    font-size: 1rem; flex-shrink: 0; position: relative; z-index: 1;
-  }
-  .custody-event.success .custody-icon { background: var(--color-success-soft); border-color: var(--color-success); }
-  .custody-event.danger .custody-icon { background: var(--color-danger-soft); border-color: var(--color-danger); }
-  .custody-event.warning .custody-icon { background: var(--color-warning-soft); border-color: var(--color-warning); }
-  .custody-details { flex: 1; min-width: 0; }
-  .custody-details strong { display: block; font-size: .85rem; margin-bottom: 2px; }
-  .custody-details p { font-size: .78rem; color: var(--color-text-secondary); margin: 0; }
-  .custody-details small { font-size: .7rem; color: var(--color-text-muted); display: block; margin-top: 4px; }
-  .custody-meta { display: inline-block; font-size: .7rem; background: var(--color-surface-alt); padding: 2px 8px; border-radius: var(--radius-sm); margin: 4px 4px 0 0; }
-  .custody-event.hidden { display: none; }
-  .show-more-wrap { text-align: center; padding: var(--space-sm) 0 0; font-size: .8rem; }
-  .show-more-link { color: var(--color-primary); font-weight: 600; cursor: pointer; text-decoration: none; }
 
   /* ── Activity ── */
   .activity-list { display: flex; flex-direction: column; gap: 0; }
-  .activity-item { padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border-light); }
+  .activity-item { padding: 8px 0; border-bottom: 1px solid var(--color-border-light); }
   .activity-item:last-child { border-bottom: none; }
-  .activity-item strong { display: block; font-size: .85rem; }
-  .activity-item p { font-size: .78rem; color: var(--color-text-secondary); margin: 2px 0; }
-  .activity-item small { font-size: .7rem; color: var(--color-text-muted); }
+  .activity-item strong { display: block; font-size: .8rem; }
+  .activity-item p { font-size: .74rem; color: var(--color-text-secondary); margin: 1px 0; }
+  .activity-item small { font-size: .66rem; color: var(--color-text-muted); }
 
-  /* ── Filter bar ── */
-  .filter-form select {
-    padding: 8px 14px; border: 1px solid var(--color-border);
-    border-radius: var(--radius-md); background: var(--color-surface);
-    color: var(--color-text); font: inherit; font-size: .82rem; cursor: pointer;
+  /* ── Action grid ── */
+  .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .quick-action {
+    display: flex; align-items: center; justify-content: center; padding: 10px;
+    border-radius: var(--radius-md); background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-light); text-decoration: none;
+    color: var(--color-text); font-weight: 600; font-size: .78rem;
+    transition: all var(--duration-fast) var(--ease-out);
   }
+  .quick-action:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
 
-  /* ── Map sidebar ── */
-  .operations-map-grid {
-    display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md);
-  }
-  @media (max-width: 900px) { .operations-map-grid { grid-template-columns: 1fr; } }
-
-  .map-card {
-    border-radius: var(--radius-md); overflow: hidden;
-    border: 1px solid var(--color-border); min-height: 360px;
-  }
-  #carrier-map { width: 100%; height: 100%; min-height: 360px; }
-
-  .map-sidebar { display: flex; flex-direction: column; gap: var(--space-sm); }
-  .map-intro p { font-size: .82rem; color: var(--color-text-secondary); margin: 0 0 var(--space-sm); }
-
-  .sidebar-panel {
-    background: var(--color-surface); border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md); padding: var(--space-md);
-  }
-  .sidebar-panel h3 { font-size: .85rem; font-weight: 700; margin: 0 0 10px; }
-
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--color-text-secondary); }
-  .legend-badge { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-
-  .carrier-status-list { display: flex; flex-direction: column; gap: 8px; }
-  .carrier-card {
-    border: 1px solid var(--color-border-light); border-radius: var(--radius-md);
-    padding: 10px 12px; background: var(--color-surface-alt); cursor: pointer;
-    transition: border-color var(--duration-fast) var(--ease-out);
-  }
-  .carrier-card:hover { border-color: var(--color-primary-border); }
-  .carrier-card strong { display: block; font-size: .82rem; margin-bottom: 2px; }
-  .carrier-card small { font-size: .7rem; color: var(--color-text-muted); display: block; }
-
-  /* ── Carrier home ── */
-  .carrier-home { padding: 4px 0 12px; }
-  .carrier-topline {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
-  }
-  .carrier-eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-bottom: 2px; }
-  .carrier-name { font-size: 1.2rem; font-weight: 700; margin: 0 0 2px; }
-  .carrier-vehicle { font-size: .82rem; color: var(--color-text-secondary); }
-  .duty-badge {
-    background: var(--color-primary-soft); color: var(--color-primary-ink);
-    font-size: .7rem; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-full); white-space: nowrap;
-  }
-  .carrier-stat-row {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;
-  }
-  .carrier-stat {
-    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md); padding: 12px;
-  }
-  .carrier-stat strong { display: block; font-size: 1.35rem; font-weight: 800; }
-  .carrier-stat span { font-size: .68rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
-  .active-pickup-card {
+  /* ── Carrier home (compact for dashboard) ── */
+  .carrier-dash { display: flex; flex-direction: column; gap: 6px; }
+  .carrier-dash a {
     display: flex; justify-content: space-between; align-items: center;
-    background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
-    padding: 14px 16px; margin-bottom: 16px; text-decoration: none;
-    transition: transform var(--duration-fast) var(--ease-out);
-  }
-  .active-pickup-card:active { transform: scale(.98); }
-  .active-pickup-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em; opacity: .85; margin-bottom: 2px; }
-  .active-pickup-client { font-size: .9rem; font-weight: 700; }
-  .queue-label { font-size: .78rem; font-weight: 700; color: var(--color-text-muted); margin-bottom: 8px; }
-  .carrier-queue { display: flex; flex-direction: column; gap: 8px; }
-  .queue-card {
-    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; border-radius: var(--radius-md);
     background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md); padding: 12px 14px; text-decoration: none; color: var(--color-text);
+    text-decoration: none; color: var(--color-text);
   }
-  .queue-client { font-size: .85rem; font-weight: 700; margin: 0; }
-  .queue-meta { font-size: .72rem; color: var(--color-text-muted); margin: 2px 0 0; }
-  .queue-time {
-    background: var(--color-surface); color: var(--color-text);
-    font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm); white-space: nowrap;
-  }
+  .carrier-dash strong { font-size: .82rem; }
+  .carrier-dash small { font-size: .68rem; color: var(--color-text-muted); }
 
-  /* ── Mobile only classes ── */
-  @media (max-width: 768px) {
-    .container { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0)); }
-    .hero-stats { grid-template-columns: repeat(2, 1fr); }
-    .action-grid { grid-template-columns: repeat(2, 1fr); }
-    .operations-map-grid { grid-template-columns: 1fr; }
-    .panel-header { flex-direction: column; }
-  }
-
-  @media (max-width: 500px) {
-    .hero-stats { grid-template-columns: repeat(2, 1fr); }
-    .action-grid { grid-template-columns: 1fr 1fr; }
-    .hero-stats strong { font-size: 1.15rem; }
-  }
+  /* ── Map for dispatcher ── */
+  .mini-map { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-border); min-height: 300px; }
+  #carrier-map { width: 100%; height: 100%; min-height: 300px; }
 </style>
 
+{# ═══ HERO ═══ #}
 <div class="hero-card">
   <div>
     <p class="eyebrow">Operational Overview</p>
-    <h1>Sample Logistics Control Center</h1>
-    <p>Welcome back{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}. Your dashboard for sample tracking and logistics management.</p>
-    {% if user_client %}<span class="role-badge">{{ user_client.name }}</span>{% endif %}
-    {% if role %}<span class="role-badge">Signed in as {{ role }}</span>{% endif %}
+    <h1>Control Center</h1>
+    <p>Welcome back{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}. {% if role %}<span class="role-badge">{{ role }}</span>{% endif %}</p>
   </div>
-
   <div class="hero-stats">
-    {% if role == "Client" %}
-      <a class="btn btn--primary btn--block" href="{% url 'tracking:client_request_pickup' %}" style="grid-column: 1 / -1;">Request Pickup</a>
-    {% endif %}
-
     {% if role == "Super Admin" %}
-      <div><strong>{{ user_counts.total_users|default:0 }}</strong><span>Total Users</span></div>
       <div><strong>{{ user_counts.active_orders|default:0 }}</strong><span>Active Orders</span></div>
-      <div><strong>{{ user_counts.completed_deliveries|default:0 }}</strong><span>Completed</span></div>
       <div><strong>{{ user_counts.pending_pickups|default:0 }}</strong><span>Pending</span></div>
-      <div><strong>{{ user_counts.samples_in_transit|default:0 }}</strong><span>In Transit</span></div>
+      <div><strong>{{ user_counts.completed_deliveries|default:0 }}</strong><span>Completed</span></div>
       <div><strong>{{ user_counts.delayed_deliveries|default:0 }}</strong><span>Delayed</span></div>
       <div><strong>{{ user_counts.active_carriers|default:0 }}</strong><span>Carriers</span></div>
-      <div><strong>{{ user_counts.registered_clients|default:0 }}</strong><span>Clients</span></div>
-      <div><strong>{{ user_counts.total_facilities|default:0 }}</strong><span>Facilities</span></div>
+      <div><strong>{{ user_counts.total_users|default:0 }}</strong><span>Users</span></div>
     {% elif role == "Dispatcher" %}
-      <div><strong>{{ dispatcher_context.pickup_requests_today|default:0 }}</strong><span>Requests Today</span></div>
+      <div><strong>{{ dispatcher_context.pickup_requests_today|default:0 }}</strong><span>Today</span></div>
       <div><strong>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</strong><span>Awaiting</span></div>
       <div><strong>{{ dispatcher_context.active_deliveries|default:0 }}</strong><span>Active</span></div>
-      <div><strong>{{ dispatcher_context.orders_in_transit|default:0 }}</strong><span>In Transit</span></div>
       <div><strong>{{ dispatcher_context.delayed_orders|default:0 }}</strong><span>Delayed</span></div>
-      <div><strong>{{ dispatcher_context.completed_today|default:0 }}</strong><span>Done Today</span></div>
+      <div><strong>{{ dispatcher_context.completed_today|default:0 }}</strong><span>Done</span></div>
     {% elif role == "Carrier" %}
       <div><strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong><span>Assigned</span></div>
       <div><strong>{{ carrier_context.completed_today|default:0 }}</strong><span>Done Today</span></div>
@@ -334,372 +146,243 @@
       <div><strong>{{ client_context.active_orders|default:0 }}</strong><span>Active</span></div>
       <div><strong>{{ client_context.delivered_samples|default:0 }}</strong><span>Delivered</span></div>
       <div><strong>{{ client_context.recent_orders.count|default:0 }}</strong><span>Recent</span></div>
-    {% else %}
-      <div><strong>{{ counts.pending }}</strong><span>Pending</span></div>
-      <div><strong>{{ counts.assigned }}</strong><span>Assigned</span></div>
-      <div><strong>{{ counts.in_transit }}</strong><span>In Transit</span></div>
-      <div><strong>{{ counts.delivered }}</strong><span>Delivered</span></div>
     {% endif %}
   </div>
 </div>
 
-{% include "tracking/workflow_visual.html" %}
+{# ═══ ADMIN & DISPATCHER ═══ #}
+{% if role == "Super Admin" or role == "Dispatcher" %}
 
-{# ═══ SUPER ADMIN ═══ #}
-{% if role == "Super Admin" %}
+{# Alert pills — always visible #}
+<div class="alert-row">
+  {% if user_counts.delayed_deliveries|default:0 > 0 or dispatcher_context.delayed_orders|default:0 > 0 %}
+    <a class="alert-pill danger" href="#">
+      <strong>{{ user_counts.delayed_deliveries|default:dispatcher_context.delayed_orders|default:0 }}</strong>
+      <small>⚠ Delayed</small>
+    </a>
+  {% endif %}
+  {% if user_counts.pending_pickups|default:0 > 0 or dispatcher_context.orders_awaiting_assignment|default:0 > 0 %}
+    <a class="alert-pill warning" href="#">
+      <strong>{{ user_counts.pending_pickups|default:dispatcher_context.orders_awaiting_assignment|default:0 }}</strong>
+      <small>📋 Unassigned</small>
+    </a>
+  {% endif %}
+  <a class="alert-pill primary" href="{% url 'tracking:reports_view' %}">
+    <strong>Reports</strong>
+    <small>📊 View</small>
+  </a>
+</div>
 
-<section class="panel">
-  <div class="panel-header">
-    <div><p class="eyebrow">Quick Actions</p><h2>Administration</h2></div>
-  </div>
-  <div class="action-grid">
-    <a class="action-card" href="{% url 'accounts:user_management' %}">Add User</a>
-    <a class="action-card" href="{% url 'tracking:order_create' %}">Create Order</a>
-    <a class="action-card" href="{% url 'tracking:client_list' %}">Register Client</a>
-    <a class="action-card" href="{% url 'tracking:carrier_create' %}">Register Carrier</a>
-    <a class="action-card" href="{% url 'tracking:reports_view' %}">Reports</a>
-    <a class="action-card" href="{% url 'accounts:account_index' %}">Audit Logs</a>
-  </div>
-</section>
+<div class="dash-grid">
+  {# Left column #}
+  <div style="display:flex;flex-direction:column;gap:var(--space-md);">
 
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Carriers</p><h2>Recent Carriers</h2></div></div>
-  <div class="table-card">
-    <ul>
-      {% for c in dispatcher_context.recent_carriers %}
-        <li>{% if c.user %}{{ c }}{% else %}Unnamed carrier{% endif %}</li>
-      {% empty %}<li>No carriers found</li>{% endfor %}
-    </ul>
-  </div>
-</section>
+    {# Pending orders (collapsible, open by default) #}
+    {% if dispatcher_context.dispatch_queue %}
+    <div class="section-card open">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>📋 Pending Orders <span class="count">{{ dispatcher_context.dispatch_queue|length }}</span></h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="compact-list">
+          {% for order in dispatcher_context.dispatch_queue|slice:":5" %}
+            <div class="compact-item">
+              <div>
+                <a href="{% url 'tracking:order_detail' order.pk %}" style="color:var(--color-text);text-decoration:none;"><strong>{{ order.reference_code }}</strong></a>
+                <small>{{ order.client.name }} · {{ order.get_status_display }}</small>
+              </div>
+              <span class="status-pill {% if order.status == 'pending_review' %}warning{% elif order.status == 'pending' %}warning{% else %}primary{% endif %}">{{ order.get_status_display }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% if dispatcher_context.dispatch_queue|length > 5 %}
+          <a class="see-all" href="{% url 'tracking:order_search' %}">See all {{ dispatcher_context.dispatch_queue|length }} →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
 
-{% if dispatcher_context.facilities %}
-<section class="panel">
-  <div class="panel-header">
-    <div><p class="eyebrow">Facilities</p><h2>Pickup Facilities ({{ dispatcher_context.facilities.count }})</h2></div>
-    <a class="btn btn--sm btn--outline" href="/admin/core/facility/">Manage</a>
+    {# Recent activity (collapsible) #}
+    {% if dispatcher_context.recent_activity %}
+    <div class="section-card">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>🕐 Recent Activity</h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="activity-list">
+          {% for event in dispatcher_context.recent_activity|slice:":5" %}
+            <div class="activity-item">
+              <strong>{{ event.get_event_type_display }}</strong>
+              <p>{{ event.notes|default:"No details" }}</p>
+              <small>{{ event.timestamp|date:"M d, H:i" }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Upcoming pickups #}
+    {% if dispatcher_context.today_schedule %}
+    <div class="section-card">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>📅 Today's Schedule <span class="count">{{ dispatcher_context.today_schedule|length }}</span></h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="compact-list">
+          {% for order in dispatcher_context.today_schedule|slice:":5" %}
+            <div class="compact-item">
+              <div>
+                <strong>{{ order.reference_code }}</strong>
+                <small>{{ order.client.name }} · {{ order.requested_pickup_time|date:"H:i"|default:"—" }}</small>
+              </div>
+              <span style="font-size:.72rem;color:var(--color-text-muted);">{{ order.get_status_display }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
-  <div class="table-card">
-    <table>
-      <thead><tr><th>Name</th><th>Address</th><th>Contact</th><th>Status</th></tr></thead>
-      <tbody>
-        {% for f in dispatcher_context.facilities %}
-          <tr><td><strong>{{ f.name }}</strong></td><td>{{ f.address }}</td><td>{{ f.contact_phone }}</td><td><span class="status-pill success">Active</span></td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+  {# Right column #}
+  <div style="display:flex;flex-direction:column;gap:var(--space-md);">
+
+    {# Quick actions #}
+    <div class="section-card open">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>⚡ Quick Actions</h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="quick-actions">
+          {% if role == "Super Admin" %}
+            <a class="quick-action" href="{% url 'accounts:user_management' %}">Add User</a>
+            <a class="quick-action" href="{% url 'tracking:order_create' %}">New Order</a>
+            <a class="quick-action" href="{% url 'tracking:carrier_create' %}">Add Carrier</a>
+            <a class="quick-action" href="{% url 'tracking:client_list' %}">Register Client</a>
+          {% endif %}
+          <a class="quick-action" href="{% url 'tracking:carrier_monitoring' %}">Live Tracking</a>
+          <a class="quick-action" href="{% url 'tracking:reports_view' %}">Reports</a>
+        </div>
+      </div>
+    </div>
+
+    {# Carrier field status #}
+    <div class="section-card open">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>🚚 Carrier Status</h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:80px;text-align:center;padding:12px;border-radius:var(--radius-md);background:var(--color-success-soft);">
+          <strong style="font-size:1.2rem;color:#065f46;">{{ dispatcher_context.available_carriers|default:0 }}</strong>
+          <small style="display:block;font-size:.62rem;color:#065f46;">Available</small>
+        </div>
+        <div style="flex:1;min-width:80px;text-align:center;padding:12px;border-radius:var(--radius-md);background:var(--color-warning-soft);">
+          <strong style="font-size:1.2rem;color:#92400e;">{{ dispatcher_context.busy_carriers|default:0 }}</strong>
+          <small style="display:block;font-size:.62rem;color:#92400e;">Busy</small>
+        </div>
+        <div style="flex:1;min-width:80px;text-align:center;padding:12px;border-radius:var(--radius-md);background:var(--color-surface-alt);">
+          <strong style="font-size:1.2rem;">{{ dispatcher_context.offline_carriers|default:0 }}</strong>
+          <small style="display:block;font-size:.62rem;color:var(--color-text-muted);">Offline</small>
+        </div>
+      </div>
+    </div>
+
+    {# Mini map #}
+    <div class="section-card open">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>🗺️ Live Map</h3>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="mini-map"><div id="carrier-map"></div></div>
+        <a class="see-all" href="{% url 'tracking:carrier_monitoring' %}">Open full monitoring →</a>
+      </div>
+    </div>
   </div>
-</section>
+</div>
+
+{# Current orders (full-width, collapsible) #}
+{% if orders %}
+<div class="section-card" style="margin-bottom:var(--space-lg);">
+  <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h3>📦 Current Orders <span class="count">{{ orders|length }}</span></h3>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="section-body">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius-md);border:1px solid var(--color-border-light);">
+      <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:600px;">
+        <thead><tr><th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--color-border);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);">Ref</th><th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--color-border);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);">Client</th><th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--color-border);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);">Priority</th><th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--color-border);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);">Status</th><th style="text-align:left;padding:8px 12px;border-bottom:2px solid var(--color-border);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);">Carrier</th></tr></thead>
+        <tbody>
+          {% for order in orders|slice:":8" %}
+            <tr><td style="padding:8px 12px;border-bottom:1px solid var(--color-border-light);"><a href="{% url 'tracking:order_detail' order.pk %}" style="color:var(--color-primary);font-weight:600;text-decoration:none;">{{ order.reference_code }}</a></td><td style="padding:8px 12px;border-bottom:1px solid var(--color-border-light);">{{ order.client.name }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--color-border-light);">{{ order.get_priority_display }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--color-border-light);"><span class="status-pill {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'assigned' %}warning{% endif %}">{{ order.get_status_display }}</span></td><td style="padding:8px 12px;border-bottom:1px solid var(--color-border-light);">{{ order.carrier|default:"—" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if orders|length > 8 %}
+      <a class="see-all" href="{% url 'tracking:order_search' %}">See all {{ orders|length }} orders →</a>
+    {% endif %}
+  </div>
+</div>
 {% endif %}
 
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Reports</p><h2>Operational Reporting</h2></div></div>
-  <div class="alert-grid">
-    <div class="alert-card primary"><h3>Live Reports</h3><p>Filter orders by status and export CSV from the reports page.</p></div>
-    <div class="alert-card success"><h3>Open Reports</h3><p><a href="{% url 'tracking:reports_view' %}">Go to reports →</a></p></div>
-  </div>
-</section>
+{% endif %}
 
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Alerts</p><h2>System Alerts</h2></div></div>
-  <div class="alert-grid">
-    <div class="alert-card warning"><h3>Delayed Samples</h3><p>{{ user_counts.delayed_deliveries|default:0 }} delayed orders need attention.</p></div>
-    <div class="alert-card warning"><h3>Unassigned</h3><p>{{ user_counts.pending_pickups|default:0 }} pickup requests are unassigned.</p></div>
-    <div class="alert-card warning"><h3>Carriers</h3><p>{{ user_counts.active_carriers|default:0 }} active carriers available.</p></div>
-    <div class="alert-card warning"><h3>Accounts</h3><p>Check users awaiting review or reactivation.</p></div>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Activity</p><h2>System Audit Feed</h2></div></div>
-  <div class="activity-list">
-    {% for event in dispatcher_context.recent_activity %}
-      <div class="activity-item"><strong>{{ event.get_event_type_display }}</strong><p>{{ event.notes|default:"No details" }}</p><small>{{ event.timestamp|date:"M d, Y H:i" }}</small></div>
-    {% empty %}<p class="empty-state">No recent activity.</p>{% endfor %}
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Recent Events &amp; Tracking</h2></div></div>
-  <div class="custody-timeline">
-    {% if dispatcher_context.custody_events %}
-      {% for event in dispatcher_context.custody_events %}
-        <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}">
-          <div class="custody-icon">
-            {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
-          </div>
-          <div class="custody-details">
-            <strong>{{ event.get_event_type_display }}</strong>
-            <p>{{ event.notes|default:"No additional notes" }}</p>
-            {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
-            {% if event.temperature_celsius %}<span class="custody-meta">🌡️ Temp: {{ event.temperature_celsius }}°C</span>{% endif %}
-            <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}<p class="empty-state">No custody events recorded yet.</p>{% endif %}
-  </div>
-</section>
-
-{# ═══ DISPATCHER ═══ #}
-{% elif role == "Dispatcher" %}
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Dispatch Queue</p><h2>Operations Summary</h2></div></div>
-  <div class="alert-grid">
-    <div class="alert-card primary"><h3>New Requests</h3><p>{{ dispatcher_context.pickup_requests_today|default:0 }}</p></div>
-    <div class="alert-card warning"><h3>Pending Review</h3><p>{{ dispatcher_context.orders_pending_review|default:0 }}</p></div>
-    <div class="alert-card warning"><h3>Awaiting Assignment</h3><p>{{ dispatcher_context.orders_awaiting_assignment|default:0 }}</p></div>
-    <div class="alert-card danger"><h3>Delayed</h3><p>{{ dispatcher_context.delayed_orders|default:0 }}</p></div>
-    <div class="alert-card primary"><h3>Reports</h3><p><a href="{% url 'tracking:reports_view' %}">Open reports →</a></p></div>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Dispatch Queue</p><h2>Pending Orders</h2></div></div>
-  {% if dispatcher_context.dispatch_queue %}
-    <div class="table-card">
-      <table>
-        <thead><tr><th>Order</th><th>Client</th><th>Pickup</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>
-          {% for order in dispatcher_context.dispatch_queue %}
-            <tr>
-              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
-              <td>{{ order.client.name }}</td>
-              <td>{{ order.requested_pickup_time|date:"M d, Y H:i"|default:"—" }}</td>
-              <td>{{ order.get_status_display }}</td>
-              <td>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  {% if order.status == 'pending_review' %}
-                    <form method="post" action="{% url 'tracking:order_approve_request' order.pk %}" style="margin:0;">
-                      {% csrf_token %}<button class="btn btn--sm btn--outline" type="submit">Approve</button>
-                    </form>
-                    <form method="post" action="{% url 'tracking:order_auto_assign' order.pk %}" style="margin:0;">
-                      {% csrf_token %}<button class="btn btn--sm btn--primary" type="submit">Auto Assign</button>
-                    </form>
-                  {% elif order.status == 'pending' %}
-                    <form method="post" action="{% url 'tracking:order_auto_assign' order.pk %}" style="margin:0;">
-                      {% csrf_token %}<button class="btn btn--sm btn--primary" type="submit">Auto Assign</button>
-                    </form>
-                    <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">View</a>
-                  {% else %}
-                    <a class="btn btn--sm btn--outline" href="{% url 'tracking:order_detail' order.pk %}">View</a>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}<p class="empty-state">No pending pickup orders available right now.</p>{% endif %}
-</section>
-
-<section class="panel">
-  <div class="panel-header">
-    <div><p class="eyebrow">Live Tracking</p><h2>Operations Map</h2></div>
-    <a class="btn btn--sm btn--primary" href="{% url 'tracking:carrier_monitoring' %}">Full Monitoring</a>
-  </div>
-  <div class="map-intro"><p>Monitor active carriers, live routes, and operational status.</p></div>
-  <div class="operations-map-grid">
-    <div class="map-card"><div id="carrier-map"></div></div>
-    <aside class="map-sidebar">
-      <div class="sidebar-panel">
-        <h3>Live Vehicles</h3>
-        <div class="legend">
-          <div class="legend-item"><span class="legend-badge" style="background:#22c55e;"></span> On schedule</div>
-          <div class="legend-item"><span class="legend-badge" style="background:#f59e0b;"></span> Delayed</div>
-          <div class="legend-item"><span class="legend-badge" style="background:#ef4444;"></span> Stopped / Alert</div>
-          <div class="legend-item"><span class="legend-badge" style="background:var(--color-primary);"></span> To pickup</div>
-        </div>
-        <div id="carrier-status-list" class="carrier-status-list"><p class="empty-state">Loading active carriers…</p></div>
-      </div>
-    </aside>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Carrier Availability</p><h2>Field Status</h2></div></div>
-  <div class="alert-grid">
-    <div class="alert-card success"><h3>Available</h3><p>{{ dispatcher_context.available_carriers|default:0 }}</p></div>
-    <div class="alert-card warning"><h3>Busy</h3><p>{{ dispatcher_context.busy_carriers|default:0 }}</p></div>
-    <div class="alert-card muted"><h3>Offline</h3><p>{{ dispatcher_context.offline_carriers|default:0 }}</p></div>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Today's Schedule</p><h2>Upcoming Pickups</h2></div></div>
-  {% if dispatcher_context.today_schedule %}
-    <div class="table-card">
-      <table>
-        <thead><tr><th>Order</th><th>Client</th><th>Pickup Time</th><th>Status</th></tr></thead>
-        <tbody>
-          {% for order in dispatcher_context.today_schedule %}
-            <tr><td>{{ order.reference_code }}</td><td>{{ order.client.name }}</td><td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td><td>{{ order.get_status_display }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}<p class="empty-state">No pickups scheduled for today.</p>{% endif %}
-</section>
-
-{# ═══ CARRIER ═══ #}
-{% elif role == "Carrier" %}
-
-<div class="carrier-home">
-  <div class="carrier-topline">
-    <div>
-      <p class="carrier-eyebrow">Today's Route</p>
-      <h1 class="carrier-name">{{ user.get_full_name|default:user.username }}</h1>
-      <p class="carrier-vehicle">{{ carrier_context.carrier.vehicle_display }}</p>
-    </div>
-    <span class="duty-badge">On Duty</span>
-  </div>
-
-  <div class="carrier-stat-row">
-    <div class="carrier-stat"><strong>{{ carrier_context.completed_today|default:0 }}</strong><span>Completed</span></div>
-    <div class="carrier-stat"><strong>{{ carrier_context.assigned_orders.count|default:0 }}</strong><span>Remaining</span></div>
-  </div>
-
+{# ═══ CARRIER (compact) ═══ #}
+{% if role == "Carrier" %}
+<div style="display:flex;flex-direction:column;gap:var(--space-md);">
   {% with active_order=carrier_context.assigned_orders|first %}
     {% if active_order %}
-      <a href="{% url 'tracking:order_detail' active_order.pk %}" class="active-pickup-card">
-        <div><p class="active-pickup-label">Active Pickup</p><p class="active-pickup-client">{{ active_order.client.name }} · {{ active_order.reference_code }}</p></div>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <a href="{% url 'tracking:order_detail' active_order.pk %}" style="display:flex;justify-content:space-between;align-items:center;background:var(--color-primary);color:#fff;border-radius:var(--radius-lg);padding:16px;text-decoration:none;">
+        <div><strong style="font-size:.9rem;">Active: {{ active_order.client.name }}</strong><br><small style="opacity:.8;">{{ active_order.reference_code }}</small></div>
+        <span style="font-size:.7rem;font-weight:700;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:var(--radius-full);">{{ active_order.get_status_display }}</span>
       </a>
     {% endif %}
   {% endwith %}
-
-  <p class="queue-label">Up Next</p>
-  <div class="carrier-queue">
-    {% for order in carrier_context.assigned_orders|slice:"1:" %}
-      <a href="{% url 'tracking:order_detail' order.pk %}" class="queue-card">
-        <div><p class="queue-client">{{ order.client.name }}</p><p class="queue-meta">{{ order.reference_code }} · {{ order.get_priority_display }}</p></div>
-        <span class="queue-time">{{ order.requested_pickup_time|date:"g:i A" }}</span>
+  <div class="carrier-dash">
+    {% for order in carrier_context.assigned_orders|slice:"1:4" %}
+      <a href="{% url 'tracking:order_detail' order.pk %}">
+        <div><strong>{{ order.client.name }}</strong><br><small>{{ order.reference_code }}</small></div>
+        <span style="font-size:.68rem;color:var(--color-text-muted);">{{ order.requested_pickup_time|date:"g:i A" }}</span>
       </a>
-    {% empty %}<p class="empty-state">No more pickups queued.</p>{% endfor %}
+    {% endfor %}
   </div>
+  {% if carrier_context.assigned_orders.count > 4 %}
+    <a class="see-all" href="{% url 'tracking:carrier_view' %}">See all {{ carrier_context.assigned_orders.count }} pickups →</a>
+  {% endif %}
 </div>
+{% endif %}
 
 {# ═══ CLIENT ═══ #}
-{% elif role == "Client" %}
-
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Recent Orders</p><h2>Your Pickup Requests</h2></div></div>
-  {% if client_context.recent_orders %}
-    <div class="table-card">
-      <table>
-        <thead><tr><th>Order</th><th>Collection</th><th>Status</th><th>Carrier</th></tr></thead>
-        <tbody>
-          {% for order in client_context.recent_orders %}
-            <tr><td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td><td>{{ order.requested_pickup_time|date:"M d, Y H:i" }}</td><td>{{ order.get_status_display }}</td><td>{{ order.carrier|default:"Unassigned" }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}<p class="empty-state">No recent orders to show.</p>{% endif %}
-</section>
-
-{% endif %}
-
-{# ═══ Custody timeline for Carrier ═══ #}
-{% if role == "Carrier" and carrier_context.custody_events %}
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Recent Activity</h2></div></div>
-  <div class="custody-timeline" id="recent-activity-carrier">
-    {% for event in carrier_context.custody_events %}
-      <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
-        <div class="custody-icon">
-          {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
-        </div>
-        <div class="custody-details">
-          <strong>{{ event.get_event_type_display }}</strong>
-          <p>{{ event.notes|default:"No additional notes" }}</p>
-          {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
-          {% if event.temperature_celsius %}<span class="custody-meta">🌡️ {{ event.temperature_celsius }}°C</span>{% endif %}
-          <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
-        </div>
-      </div>
-    {% endfor %}
-    {% if carrier_context.custody_events|length > 3 %}
-      <div class="show-more-wrap"><a href="#" class="show-more-link" data-target="recent-activity-carrier">See more</a> <small>({{ carrier_context.custody_events|length }} events)</small></div>
-    {% endif %}
+{% if role == "Client" %}
+<div class="section-card open" style="margin-bottom:var(--space-lg);">
+  <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+    <h3>📦 Recent Orders</h3>
+    <span class="chevron">▼</span>
   </div>
-</section>
-{% elif role == "Carrier" %}
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Recent Activity</h2></div></div>
-  <p class="empty-state">No custody events recorded yet.</p>
-</section>
-{% endif %}
-
-{# ═══ Custody timeline for Client ═══ #}
-{% if role == "Client" and client_context.custody_events %}
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Order Tracking</h2></div></div>
-  <div class="custody-timeline" id="recent-activity-client">
-    {% for event in client_context.custody_events %}
-      <div class="custody-event {% if event.event_type == 'completed' or event.event_type == 'received' %}success{% elif event.event_type == 'exception' %}danger{% elif event.event_type == 'temp_check' %}warning{% endif %}{% if forloop.counter > 3 %} collapsible-event hidden{% endif %}">
-        <div class="custody-icon">
-          {% if event.event_type == 'order_created' %}📋{% elif event.event_type == 'request_approved' or event.event_type == 'delivered' or event.event_type == 'received' %}✓{% elif event.event_type == 'carrier_assigned' %}🚚{% elif event.event_type == 'started_to_client' %}🛫{% elif event.event_type == 'arrived_at_client' %}📍{% elif event.event_type == 'picked_up' %}📦{% elif event.event_type == 'departed' %}🛬{% elif event.event_type == 'completed' %}🎉{% elif event.event_type == 'exception' %}⚠️{% elif event.event_type == 'temp_check' %}🌡️{% else %}📌{% endif %}
-        </div>
-        <div class="custody-details">
-          <strong>{{ event.get_event_type_display }}</strong>
-          <p>{{ event.notes|default:"No additional notes" }}</p>
-          {% if event.order %}<span class="custody-meta">Order: {{ event.order.reference_code }}</span>{% endif %}
-          {% if event.temperature_celsius %}<span class="custody-meta">🌡️ {{ event.temperature_celsius }}°C</span>{% endif %}
-          <small>{% if event.actor %}by {{ event.actor.get_full_name|default:event.actor.username }} • {% endif %}{{ event.timestamp|date:"M d, Y H:i" }}</small>
-        </div>
-      </div>
-    {% endfor %}
-    {% if client_context.custody_events|length > 3 %}
-      <div class="show-more-wrap"><a href="#" class="show-more-link" data-target="recent-activity-client">See more</a> <small>({{ client_context.custody_events|length }} events)</small></div>
-    {% endif %}
-  </div>
-</section>
-{% elif role == "Client" %}
-<section class="panel">
-  <div class="panel-header"><div><p class="eyebrow">Chain of Custody</p><h2>Your Order Tracking</h2></div></div>
-  <p class="empty-state">No custody events recorded for your orders yet.</p>
-</section>
-{% endif %}
-
-{# ═══ SHARED: Orders table for Admin & Dispatcher ═══ #}
-{% if role == "Super Admin" or role == "Dispatcher" %}
-<section class="panel">
-  <div class="panel-header">
-    <div><p class="eyebrow">Live Queue</p><h2>Current Orders</h2></div>
-    <form method="get" class="filter-form">
-      <label for="status" style="position:absolute;width:1px;height:1px;overflow:hidden;">Filter status</label>
-      <select id="status" name="status" onchange="this.form.submit()">
-        <option value="">All Statuses</option>
-        {% for value, label in statuses %}
-          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+  <div class="section-body">
+    {% if client_context.recent_orders %}
+      <div class="compact-list">
+        {% for order in client_context.recent_orders|slice:":5" %}
+          <div class="compact-item">
+            <div>
+              <a href="{% url 'tracking:order_detail' order.pk %}" style="color:var(--color-text);text-decoration:none;"><strong>{{ order.reference_code }}</strong></a>
+              <small>{{ order.requested_pickup_time|date:"M d, H:i" }} · {{ order.get_status_display }}</small>
+            </div>
+            <span class="status-pill {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% else %}warning{% endif %}">{{ order.get_status_display }}</span>
+          </div>
         {% endfor %}
-      </select>
-    </form>
+      </div>
+    {% else %}<p class="empty-state">No recent orders.</p>{% endif %}
+    <a class="btn btn--sm btn--primary btn--block" href="{% url 'tracking:client_request_pickup' %}" style="margin-top:8px;">Request Pickup</a>
   </div>
-
-  {% if orders %}
-    <div class="table-card">
-      <table>
-        <thead><tr><th>Reference</th><th>Client</th><th>Priority</th><th>Status</th><th>Carrier</th><th>Created</th></tr></thead>
-        <tbody>
-          {% for order in orders %}
-            <tr>
-              <td><a href="{% url 'tracking:order_detail' order.pk %}">{{ order.reference_code }}</a></td>
-              <td>{{ order.client.name }}</td>
-              <td>{{ order.get_priority_display }}</td>
-              <td><span class="status-pill {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'assigned' %}warning{% endif %}">{{ order.get_status_display }}</span></td>
-              <td>{{ order.carrier|default:"Unassigned" }}</td>
-              <td>{{ order.created_at|date:"M d, Y" }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}<p class="empty-state">No orders in queue. Create a new pickup request to begin.</p>{% endif %}
-</section>
+</div>
 {% endif %}
 
 {% endblock %}
@@ -707,73 +390,35 @@
 {% block extra_js %}
 <script>
   (function() {
-    'use strict';
-
-    /* ── Carrier map (Dispatcher / Super Admin) ── */
+    /* ── Mini map ── */
     {% if role == "Dispatcher" or role == "Super Admin" %}
     (function() {
-      var mapEl = document.getElementById('carrier-map');
-      if (!mapEl) return;
-
-      var labLat = {{ lab_location.latitude }};
-      var labLng = {{ lab_location.longitude }};
-      var m = L.map('carrier-map').setView([labLat, labLng], 8);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OSM', maxZoom: 19
-      }).addTo(m);
-
+      var el = document.getElementById('carrier-map');
+      if (!el) return;
+      var labLat = {{ lab_location.latitude }}, labLng = {{ lab_location.longitude }};
+      var m = L.map('carrier-map').setView([labLat, labLng], 9);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM', maxZoom: 19 }).addTo(m);
       var layer = L.layerGroup().addTo(m);
-      var routes = L.layerGroup().addTo(m);
-      var list = document.getElementById('carrier-status-list');
-
-      function colorFor(s) {
-        if (s === 'Delayed') return '#f59e0b';
-        if (s === 'Stopped' || s === 'Alert') return '#ef4444';
-        if (s === 'Heading to pickup') return '#0d9488';
-        return '#22c55e';
-      }
-      function pillFor(s) {
-        if (s === 'Delayed') return 'warning';
-        if (s === 'Stopped' || s === 'Alert') return 'danger';
-        return 'success';
-      }
-
-      function renderList(data) {
-        if (!list) return;
-        list.innerHTML = '';
-        if (!data.carriers || !data.carriers.length) {
-          list.innerHTML = '<p class="empty-state">No active carriers.</p>'; return;
-        }
-        data.carriers.forEach(function(c) {
-          var card = document.createElement('div');
-          card.className = 'carrier-card';
-          card.innerHTML = '<strong>' + c.name + '</strong><small>Order: ' + (c.order || 'N/A') + '</small><small>Updated: ' + (c.last_location_update || 'unknown') + '</small><span class="status-pill ' + pillFor(c.status) + '">' + c.status + '</span>';
-          card.addEventListener('click', function() { if (c.latitude != null) m.setView([c.latitude, c.longitude], 12, { animate: true }); });
-          list.appendChild(card);
-        });
-      }
 
       function refresh() {
         m.invalidateSize();
-        fetch('{% url "tracking:carrier_positions" %}').then(function(r) { return r.json(); }).then(function(d) {
-          layer.clearLayers(); routes.clearLayers();
-          renderList(d);
+        fetch('{% url "tracking:carrier_positions" %}').then(function(r){return r.json();}).then(function(d){
+          layer.clearLayers();
           if (!d.carriers) return;
-          d.carriers.forEach(function(c) {
-            if (c.route && c.route.length > 1) L.polyline(c.route, { color: '#c8102e', weight: 3, opacity: .6, dashArray: '6 3' }).addTo(routes);
+          d.carriers.forEach(function(c){
             if (c.latitude == null) return;
-            L.circleMarker([c.latitude, c.longitude], { radius: 10, fillColor: colorFor(c.status), color: '#fff', weight: 2, fillOpacity: .9 })
-              .addTo(layer).bindPopup('<strong>' + c.name + '</strong><br>Order: ' + (c.order || 'N/A') + '<br>Status: ' + c.status);
+            var color = c.status === 'In transit' ? '#0d9488' : c.status === 'Delayed' ? '#f59e0b' : '#22c55e';
+            L.circleMarker([c.latitude, c.longitude], { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: .9 })
+              .addTo(layer).bindPopup('<strong>'+c.name+'</strong><br>'+c.status);
           });
-        }).catch(function(e) { console.warn('Map load failed', e); });
+        });
       }
-
-      setTimeout(function() { m.invalidateSize(); refresh(); }, 100);
+      setTimeout(function(){ m.invalidateSize(); refresh(); }, 200);
       setInterval(refresh, 15000);
     })();
     {% endif %}
 
-    /* ── Show more ── */
+    /* ── Show more (custody timeline) ── */
     document.querySelectorAll('.show-more-link').forEach(function(link) {
       link.addEventListener('click', function(e) {
         e.preventDefault();

@@ -4,6 +4,7 @@
 
 {% block content %}
 <style>
+  /* ── Key–value account table ── */
   .account-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
   .account-table th {
     text-align: left; width: 160px; padding: 12px 16px;
@@ -19,6 +20,7 @@
   .account-table tr:last-child th,
   .account-table tr:last-child td { border-bottom: none; }
 
+  /* ── Profile card ── */
   .profile-avatar {
     width: 56px; height: 56px; border-radius: var(--radius-full);
     background: linear-gradient(135deg, var(--color-primary), #047857);
@@ -31,6 +33,13 @@
     display: flex; align-items: flex-start; gap: var(--space-lg);
     margin-bottom: var(--space-lg);
   }
+  .profile-card__name {
+    font-size: 1.15rem; font-weight: 700; margin: 0 0 2px;
+  }
+  .profile-card__meta {
+    font-size: .8rem; color: var(--color-text-muted); margin: 0 0 16px;
+  }
+
   @media (max-width: 480px) {
     .profile-card { flex-direction: column; align-items: center; text-align: center; }
     .account-table th { width: 120px; }
@@ -51,8 +60,8 @@
 <div class="profile-card">
   <div class="profile-avatar" aria-hidden="true">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</div>
   <div style="flex:1;min-width:0;">
-    <h2 style="font-size:1.15rem;font-weight:700;margin:0 0 2px;">{{ user.get_full_name|default:user.username }}</h2>
-    <p style="font-size:.8rem;color:var(--color-text-muted);margin:0 0 16px;">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
+    <h2 class="profile-card__name">{{ user.get_full_name|default:user.username }}</h2>
+    <p class="profile-card__meta">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
   </div>
 </div>
 {% endif %}

@@ -1,0 +1,682 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Live Carrier Tracking — PathCare Kenya{% endblock %}
+
+{% block content %}
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  .monitor-layout {
+    display: grid; grid-template-columns: 1fr 360px; gap: 0;
+    height: calc(100vh - 64px - 48px); margin: calc(-1 * var(--space-lg));
+  }
+  @media (max-width: 1024px) {
+    .monitor-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: auto; margin: 0; }
+    .map-panel { height: 55vh; min-height: 400px; }
+  }
+  @media (max-width: 768px) { .map-panel { height: 45vh; min-height: 320px; } }
+
+  .map-panel { position: relative; overflow: hidden; border-right: 1px solid var(--color-border); }
+  @media (max-width: 1024px) { .map-panel { border-right: none; border-bottom: 1px solid var(--color-border); } }
+  #monitor-map { width: 100%; height: 100%; }
+
+  .monitor-sidebar { display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); }
+  .monitor-sidebar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border-light);
+    flex-shrink: 0; gap: var(--space-sm);
+  }
+  .monitor-sidebar-header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+  .sidebar-tabs {
+    display: flex; gap: 4px; padding: 4px; border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+  }
+  .sidebar-tab {
+    padding: 6px 12px; border-radius: var(--radius-sm); font-size: .72rem;
+    font-weight: 600; cursor: pointer; border: none; background: none;
+    color: var(--color-text-muted); font-family: inherit;
+  }
+  .sidebar-tab.active { background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-sm); }
+  .monitor-sidebar-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: var(--space-sm); }
+
+  /* Connection badge */
+  .conn-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: var(--radius-full);
+    font-size: .68rem; font-weight: 700; white-space: nowrap;
+  }
+  .conn-badge.live { background: var(--color-success-soft); color: #065f46; }
+  .conn-badge.polling { background: var(--color-warning-soft); color: #92400e; }
+  .conn-badge.offline { background: var(--color-danger-soft); color: #991b1b; }
+  .conn-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .conn-badge.live .conn-dot { background: var(--color-success); animation: pulse-dot 1.5s infinite; }
+  .conn-badge.polling .conn-dot { background: var(--color-warning); animation: pulse-dot 2s infinite; }
+  .conn-badge.offline .conn-dot { background: var(--color-danger); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+  /* Carrier list */
+  .carrier-list { display: flex; flex-direction: column; gap: 6px; }
+  .carrier-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    border-radius: var(--radius-md); border: 1px solid var(--color-border-light);
+    cursor: pointer; transition: all var(--duration-fast) var(--ease-out);
+    background: var(--color-surface);
+  }
+  .carrier-row:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+  .carrier-row.selected { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); background: var(--color-primary-soft); }
+  .carrier-row.alert { border-color: #fecaca; background: #fff5f5; }
+  .carrier-row .mini-vehicle { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .carrier-row .mini-vehicle svg { width: 24px; height: 24px; }
+  .carrier-info { flex: 1; min-width: 0; }
+  .carrier-info strong { display: block; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .carrier-info small { font-size: .68rem; color: var(--color-text-muted); display: block; }
+  .carrier-meta { text-align: right; flex-shrink: 0; }
+  .carrier-meta .speed { font-size: .85rem; font-weight: 700; }
+  .carrier-meta .updated { font-size: .62rem; color: var(--color-text-muted); }
+
+  /* Detail drawer */
+  .detail-drawer {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    max-height: 45vh; z-index: 1050; background: var(--color-surface);
+    border-top: 1px solid var(--color-border); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -4px 24px rgba(0,0,0,.1); overflow-y: auto; padding: var(--space-md);
+  }
+  .detail-drawer.open { display: block; }
+  .detail-drawer-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--color-border); margin: 0 auto 12px; }
+  .detail-drawer .close-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.2rem; color: var(--color-text-muted); cursor: pointer; }
+
+  /* Alerts */
+  .alert-list { display: flex; flex-direction: column; gap: 8px; }
+  .alert-item {
+    padding: 10px 12px; border-radius: var(--radius-md);
+    border: 1px solid #fecaca; background: #fff5f5; font-size: .78rem;
+  }
+  .alert-item strong { display: block; color: #991b1b; margin-bottom: 2px; }
+
+  /* Map overlays */
+  .map-overlay {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; flex-direction: column; gap: 6px; z-index: 500;
+  }
+  .map-overlay button {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-border); background: var(--color-surface);
+    cursor: pointer; font-size: 1rem; display: flex; align-items: center;
+    justify-content: center; box-shadow: var(--shadow-sm);
+  }
+  .map-overlay button:hover { background: var(--color-surface-alt); }
+  .map-overlay button.active { background: var(--color-primary-soft); border-color: var(--color-primary); }
+
+  .status-legend {
+    position: absolute; bottom: 12px; left: 12px; z-index: 500;
+    display: flex; gap: 8px; padding: 8px 12px;
+    border-radius: var(--radius-md); background: rgba(255,255,255,.92);
+    border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
+    font-size: .68rem; flex-wrap: wrap;
+  }
+  .status-legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Vehicle icon wrapper */
+  .vehicle-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; transition: transform 0.3s ease;
+  }
+  .vehicle-icon svg { width: 36px; height: 36px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+  .vehicle-icon.online svg { color: #16a34a; }
+  .vehicle-icon.busy svg { color: var(--color-primary); }
+  .vehicle-icon.offline svg { color: #94a3b8; }
+
+  /* Pulsing destination marker */
+  @keyframes pulse-ring {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .destination-marker {
+    position: relative;
+  }
+  .destination-marker::before {
+    content: '';
+    position: absolute; top: -8px; left: -8px;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--color-primary);
+    animation: pulse-ring 2s infinite;
+  }
+
+  /* ETA badge on map */
+  .eta-badge {
+    background: rgba(15,23,42,.88); color: #fff;
+    padding: 4px 8px; border-radius: var(--radius-sm);
+    font-size: .7rem; font-weight: 700; white-space: nowrap;
+  }
+
+  .hidden { display: none !important; }
+</style>
+
+<div class="hero-card" style="margin-bottom:0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-md);flex-wrap:wrap;">
+    <div>
+      <p class="eyebrow">Real-Time Monitoring</p>
+      <h1>Live Carrier Tracking</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:var(--space-sm);flex-wrap:wrap;">
+      <span id="conn-status" class="conn-badge polling"><span class="conn-dot"></span> Connecting…</span>
+      <span style="font-size:.72rem;color:var(--color-text-muted);">
+        <strong id="online-count">0</strong> online · <strong id="total-count">0</strong> total
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="monitor-layout">
+  <div class="map-panel">
+    <div id="monitor-map"></div>
+    <div class="map-overlay">
+      <button id="btn-fit-all" title="Fit all carriers">⊡</button>
+      <button id="btn-center-lab" title="Center lab">📍</button>
+      <button id="btn-toggle-traffic" title="Toggle traffic view">🚦</button>
+    </div>
+    <div class="status-legend">
+      <span><span class="legend-dot" style="background:#16a34a;"></span> Online</span>
+      <span><span class="legend-dot" style="background:var(--color-primary);"></span> Busy</span>
+      <span><span class="legend-dot" style="background:#94a3b8;"></span> Offline</span>
+      <span><span class="legend-dot" style="background:#dc2626;"></span> Alert</span>
+    </div>
+  </div>
+
+  <aside class="monitor-sidebar">
+    <div class="monitor-sidebar-header">
+      <h2>Carriers</h2>
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-tab="all">All</button>
+        <button class="sidebar-tab" data-tab="alerts">Alerts <span id="alert-count" style="display:none;">0</span></button>
+      </div>
+    </div>
+    <div class="monitor-sidebar-body">
+      <div class="carrier-list" id="carrier-list"><div class="empty-state">Loading carriers…</div></div>
+      <div class="alert-list hidden" id="alert-list"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="detail-drawer" id="detail-drawer">
+  <div class="detail-drawer-handle"></div>
+  <button class="close-btn" id="drawer-close">✕</button>
+  <div id="drawer-content"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  'use strict';
+
+  /* ═══ CONFIG ═══ */
+  var LAB_LAT = {{ lab_location.latitude }};
+  var LAB_LNG = {{ lab_location.longitude }};
+  var WS_URL = '{{ WS_URL|default:"" }}';
+  var POLL_URL = '{% url "tracking:carrier_positions" %}';
+  var POLL_INTERVAL = 5000;
+
+  /* ═══ STATE ═══ */
+  var map, carrierLayer, routeLayer, destLayer, labMarker;
+  var carrierState = {};  // id → { marker, prevLat, prevLng, bearing, trail, ... }
+  var carrierData = {};
+  var selectedId = null;
+  var connectionMode = 'polling';
+  var socket = null;
+  var pollTimer = null;
+  var animationFrames = {};
+  var showTraffic = false;
+  var trafficLayer = null;
+
+  /* ═══ VEHICLE SVG ICONS ═══ */
+  var VEHICLE_ICONS = {
+    car: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.5-4.5h11L19 11m-14 0v3a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-3m-14 0h14M7 8l-2 3m12-3l2 3"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></svg>',
+    bike: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6l-3 5h4l3 4"/><circle cx="12" cy="7" r="1.5" fill="currentColor"/></svg>'
+  };
+
+  /* ═══ HELPERS ═══ */
+  function bearing(lat1, lng1, lat2, lng2) {
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var y = Math.sin(dLng) * Math.cos(lat2 * Math.PI / 180);
+    var x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+            Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLng);
+    return Math.atan2(y, x) * 180 / Math.PI;
+  }
+
+  function dist(lat1, lng1, lat2, lng2) {
+    var R = 6371e3, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+    var a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function getStatusCategory(c) {
+    var s = c.order_status || c.status || '';
+    if (!s || s === 'Offline') return 'offline';
+    if (s === 'In transit' || s === 'On job') return 'busy';
+    return 'online';
+  }
+
+  function initials(name) {
+    if (!name) return 'C';
+    var p = name.trim().split(/\s+/);
+    if (p.length === 1) return p[0].slice(0,2).toUpperCase();
+    return (p[0][0]+p[1][0]).toUpperCase();
+  }
+
+  /* ═══ MAP INIT ═══ */
+  function initMap() {
+    var el = document.getElementById('monitor-map');
+    if (!el) return;
+    map = L.map('monitor-map', { zoomControl: false, preferCanvas: true }).setView([LAB_LAT, LAB_LNG], 10);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OSM', maxZoom: 19
+    }).addTo(map);
+
+    carrierLayer = L.layerGroup().addTo(map);
+    routeLayer = L.layerGroup().addTo(map);
+    destLayer = L.layerGroup().addTo(map);
+
+    // Lab marker with pulse
+    var labIcon = L.divIcon({
+      html: '<div style="position:relative;"><div style="width:20px;height:20px;border-radius:50%;background:#0d9488;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);"></div><div style="position:absolute;top:-6px;left:-6px;width:32px;height:32px;border-radius:50%;border:3px solid #0d9488;animation:pulse-ring 2s infinite;"></div></div>',
+      className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+    });
+    labMarker = L.marker([LAB_LAT, LAB_LNG], { icon: labIcon })
+      .addTo(map).bindTooltip('🏥 PathCare Lab', { permanent: true, direction: 'right' });
+
+    // Traffic layer (OSM-based, free — shows road hierarchy, not live traffic)
+    // Toggle swaps between standard and humanitarian tiles for visual contrast
+    trafficLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; OSM contributors, HOT', maxZoom: 19
+    });
+
+    document.getElementById('btn-fit-all').addEventListener('click', fitAllCarriers);
+    document.getElementById('btn-center-lab').addEventListener('click', function() {
+      map.setView([LAB_LAT, LAB_LNG], 13, { animate: true });
+    });
+    document.getElementById('btn-toggle-traffic').addEventListener('click', toggleTraffic);
+  }
+
+  function toggleTraffic() {
+    showTraffic = !showTraffic;
+    var btn = document.getElementById('btn-toggle-traffic');
+    if (showTraffic) {
+      map.addLayer(trafficLayer);
+      btn.classList.add('active');
+    } else {
+      map.removeLayer(trafficLayer);
+      btn.classList.remove('active');
+    }
+  }
+
+  /* ═══ VEHICLE MARKER ═══ */
+  function createVehicleIcon(cat) {
+    var color = cat === 'busy' ? '#0d9488' : cat === 'offline' ? '#94a3b8' : '#16a34a';
+    return L.divIcon({
+      html: '<div class="vehicle-icon ' + cat + '" style="color:' + color + ';">' + VEHICLE_ICONS.car + '</div>',
+      className: '', iconSize: [48, 48], iconAnchor: [24, 24]
+    });
+  }
+
+  function updateVehicleMarker(id, cat, lat, lng, prevLat, prevLng) {
+    var state = carrierState[id];
+    if (!state) return;
+
+    var el = state.marker.getElement();
+    if (!el) return;
+
+    var iconEl = el.querySelector('.vehicle-icon');
+    if (!iconEl) return;
+
+    // Calculate bearing
+    if (prevLat != null && prevLng != null) {
+      var d = dist(prevLat, prevLng, lat, lng);
+      if (d > 2) { // only rotate if moved >= 2 meters
+        state.bearing = bearing(prevLat, prevLng, lat, lng);
+      }
+    }
+    if (state.bearing != null) {
+      iconEl.style.transform = 'rotate(' + state.bearing + 'deg)';
+    }
+  }
+
+  /* ═══ SMOOTH ANIMATION ═══ */
+  function animateMarker(id, toLat, toLng, duration) {
+    var state = carrierState[id];
+    if (!state || !state.marker) return;
+
+    // Cancel existing animation for this marker
+    if (animationFrames[id]) { cancelAnimationFrame(animationFrames[id]); animationFrames[id] = null; }
+
+    var fromLat = state.marker.getLatLng().lat;
+    var fromLng = state.marker.getLatLng().lng;
+    var startTime = performance.now();
+
+    function step(now) {
+      var elapsed = now - startTime;
+      var t = Math.min(elapsed / duration, 1);
+      // Ease-out
+      t = 1 - Math.pow(1 - t, 3);
+
+      var lat = fromLat + (toLat - fromLat) * t;
+      var lng = fromLng + (toLng - fromLng) * t;
+
+      if (state.marker) {
+        state.marker.setLatLng([lat, lng]);
+      }
+
+      if (t < 1) {
+        animationFrames[id] = requestAnimationFrame(step);
+      } else {
+        animationFrames[id] = null;
+      }
+    }
+
+    animationFrames[id] = requestAnimationFrame(step);
+  }
+
+  /* ═══ CONNECTION ═══ */
+  function setConnection(mode) {
+    connectionMode = mode;
+    var el = document.getElementById('conn-status');
+    el.className = 'conn-badge ' + mode;
+    el.innerHTML = '<span class="conn-dot"></span> ' +
+      (mode === 'ws' ? 'Live (WebSocket)' : mode === 'polling' ? 'Live (Polling)' : 'Disconnected');
+  }
+
+  function connectWebSocket() {
+    if (!WS_URL) return false;
+    try {
+      socket = new WebSocket(WS_URL);
+      socket.onopen = function() {
+        setConnection('ws');
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        socket.send(JSON.stringify({ type: 'subscribe_carriers' }));
+      };
+      socket.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        if (data.type === 'carrier_update' || data.type === 'carrier_snapshot') {
+          processCarrierData({ carriers: data.carriers });
+        }
+      };
+      socket.onclose = function() { fallbackToPolling(); };
+      socket.onerror = function() { fallbackToPolling(); };
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function fallbackToPolling() {
+    setConnection('polling');
+    socket = null;
+    if (!pollTimer) pollTimer = setInterval(pollCarrierPositions, POLL_INTERVAL);
+  }
+
+  function pollCarrierPositions() {
+    fetch(POLL_URL).then(function(r) { return r.json(); }).then(function(data) {
+      if (connectionMode !== 'ws') setConnection('polling');
+      processCarrierData(data);
+    }).catch(function() {
+      if (connectionMode === 'polling') setConnection('offline');
+    });
+  }
+
+  /* ═══ DESTINATION MARKERS ═══ */
+  function renderDestinations(carriers) {
+    destLayer.clearLayers();
+    carriers.forEach(function(c) {
+      if (c.pickup_latitude == null || c.pickup_longitude == null) return;
+      if (c.latitude != null && c.longitude != null) return; // skip if carrier already there
+
+      // Pulsing destination dot
+      var destIcon = L.divIcon({
+        html: '<div style="position:relative;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);"></div><div style="position:absolute;top:-8px;left:-8px;width:30px;height:30px;border-radius:50%;border:2px solid #f59e0b;animation:pulse-ring 2s infinite;"></div></div>',
+        className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+      L.marker([c.pickup_latitude, c.pickup_longitude], { icon: destIcon })
+        .addTo(destLayer)
+        .bindTooltip((c.order || 'Pickup') + ' · ' + (c.client || ''), { direction: 'top' });
+    });
+  }
+
+  /* ═══ DATA PROCESSING ═══ */
+  function processCarrierData(data) {
+    if (!data || !data.carriers) return;
+    var carriers = data.carriers;
+
+    document.getElementById('online-count').textContent = carriers.filter(function(c) {
+      return getStatusCategory(c) !== 'offline';
+    }).length;
+    document.getElementById('total-count').textContent = carriers.length;
+
+    var alerts = carriers.filter(function(c) { return getStatusCategory(c) === 'offline'; });
+    updateAlertBadge(alerts.length);
+
+    var now = Date.now();
+
+    carriers.forEach(function(c) {
+      carrierData[c.id] = c;
+      var cat = getStatusCategory(c);
+
+      if (c.latitude == null || c.longitude == null) {
+        // Remove marker if no GPS
+        if (carrierState[c.id] && carrierState[c.id].marker) {
+          carrierLayer.removeLayer(carrierState[c.id].marker);
+          delete carrierState[c.id];
+        }
+        return;
+      }
+
+      var prevLat = carrierState[c.id] ? carrierState[c.id].lastLat : null;
+      var prevLng = carrierState[c.id] ? carrierState[c.id].lastLng : null;
+
+      if (!carrierState[c.id]) {
+        // First time — create marker
+        var icon = createVehicleIcon(cat);
+        var marker = L.marker([c.latitude, c.longitude], {
+          icon: icon, zIndexOffset: cat === 'alert' ? 900 : 500
+        }).addTo(carrierLayer);
+
+        // Popup with ETA
+        var popupContent = '<div style="min-width:160px;"><strong>' + c.name + '</strong><br>Status: ' + (c.order_status || c.status || 'Unknown') + '<br>Order: ' + (c.order || 'N/A');
+        if (c.route && c.route.length > 1) {
+          var routeDist = 0;
+          for (var i = 1; i < c.route.length; i++) routeDist += dist(c.route[i-1][0], c.route[i-1][1], c.route[i][0], c.route[i][1]);
+          var eta = Math.round(routeDist / 1000 / 0.5); // ~30 km/h average
+          popupContent += '<br><span style="color:#0d9488;font-weight:700;">ETA: ~' + eta + ' min</span>';
+        }
+        popupContent += '</div>';
+        marker.bindPopup(popupContent);
+        marker.on('click', function() { selectCarrier(c.id); });
+
+        carrierState[c.id] = {
+          marker: marker,
+          lastLat: c.latitude,
+          lastLng: c.longitude,
+          lastTime: now,
+          bearing: 0,
+          trail: []
+        };
+      } else {
+        // Update existing — smooth animate
+        var state = carrierState[c.id];
+        var moveDist = dist(state.lastLat, state.lastLng, c.latitude, c.longitude);
+        var moveTimeMs = now - state.lastTime;
+        var animDuration = Math.min(moveTimeMs * 0.8, 2000); // animate over ~80% of the interval, max 2s
+
+        updateVehicleMarker(c.id, cat, c.latitude, c.longitude, state.lastLat, state.lastLng);
+
+        if (moveDist > 3 && animDuration > 100) {
+          animateMarker(c.id, c.latitude, c.longitude, animDuration);
+        } else if (moveDist > 0.5) {
+          state.marker.setLatLng([c.latitude, c.longitude]);
+        }
+
+        state.lastLat = c.latitude;
+        state.lastLng = c.longitude;
+        state.lastTime = now;
+
+        // Update popup
+        var pp = '<div style="min-width:160px;"><strong>' + c.name + '</strong><br>Status: ' + (c.order_status || c.status || 'Unknown') + '<br>Order: ' + (c.order || 'N/A');
+        if (moveTimeMs > 0 && moveDist > 0) {
+          var speed = Math.round((moveDist / moveTimeMs) * 3600);
+          pp += '<br>Speed: ' + speed + ' km/h';
+        }
+        pp += '</div>';
+        state.marker.setPopupContent(pp);
+      }
+
+      // Trail
+      if (!carrierState[c.id].trail) carrierState[c.id].trail = [];
+      carrierState[c.id].trail.push([c.latitude, c.longitude]);
+      if (carrierState[c.id].trail.length > 30) carrierState[c.id].trail.shift();
+    });
+
+    // Draw trails
+    routeLayer.clearLayers();
+    Object.keys(carrierState).forEach(function(id) {
+      var t = carrierState[id].trail;
+      if (t && t.length > 1) {
+        var color = getStatusCategory(carrierData[id]) === 'busy' ? '#0d9488' : '#94a3b8';
+        L.polyline(t, {
+          color: color, weight: 2.5, opacity: .3, dashArray: '5 5'
+        }).addTo(routeLayer);
+      }
+      // Assigned route
+      var c = carrierData[id];
+      if (c && c.route && c.route.length > 1) {
+        L.polyline(c.route, {
+          color: '#0d9488', weight: 3, opacity: .55
+        }).addTo(routeLayer);
+      }
+    });
+
+    // Destination markers
+    renderDestinations(carriers);
+
+    // Clean up removed carriers
+    Object.keys(carrierState).forEach(function(id) {
+      if (!carrierData[id]) {
+        carrierLayer.removeLayer(carrierState[id].marker);
+        delete carrierState[id];
+      }
+    });
+
+    // Fit bounds on first load
+    if (!selectedId) {
+      var bounds = L.latLngBounds(), hasGPS = false;
+      carriers.forEach(function(c) {
+        if (c.latitude != null) { bounds.extend([c.latitude, c.longitude]); hasGPS = true; }
+      });
+      if (hasGPS) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    }
+
+    renderCarrierList(carriers);
+    renderAlertList(alerts);
+    if (selectedId && carrierData[selectedId]) showDetail(carrierData[selectedId]);
+  }
+
+  /* ═══ LISTS ═══ */
+  function renderCarrierList(carriers) {
+    var list = document.getElementById('carrier-list');
+    list.innerHTML = '';
+    if (!carriers.length) { list.innerHTML = '<div class="empty-state">No carriers active.</div>'; return; }
+    carriers.forEach(function(c) {
+      var cat = getStatusCategory(c);
+      var color = cat === 'busy' ? '#0d9488' : cat === 'offline' ? '#94a3b8' : '#16a34a';
+      var row = document.createElement('div');
+      row.className = 'carrier-row' + (cat === 'offline' ? ' alert' : '') + (selectedId === String(c.id) ? ' selected' : '');
+      row.dataset.carrierId = c.id;
+      row.innerHTML = '<div class="mini-vehicle" style="color:' + color + ';">' + VEHICLE_ICONS.car + '</div>' +
+        '<div class="carrier-info"><strong>' + c.name + '</strong><small>' + (c.order || 'No order') + ' · ' + (c.order_status || c.status || 'Unknown') + '</small></div>' +
+        '<div class="carrier-meta"><div class="updated">' + (c.last_location_update || '—') + '</div></div>';
+      row.addEventListener('click', function() { selectCarrier(c.id); });
+      list.appendChild(row);
+    });
+  }
+
+  function renderAlertList(alerts) {
+    var list = document.getElementById('alert-list');
+    list.innerHTML = '';
+    if (!alerts.length) { list.innerHTML = '<div class="empty-state" style="padding:16px;">No alerts — all carriers online.</div>'; return; }
+    alerts.forEach(function(c) {
+      var item = document.createElement('div');
+      item.className = 'alert-item';
+      item.innerHTML = '<strong>⚠ ' + c.name + '</strong><p>Offline — last seen: ' + (c.last_location_update || 'unknown') + '</p>';
+      item.addEventListener('click', function() { selectCarrier(c.id); });
+      list.appendChild(item);
+    });
+  }
+
+  function updateAlertBadge(count) {
+    var badge = document.getElementById('alert-count');
+    if (count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+    else { badge.style.display = 'none'; }
+  }
+
+  /* ═══ SELECTION ═══ */
+  function selectCarrier(id) {
+    selectedId = String(id);
+    document.querySelectorAll('.carrier-row').forEach(function(r) {
+      r.classList.toggle('selected', r.dataset.carrierId === selectedId);
+    });
+    if (carrierData[id]) showDetail(carrierData[id]);
+    var c = carrierData[id];
+    if (c && c.latitude != null) {
+      map.flyTo([c.latitude, c.longitude], 15, { duration: .6 });
+      if (carrierState[id] && carrierState[id].marker) {
+        carrierState[id].marker.openPopup();
+      }
+    }
+    if (window.innerWidth <= 1024) {
+      document.getElementById('detail-drawer').classList.add('open');
+    }
+  }
+
+  function showDetail(c) {
+    var el = document.getElementById('drawer-content');
+    if (!el) return;
+    el.innerHTML = '<h3 style="margin:0 0 4px;">' + c.name + '</h3>' +
+      '<p style="font-size:.78rem;color:var(--color-text-muted);margin:0 0 16px;">' + (c.order || 'No active order') + ' · ' + (c.order_status || c.status || 'Unknown') + '</p>' +
+      '<div class="stat-grid" style="margin-bottom:12px;">' +
+        '<div class="stat-card"><span class="stat-card__value">' + (c.latitude ? c.latitude.toFixed(4) : '—') + '</span><span class="stat-card__label">Latitude</span></div>' +
+        '<div class="stat-card"><span class="stat-card__value">' + (c.longitude ? c.longitude.toFixed(4) : '—') + '</span><span class="stat-card__label">Longitude</span></div>' +
+      '</div>' +
+      '<p style="font-size:.78rem;color:var(--color-text-muted);"><strong>Last Update:</strong> ' + (c.last_location_update || 'No data') + '<br><strong>GPS:</strong> ' + (c.latitude != null ? 'Live' : 'No signal') + '</p>';
+  }
+
+  function fitAllCarriers() {
+    var bounds = L.latLngBounds(), hasAny = false;
+    Object.values(carrierData).forEach(function(c) {
+      if (c.latitude != null) { bounds.extend([c.latitude, c.longitude]); hasAny = true; }
+    });
+    if (hasAny) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    else map.setView([LAB_LAT, LAB_LNG], 10);
+  }
+
+  /* ═══ TABS ═══ */
+  document.querySelectorAll('.sidebar-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.sidebar-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var which = tab.dataset.tab;
+      document.getElementById('carrier-list').classList.toggle('hidden', which !== 'all');
+      document.getElementById('alert-list').classList.toggle('hidden', which !== 'alerts');
+    });
+  });
+
+  document.getElementById('drawer-close').addEventListener('click', function() {
+    document.getElementById('detail-drawer').classList.remove('open');
+  });
+
+  /* ═══ BOOT ═══ */
+  document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    if (!connectWebSocket()) fallbackToPolling();
+    setTimeout(function() { map.invalidateSize(); pollCarrierPositions(); }, 200);
+  });
+})();
+</script>
+{% endblock %}

@@ -197,3 +197,17 @@ else:
             'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
+
+
+
+
+
+    SECURE_CONTENT_SECURITY_POLICY = {
+    "default-src": ("'self'",),
+    "script-src": ("'self'", "'unsafe-inline'", "unpkg.com"),
+    "style-src": ("'self'", "'unsafe-inline'", "unpkg.com"),
+    "img-src": ("'self'", "data:", "https:"),
+    "font-src": ("'self'",),
+    "connect-src": ("'self'", "ws:", "wss:"),   # ← add ws: and wss:
+    "frame-ancestors": ("'none'",),
+}

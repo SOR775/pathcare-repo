@@ -177,28 +177,6 @@
     border: 1px solid var(--color-border);
   }
 
-  /* ── Uber-style vehicle ── */
-  .vehicle-icon {
-    display: flex; align-items: center; justify-content: center;
-    width: 48px; height: 48px; transition: transform 0.3s ease;
-  }
-  .vehicle-icon svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); color: var(--color-primary); }
-
-  @keyframes pulse-ring { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
-  .dest-pulse {
-    position: relative; width: 20px; height: 20px;
-  }
-  .dest-pulse::before {
-    content: ''; position: absolute; top: -6px; left: -6px;
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 3px solid #f59e0b; animation: pulse-ring 2s infinite;
-  }
-  .dest-pulse .dot {
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #f59e0b; border: 2px solid #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,.2); position: relative; z-index: 1;
-  }
-
   /* ── Route guidance ── */
   .guidance-card {
     padding: var(--space-md); border-radius: var(--radius-md);
@@ -675,7 +653,7 @@
       });
     });
 
-    /* ── Map + Route (Uber-style) ── */
+    /* ── Map + Route ── */
     document.addEventListener('DOMContentLoaded', function() {
       var list = document.getElementById('journey-progress-list');
       if (list) updateJourney(list.getAttribute('data-current-status'));
@@ -683,11 +661,11 @@
       var mapEl = document.getElementById('carrier-route-map');
       if (!mapEl) return;
 
-      var map = L.map('carrier-route-map', { zoomControl: false });
+      var map = L.map('carrier-route-map');
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OSM', maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        maxZoom: 19,
       }).addTo(map);
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       var routeStatus = document.getElementById('route-status');
       var routeSummary = document.getElementById('route-summary');
@@ -696,11 +674,7 @@
       var openMaps = document.getElementById('open-route-maps');
       var startBtn = document.getElementById('start-live-tracking');
       var tracking = false, watchId = null;
-      var vehicleMarker = null, pickupMarker = null, routeLine = null, trailLine = null;
-      var carrierTrail = [];
-      var lastPos = null, lastTime = null, currentBearing = 0, animFrame = null;
-
-      var CAR_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.5-4.5h11L19 11m-14 0v3a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-3m-14 0h14M7 8l-2 3m12-3l2 3"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></svg>';
+      var carrierMarker = null, pickupMarker = null, routeLine = null;
 
       {% if carrier_location %}
         var carrierLat = {{ carrier_location.latitude }};
@@ -722,85 +696,6 @@
         var destLabel = 'Destination';
       {% endif %}
 
-      /* ── Helpers ── */
-      function calcBearing(lat1, lng1, lat2, lng2) {
-        var dL = (lng2 - lng1) * Math.PI / 180;
-        var y = Math.sin(dL) * Math.cos(lat2 * Math.PI / 180);
-        var x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dL);
-        return Math.atan2(y, x) * 180 / Math.PI;
-      }
-
-      function distM(lat1, lng1, lat2, lng2) {
-        return map.distance([lat1, lng1], [lat2, lng2]);
-      }
-
-      /* ── Smooth animation ── */
-      function animateMarker(toLat, toLng, duration) {
-        if (!vehicleMarker) return;
-        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-        var fromLat = vehicleMarker.getLatLng().lat;
-        var fromLng = vehicleMarker.getLatLng().lng;
-        var start = performance.now();
-        function step(now) {
-          var t = Math.min((now - start) / duration, 1);
-          t = 1 - Math.pow(1 - t, 3);
-          vehicleMarker.setLatLng([fromLat + (toLat - fromLat) * t, fromLng + (toLng - fromLng) * t]);
-          if (t < 1) animFrame = requestAnimationFrame(step);
-        }
-        animFrame = requestAnimationFrame(step);
-      }
-
-      function updateLive(lat, lng) {
-        var now = Date.now();
-
-        if (!vehicleMarker) {
-          // Create vehicle on first position
-          vehicleMarker = L.marker([lat, lng], {
-            icon: L.divIcon({ html: '<div class="vehicle-icon">' + CAR_SVG + '</div>', className: '', iconSize: [48, 48], iconAnchor: [24, 24] }),
-            zIndexOffset: 1000,
-          }).addTo(map);
-          map.setView([lat, lng], 15);
-        } else {
-          if (lastPos) {
-            var d = distM(lastPos[0], lastPos[1], lat, lng);
-            if (d > 3) {
-              currentBearing = calcBearing(lastPos[0], lastPos[1], lat, lng);
-              var el = vehicleMarker.getElement();
-              if (el) {
-                var icon = el.querySelector('.vehicle-icon');
-                if (icon) icon.style.transform = 'rotate(' + currentBearing + 'deg)';
-              }
-            }
-            var dur = lastTime ? Math.min(now - lastTime, 4000) : 1000;
-            animateMarker(lat, lng, dur * 0.75);
-          } else {
-            vehicleMarker.setLatLng([lat, lng]);
-          }
-        }
-
-        lastPos = [lat, lng]; lastTime = now;
-
-        // Breadcrumb trail
-        carrierTrail.push([lat, lng]);
-        if (carrierTrail.length > 50) carrierTrail.shift();
-        if (!trailLine) trailLine = L.polyline(carrierTrail, { color: '#94a3b8', weight: 3, opacity: .35, dashArray: '5 5' }).addTo(map);
-        else trailLine.setLatLngs(carrierTrail);
-
-        // Update popup with speed
-        var pp = '<div style="min-width:140px;"><strong>Your Location</strong>';
-        if (lastPos && lastTime && d > 0) {
-          var speed = Math.round((d / (now - lastTime)) * 3600);
-          pp += '<br>Speed: ' + speed + ' km/h';
-        }
-        pp += '</div>';
-        vehicleMarker.setPopupContent(pp);
-
-        // Recalculate route
-        if (pickupLat != null) renderRoute(lat, lng);
-
-        if (routeStatus) routeStatus.textContent = 'Live GPS active. Route updating as you move.';
-      }
-
       function postLocation(lat, lng) {
         var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
         fetch('{% url "tracking:update_carrier_location" %}', {
@@ -814,13 +709,16 @@
         if (pickupLat == null || pickupLng == null) return;
         carrierLat = clat; carrierLng = clng;
 
+        if (carrierMarker) carrierMarker.setLatLng([clat, clng]);
+        else carrierMarker = L.marker([clat, clng]).addTo(map).bindPopup('Your location');
+
         if (routeLine) map.removeLayer(routeLine);
+
+        var url = 'https://router.project-osrm.org/route/v1/driving/' + clng + ',' + clat + ';' + pickupLng + ',' + pickupLat + '?overview=full&geometries=geojson&steps=true&alternatives=true';
 
         if (routeStatus) routeStatus.textContent = 'Finding the quickest road path…';
         if (routeSummary) routeSummary.textContent = 'Best Route';
         if (nextStep) nextStep.textContent = 'Calculating from your current location…';
-
-        var url = 'https://router.project-osrm.org/route/v1/driving/' + clng + ',' + clat + ';' + pickupLng + ',' + pickupLat + '?overview=full&geometries=geojson&steps=true&alternatives=true';
 
         fetch(url).then(function(r) { return r.json(); }).then(function(data) {
           if (!data.routes || !data.routes.length) throw new Error('No route');
@@ -845,14 +743,19 @@
             nextStep.textContent = 'Next: ' + ((first.maneuver && first.maneuver.instruction) || first.name || 'Continue');
           }
 
-          var b = L.featureGroup([vehicleMarker, pickupMarker, routeLine]).getBounds();
+          var b = L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds();
           if (b.isValid()) map.fitBounds(b, { padding: [40, 40] });
         }).catch(function() {
           if (routeStatus) routeStatus.textContent = 'Route guidance unavailable. Use the map button for directions.';
           if (nextStep) nextStep.textContent = 'Open Google Maps or Waze for turn-by-turn guidance.';
           routeLine = L.polyline([[clat, clng], [pickupLat, pickupLng]], { color: '#c8102e', weight: 4, opacity: .75, dashArray: '8 4' }).addTo(map);
-          map.fitBounds(L.featureGroup([vehicleMarker, pickupMarker, routeLine]).getBounds(), { padding: [40, 40] });
+          map.fitBounds(L.featureGroup([carrierMarker, pickupMarker, routeLine]).getBounds(), { padding: [40, 40] });
         });
+      }
+
+      function updateLive(lat, lng) {
+        renderRoute(lat, lng);
+        if (routeStatus) routeStatus.textContent = 'Live GPS active. Updating route guidance.';
       }
 
       function startTracking() {
@@ -865,35 +768,29 @@
         if (startBtn) { startBtn.textContent = 'Tracking live…'; startBtn.disabled = true; }
 
         watchId = navigator.geolocation.watchPosition(function(pos) {
-          var lat = pos.coords.latitude, lng = pos.coords.longitude;
-          postLocation(lat, lng);
-          updateLive(lat, lng);
+          postLocation(pos.coords.latitude, pos.coords.longitude);
+          updateLive(pos.coords.latitude, pos.coords.longitude);
         }, function() {
-          if (routeStatus) routeStatus.textContent = 'GPS permission denied.';
-        }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
+          if (routeStatus) routeStatus.textContent = 'GPS permission denied. Use the pinned client location.';
+        }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
       }
 
       if (startBtn) startBtn.addEventListener('click', startTracking);
 
-      // ── Initial map setup ──
       if (pickupLat != null && pickupLng != null) {
-        // Pulsing destination marker
-        var destIcon = L.divIcon({
-          html: '<div class="dest-pulse"><div class="dot"></div></div>',
-          className: '', iconSize: [30, 30], iconAnchor: [15, 15]
-        });
-        pickupMarker = L.marker([pickupLat, pickupLng], { icon: destIcon }).addTo(map).bindTooltip(destLabel, { direction: 'top' });
-
+        pickupMarker = L.marker([pickupLat, pickupLng]).addTo(map).bindPopup(destLabel);
         var gmaps = 'https://www.google.com/maps/dir/?api=1&destination=' + pickupLat + ',' + pickupLng + '&travelmode=driving';
 
         if (carrierLat != null && carrierLng != null) {
           gmaps += '&origin=' + carrierLat + ',' + carrierLng;
+          carrierMarker = L.marker([carrierLat, carrierLng]).addTo(map).bindPopup('Your location');
           if (openMaps) openMaps.href = gmaps;
-          updateLive(carrierLat, carrierLng);
+          renderRoute(carrierLat, carrierLng);
         } else {
           map.setView([pickupLat, pickupLng], 13);
+          pickupMarker.openPopup();
           if (openMaps) openMaps.href = gmaps;
-          if (routeStatus) routeStatus.textContent = 'Click "Start Live Tracking" to begin GPS navigation.';
+          if (routeStatus) routeStatus.textContent = 'GPS not available yet. Use the map button for directions.';
         }
       } else {
         map.setView([-1.2921, 36.8219], 10);

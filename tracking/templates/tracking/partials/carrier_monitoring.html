@@ -1,0 +1,528 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Carrier Monitoring — PathCare Kenya{% endblock %}
+
+{% block content %}
+<style>
+  /* ── Page layout ── */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  .page-header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+  .page-header p { color: var(--color-text-secondary); font-size: .875rem; margin-top: 4px; max-width: 600px; }
+
+  .refresh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-ink);
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .refresh-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--color-success);
+    animation: pulse-dot 1.5s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  /* ── Stat cards ── */
+  .monitoring-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 900px) { .monitoring-stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .monitoring-stats { grid-template-columns: 1fr; } }
+
+  .stat-card--live {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .stat-card--live:hover { box-shadow: var(--shadow-md); }
+  .stat-card--live .stat-label {
+    font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--color-text-muted);
+  }
+  .stat-card--live .stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .stat-card--live .stat-sub {
+    font-size: .75rem; color: var(--color-text-secondary);
+  }
+
+  /* ── Map + sidebar grid ── */
+  .map-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 900px) {
+    .map-layout { grid-template-columns: 1fr; }
+  }
+
+  .map-card {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    min-height: 480px;
+  }
+  #carrier-monitor-map {
+    width: 100%;
+    height: 100%;
+    min-height: 480px;
+  }
+
+  /* ── Sidebar panels ── */
+  .map-sidebar { display: flex; flex-direction: column; gap: var(--space-md); }
+
+  .panel-block {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+  }
+  .panel-block h3 {
+    font-size: .8rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  /* ── Carrier list ── */
+  .carrier-list { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+  .carrier-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+    background: var(--color-surface-alt);
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                background var(--duration-fast) var(--ease-out),
+                transform var(--duration-fast) var(--ease-out);
+  }
+  .carrier-card:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+  .carrier-card:active { transform: scale(.98); }
+  .carrier-card.selected { border-color: var(--color-primary); background: var(--color-primary-soft); box-shadow: 0 0 0 1px var(--color-primary); }
+  .carrier-card.no-location { opacity: .6; }
+
+  .carrier-avatar {
+    width: 40px; height: 40px; border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .carrier-avatar--danger { background: #dc2626; }
+  .carrier-avatar--success { background: #16a34a; }
+  .carrier-avatar--warning { background: #f59e0b; }
+  .carrier-avatar--primary { background: var(--color-primary); }
+
+  .carrier-info { flex: 1; min-width: 0; }
+  .carrier-info strong { display: block; font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .carrier-info small { display: block; font-size: .72rem; color: var(--color-text-muted); }
+
+  .carrier-pill {
+    font-size: .65rem; font-weight: 700; padding: 3px 8px;
+    border-radius: var(--radius-full); white-space: nowrap; flex-shrink: 0;
+  }
+  .carrier-pill--danger { background: var(--color-danger-soft); color: #991b1b; }
+  .carrier-pill--success { background: var(--color-success-soft); color: #065f46; }
+  .carrier-pill--warning { background: var(--color-warning-soft); color: #92400e; }
+  .carrier-pill--primary { background: var(--color-primary-soft); color: var(--color-primary-ink); }
+
+  /* ── Detail card ── */
+  .detail-card { font-size: .85rem; }
+  .detail-card .detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--color-border-light);
+  }
+  .detail-card .detail-row:last-child { border-bottom: none; }
+  .detail-card .detail-label { color: var(--color-text-muted); font-size: .75rem; }
+  .detail-card .detail-value { font-weight: 600; text-align: right; }
+
+  /* ── Legend ── */
+  .legend-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: .8rem; font-weight: 500; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Map markers ── */
+  .carrier-label-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; background: transparent; border: none;
+    box-shadow: none; pointer-events: none;
+  }
+  .carrier-label-marker {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%; border-radius: 50%;
+    color: #fff; font-size: .85rem; font-weight: 700;
+    line-height: 1; text-align: center;
+    border: 2.5px solid #fff;
+    box-shadow: 0 2px 14px rgba(0,0,0,.2);
+    user-select: none; pointer-events: auto;
+  }
+  .carrier-label-marker--danger { background: #dc2626; }
+  .carrier-label-marker--success { background: #16a34a; }
+  .carrier-label-marker--warning { background: #f59e0b; }
+  .carrier-label-marker--primary { background: var(--color-primary); }
+
+  .carrier-map-tooltip {
+    background: rgba(15,23,42,.92); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    padding: 4px 10px; font-size: .75rem; font-weight: 600;
+    white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .leaflet-tooltip.carrier-map-tooltip { opacity: 1; }
+
+  /* ── Empty state ── */
+  .panel-empty {
+    text-align: center; padding: var(--space-lg) var(--space-md);
+    color: var(--color-text-muted); font-size: .85rem;
+  }
+</style>
+
+{# ── Header ── #}
+<div class="page-header">
+  <div>
+    <h1>Live Carrier Monitoring</h1>
+    <p>Real-time carrier locations, active shipments, and status updates. Auto-refreshes every 15 seconds.</p>
+  </div>
+  <div class="refresh-badge">
+    <span class="refresh-dot" aria-hidden="true"></span> Live
+  </div>
+</div>
+
+{# ── Stats ── #}
+<div class="monitoring-stats">
+  <div class="stat-card--live">
+    <span class="stat-label">Active Shipments</span>
+    <span class="stat-value" id="summary-active-shipments">—</span>
+    <span class="stat-sub" id="summary-active-shipments-label">Loading…</span>
+  </div>
+  <div class="stat-card--live">
+    <span class="stat-label">Active Carriers</span>
+    <span class="stat-value" id="summary-active-carriers">—</span>
+    <span class="stat-sub" id="summary-active-carriers-label">Loading…</span>
+  </div>
+  <div class="stat-card--live">
+    <span class="stat-label">Online</span>
+    <span class="stat-value" id="summary-online-carriers">—</span>
+    <span class="stat-sub" id="summary-online-carriers-label">Available or on job</span>
+  </div>
+  <div class="stat-card--live">
+    <span class="stat-label">No GPS</span>
+    <span class="stat-value" id="summary-missing-location">—</span>
+    <span class="stat-sub" id="summary-missing-location-label">Awaiting location</span>
+  </div>
+</div>
+
+{# ── Map + Sidebar ── #}
+<div class="map-layout">
+  <div class="map-card">
+    <div id="carrier-monitor-map"></div>
+  </div>
+
+  <aside class="map-sidebar">
+    {# Selected carrier detail #}
+    <div class="panel-block">
+      <h3>Selected Carrier</h3>
+      <div id="carrier-detail-content">
+        <div class="panel-empty">Click a carrier marker or card to view details.</div>
+      </div>
+    </div>
+
+    {# Carrier list #}
+    <div class="panel-block">
+      <h3>All Carriers</h3>
+      <div id="carrier-status-list" class="carrier-list">
+        <div class="panel-empty">Loading carrier positions…</div>
+      </div>
+    </div>
+
+    {# Legend #}
+    <div class="panel-block">
+      <h3>Status Legend</h3>
+      <ul class="legend-list">
+        <li class="legend-item"><span class="legend-dot" style="background:#16a34a;"></span> Delivered / Received</li>
+        <li class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> Available / On job</li>
+        <li class="legend-item"><span class="legend-dot" style="background:#dc2626;"></span> In transit</li>
+        <li class="legend-item"><span class="legend-dot" style="background:var(--color-primary);"></span> Unknown / Other</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    'use strict';
+
+    var mapEl = document.getElementById('carrier-monitor-map');
+    if (!mapEl) return;
+
+    /* ── Map init ── */
+    var labLat = {{ lab_location.latitude }};
+    var labLng = {{ lab_location.longitude }};
+    var carrierMap = L.map('carrier-monitor-map').setView([labLat, labLng], 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(carrierMap);
+
+    var carrierLayer = L.layerGroup().addTo(carrierMap);
+    var routeLayer = L.layerGroup().addTo(carrierMap);
+    var carrierMarkers = {};
+    var selectedCarrierId = null;
+    var tempFocusMarker = null;
+
+    /* ── Helpers ── */
+    function getDisplayStatus(c) {
+      return c.order_status || c.status || 'Unknown';
+    }
+
+    function getStatusClass(status) {
+      if (status === 'In transit') return 'danger';
+      if (status === 'Delivered' || status === 'Received' || status === 'Completed') return 'success';
+      if (status === 'Available' || status === 'On job') return 'warning';
+      return 'primary';
+    }
+
+    function getMarkerColor(status) {
+      if (status === 'In transit') return '#dc2626';
+      if (status === 'Delivered' || status === 'Received' || status === 'Completed') return '#16a34a';
+      if (status === 'Available' || status === 'On job') return '#f59e0b';
+      return '#0d9488';
+    }
+
+    function makeLabel(c) {
+      if (c.order) return c.order.length <= 4 ? c.order : c.order.slice(-4);
+      var parts = (c.name || '').trim().split(/\s+/);
+      if (!parts.length) return 'C';
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    /* ── Selected carrier detail ── */
+    function updateCardSelection() {
+      document.querySelectorAll('#carrier-status-list .carrier-card').forEach(function(card) {
+        card.classList.toggle('selected', card.dataset.carrierId === selectedCarrierId);
+      });
+    }
+
+    function showCarrierDetail(carrier) {
+      var el = document.getElementById('carrier-detail-content');
+      if (!el) return;
+
+      if (tempFocusMarker) { carrierLayer.removeLayer(tempFocusMarker); tempFocusMarker = null; }
+
+      if (!carrier) {
+        selectedCarrierId = null;
+        el.innerHTML = '<div class="panel-empty">Click a carrier marker or card to view details.</div>';
+        updateCardSelection();
+        return;
+      }
+
+      var ds = getDisplayStatus(carrier);
+      var sc = getStatusClass(ds);
+      selectedCarrierId = String(carrier.id);
+
+      el.innerHTML =
+        '<div class="detail-card">' +
+          '<div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">' + carrier.name + '</span></div>' +
+          '<div class="detail-row"><span class="detail-label">Order</span><span class="detail-value">' + (carrier.order || 'None') + '</span></div>' +
+          '<div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="carrier-pill carrier-pill--' + sc + '">' + ds + '</span></span></div>' +
+          '<div class="detail-row"><span class="detail-label">Location</span><span class="detail-value" style="font-size:.75rem;">' + (carrier.latitude != null ? carrier.latitude.toFixed(4) + ', ' + carrier.longitude.toFixed(4) : 'Not shared') + '</span></div>' +
+          '<div class="detail-row"><span class="detail-label">Last update</span><span class="detail-value" style="font-size:.75rem;">' + (carrier.last_location_update || 'Unknown') + '</span></div>' +
+        '</div>';
+
+      updateCardSelection();
+
+      if (carrier.latitude != null && carrier.longitude != null) {
+        carrierMap.flyTo([carrier.latitude, carrier.longitude], 13, { duration: .6 });
+        var m = carrierMarkers[String(carrier.id)];
+        if (m) { m.openPopup(); m.bringToFront(); }
+        else {
+          var color = getMarkerColor(ds);
+          tempFocusMarker = L.circleMarker([carrier.latitude, carrier.longitude], {
+            radius: 14, fillColor: color, color: '#fff', weight: 2.5, fillOpacity: .9,
+          }).addTo(carrierLayer).bindPopup('<strong>' + carrier.name + '</strong><br>Order: ' + (carrier.order || 'N/A')).openPopup();
+        }
+      } else if (carrier.pickup_latitude != null && carrier.pickup_longitude != null) {
+        carrierMap.flyTo([carrier.pickup_latitude, carrier.pickup_longitude], 13, { duration: .6 });
+        tempFocusMarker = L.marker([carrier.pickup_latitude, carrier.pickup_longitude])
+          .addTo(carrierLayer).bindPopup('<strong>Pickup location</strong><br>' + (carrier.order || 'Order')).openPopup();
+      } else {
+        carrierMap.flyTo([labLat, labLng], 10, { duration: .6 });
+      }
+    }
+
+    /* ── Map markers ── */
+    function createMarker(carrier) {
+      var ds = getDisplayStatus(carrier);
+      var sc = getStatusClass(ds);
+      var label = makeLabel(carrier);
+
+      var icon = L.divIcon({
+        html: '<div class="carrier-label-marker carrier-label-marker--' + sc + '">' + label + '</div>',
+        className: 'carrier-label-icon',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+      });
+
+      var marker = L.marker([carrier.latitude, carrier.longitude], {
+        icon: icon, riseOnHover: true, zIndexOffset: 500,
+      }).bindPopup(
+        '<strong>' + carrier.name + '</strong><br>' +
+        'Order: ' + (carrier.order || 'N/A') + '<br>' +
+        'Status: ' + ds + '<br>' +
+        '<small>Updated: ' + (carrier.last_location_update || 'unknown') + '</small>'
+      );
+
+      marker.bindTooltip(label, {
+        permanent: true, direction: 'top',
+        className: 'carrier-map-tooltip',
+        offset: [0, -24], opacity: 1,
+      });
+
+      marker.on('click', function() { showCarrierDetail(carrier); });
+      carrierMarkers[carrier.id] = marker;
+      return marker;
+    }
+
+    /* ── Sidebar list ── */
+    function renderCarrierList(data) {
+      var list = document.getElementById('carrier-status-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      if (!data.carriers || !data.carriers.length) {
+        list.innerHTML = '<div class="panel-empty">No active carriers.</div>';
+        showCarrierDetail(null);
+        return;
+      }
+
+      data.carriers.forEach(function(c) {
+        var ds = getDisplayStatus(c);
+        var sc = getStatusClass(ds);
+        var initials = makeLabel(c);
+
+        var card = document.createElement('div');
+        card.className = 'carrier-card';
+        card.dataset.carrierId = c.id;
+        if (c.latitude == null || c.longitude == null) card.classList.add('no-location');
+        if (selectedCarrierId === String(c.id)) card.classList.add('selected');
+
+        card.innerHTML =
+          '<div class="carrier-avatar carrier-avatar--' + sc + '">' + initials + '</div>' +
+          '<div class="carrier-info">' +
+            '<strong>' + c.name + '</strong>' +
+            '<small>' + (c.order || 'No order') + ' · ' + (c.latitude != null ? '📍 Live' : '📍 No GPS') + '</small>' +
+          '</div>' +
+          '<span class="carrier-pill carrier-pill--' + sc + '">' + ds + '</span>';
+
+        card.addEventListener('click', function() { showCarrierDetail(c); });
+        list.appendChild(card);
+      });
+
+      if (!selectedCarrierId) {
+        var first = data.carriers.find(function(c) { return c.latitude != null; }) || data.carriers[0];
+        showCarrierDetail(first);
+      } else {
+        var sel = data.carriers.find(function(c) { return String(c.id) === selectedCarrierId; });
+        showCarrierDetail(sel || null);
+      }
+    }
+
+    /* ── Routes ── */
+    function drawRoutes(data) {
+      routeLayer.clearLayers();
+      if (!data.carriers) return;
+      data.carriers.forEach(function(c) {
+        if (c.route && c.route.length > 1) {
+          L.polyline(c.route, { color: '#c8102e', weight: 3, opacity: .65, dashArray: '8 4' }).addTo(routeLayer);
+        }
+      });
+    }
+
+    /* ── Summary cards ── */
+    function updateStats(data) {
+      if (!data || !Array.isArray(data.carriers)) return;
+
+      var carriers = data.carriers;
+      var shipments = carriers.filter(function(c) { return c.order != null; }).length;
+      var total = carriers.length;
+      var online = carriers.filter(function(c) { return c.status === 'Available' || c.status === 'On job'; }).length;
+      var noGPS = carriers.filter(function(c) { return c.latitude == null || c.longitude == null; }).length;
+
+      var el = function(id) { return document.getElementById(id); };
+      var set = function(id, val) { var e = el(id); if (e) e.textContent = val; };
+
+      set('summary-active-shipments', shipments);
+      set('summary-active-shipments-label', shipments === 1 ? 'Live sample delivery' : 'Live sample deliveries');
+      set('summary-active-carriers', total);
+      set('summary-active-carriers-label', total === 1 ? 'Active carrier' : 'Active carriers');
+      set('summary-online-carriers', online);
+      set('summary-online-carriers-label', online === 1 ? 'Online carrier' : 'Online carriers');
+      set('summary-missing-location', noGPS);
+      set('summary-missing-location-label', noGPS === 1 ? 'Awaiting GPS' : 'Awaiting GPS');
+    }
+
+    /* ── Full refresh ── */
+    function refresh() {
+      carrierMap.invalidateSize();
+
+      fetch('{% url "tracking:carrier_positions" %}')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          carrierLayer.clearLayers();
+          carrierMarkers = {};
+
+          drawRoutes(data);
+          renderCarrierList(data);
+          updateStats(data);
+
+          var bounds = L.latLngBounds();
+          data.carriers.forEach(function(c) {
+            if (c.latitude == null || c.longitude == null) return;
+            var m = createMarker(c).addTo(carrierLayer);
+            bounds.extend([c.latitude, c.longitude]);
+            if (m.openTooltip) m.openTooltip();
+          });
+
+          if (bounds.isValid()) {
+            var withGPS = data.carriers.filter(function(c) { return c.latitude != null; });
+            if (withGPS.length === 1) {
+              carrierMap.fitBounds(bounds.pad(0.5));
+            } else {
+              carrierMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+            }
+          }
+        })
+        .catch(function(err) { console.warn('Carrier data fetch failed', err); });
+    }
+
+    /* ── Start ── */
+    setTimeout(function() { carrierMap.invalidateSize(); refresh(); }, 100);
+    setInterval(refresh, 15000);
+  })();
+</script>
+{% endblock %}

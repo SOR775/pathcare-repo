@@ -30,6 +30,66 @@ from .signals import broadcast_order_update
 User = get_user_model()
 
 
+def _serialize_active_carriers():
+    """Return all active carrier data in the format the frontend expects.
+    Used by both the polling endpoint AND the WebSocket broadcast."""
+    carriers = Carrier.objects.filter(is_active=True).select_related("user")
+    data = []
+    for carrier in carriers:
+        name = "Unnamed carrier"
+        if carrier.user:
+            name = carrier.user.get_full_name() or carrier.user.username
+
+        order = Order.objects.filter(
+            carrier=carrier,
+            status__in=[
+                Order.Status.ASSIGNED,
+                Order.Status.ACCEPTED,
+                Order.Status.EN_ROUTE_TO_CLIENT,
+                Order.Status.AT_CLIENT,
+                Order.Status.PICKED_UP,
+                Order.Status.IN_TRANSIT,
+                Order.Status.DELIVERED,
+            ],
+        ).order_by("-created_at").first()
+
+        route = []
+        if order and order.latitude is not None and order.longitude is not None:
+            if order.status in [
+                Order.Status.ASSIGNED, Order.Status.ACCEPTED,
+                Order.Status.EN_ROUTE_TO_CLIENT, Order.Status.AT_CLIENT,
+            ]:
+                if carrier.current_latitude is not None and carrier.current_longitude is not None:
+                    route = [
+                        [carrier.current_latitude, carrier.current_longitude],
+                        [order.latitude, order.longitude],
+                    ]
+            else:
+                from django.conf import settings
+                route = [
+                    [order.latitude, order.longitude],
+                    [settings.LAB_LOCATION["latitude"], settings.LAB_LOCATION["longitude"]],
+                ]
+
+        data.append({
+            "id": str(carrier.id),
+            "name": name,
+            "latitude": carrier.current_latitude,
+            "longitude": carrier.current_longitude,
+            "last_location_update": carrier.last_location_update.isoformat() if carrier.last_location_update else None,
+            "status": carrier.get_status_display(),
+            "order": order.reference_code if order else None,
+            "order_status": order.get_status_display() if order else None,
+            "order_raw_status": order.status if order else None,
+            "client": order.client.name if order and order.client else None,
+            "destination": "Pickup point" if (order and order.status in [Order.Status.ASSIGNED, Order.Status.ACCEPTED, Order.Status.EN_ROUTE_TO_CLIENT, Order.Status.AT_CLIENT]) else "Laboratory",
+            "route": route,
+            "pickup_latitude": order.latitude if order else None,
+            "pickup_longitude": order.longitude if order else None,
+        })
+    return data
+
+
 def _user_role(user):
     if not user.is_authenticated:
         return None
@@ -398,13 +458,18 @@ def update_carrier_location(request):
     carrier_profile.current_longitude = longitude
     carrier_profile.last_location_update = timezone.localtime()
     carrier_profile.save()
+
+    # ═══ NEW: Broadcast to all admin/dispatcher browsers ═══
+    from tracking.consumers import broadcast_carrier_positions
+    broadcast_carrier_positions(_serialize_active_carriers())
+
     return JsonResponse({
         "status": "ok",
         "latitude": latitude,
         "longitude": longitude,
         "updated_at": carrier_profile.last_location_update.isoformat(),
     })
-
+    
 @role_required("super_admin", "dispatcher", "client")
 def order_location(request, pk):
     """Return the current carrier location for an order as JSON (if authorized)."""
@@ -804,73 +869,19 @@ def order_search(request):
         },
     )
 
-
 @role_required("super_admin", "dispatcher")
 def carrier_monitoring(request):
     role = _user_role(request.user)
-    return render(request, "tracking/carrier_monitoring.html", {"role": role, "lab_location": settings.LAB_LOCATION})
-
+    ws_protocol = "wss" if request.is_secure() else "ws"
+    return render(request, "tracking/carrier_monitoring.html", {
+        "role": role,
+        "lab_location": settings.LAB_LOCATION,
+        "WS_URL": f"{ws_protocol}://{request.get_host()}/ws/pathcare/",
+    })
 @role_required("super_admin", "dispatcher")
 def carrier_positions(request):
-    carriers = Carrier.objects.filter(is_active=True).select_related("user")
-    data = []
-    for carrier in carriers:
-        name = "Unnamed carrier"
-        if carrier.user:
-            name = carrier.user.get_full_name() or carrier.user.username
-
-        order = Order.objects.filter(
-            carrier=carrier,
-            status__in=[
-                Order.Status.ASSIGNED,
-                Order.Status.ACCEPTED,
-                Order.Status.EN_ROUTE_TO_CLIENT,
-                Order.Status.AT_CLIENT,
-                Order.Status.PICKED_UP,
-                Order.Status.IN_TRANSIT,
-                Order.Status.DELIVERED,
-            ],
-        ).order_by('-created_at').first()
-
-        route = []
-        destination = settings.LAB_LOCATION.get('name', 'Laboratory')
-        if order and order.latitude is not None and order.longitude is not None:
-            if order.status in [
-                Order.Status.ASSIGNED,
-                Order.Status.ACCEPTED,
-                Order.Status.EN_ROUTE_TO_CLIENT,
-                Order.Status.AT_CLIENT,
-            ]:
-                if carrier.current_latitude is not None and carrier.current_longitude is not None:
-                    route = [
-                        [carrier.current_latitude, carrier.current_longitude],
-                        [order.latitude, order.longitude],
-                    ]
-                destination = "Pickup point"
-            else:
-                route = [
-                    [order.latitude, order.longitude],
-                    [settings.LAB_LOCATION['latitude'], settings.LAB_LOCATION['longitude']],
-                ]
-                destination = settings.LAB_LOCATION.get('name', 'Laboratory')
-
-        data.append({
-            "id": str(carrier.id),
-            "name": name,
-            "latitude": carrier.current_latitude,
-            "longitude": carrier.current_longitude,
-            "last_location_update": carrier.last_location_update.isoformat() if carrier.last_location_update else None,
-            "status": carrier.get_status_display(),
-            "order": order.reference_code if order else None,
-            "order_status": order.get_status_display() if order else None,
-            "order_raw_status": order.status if order else None,
-            "client": order.client.name if order and order.client else None,
-            "destination": destination,
-            "route": route,
-            "pickup_latitude": order.latitude if order else None,
-            "pickup_longitude": order.longitude if order else None,
-        })
-    return JsonResponse({"carriers": data})
+    carriers = _serialize_active_carriers()
+    return JsonResponse({"carriers": carriers})
 
 
 @role_required("super_admin", "dispatcher")

@@ -1,36 +1,71 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Accounts - Pathcare Kenya{% endblock %}
+{% block title %}{% if user.role == 'super_admin' %}Accounts{% else %}My Profile{% endif %} — PathCare Kenya{% endblock %}
 
 {% block content %}
-{% if user.role == 'super_admin' %}
+<style>
+  .account-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .account-table th {
+    text-align: left; width: 160px; padding: 12px 16px;
+    font-size: .72rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border-light);
+    vertical-align: top;
+  }
+  .account-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text); font-weight: 500;
+  }
+  .account-table tr:last-child th,
+  .account-table tr:last-child td { border-bottom: none; }
+
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), #047857);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 1.25rem; flex-shrink: 0;
+  }
+  .profile-card {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg);
+    display: flex; align-items: flex-start; gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 480px) {
+    .profile-card { flex-direction: column; align-items: center; text-align: center; }
+    .account-table th { width: 120px; }
+  }
+</style>
+
+{# ── Hero ── #}
 <div class="hero-card">
   <div>
-    <p class="eyebrow">Accounts</p>
-    <h1>Operational account directory</h1>
-    <p>Review service accounts and their assigned operational roles.</p>
+    <p class="eyebrow">{% if user.role == 'super_admin' %}Accounts{% else %}Profile{% endif %}</p>
+    <h1>{% if user.role == 'super_admin' %}Operational Account Directory{% else %}My Account{% endif %}</h1>
+    <p>{% if user.role == 'super_admin' %}Review service accounts and their assigned operational roles.{% else %}Review your account details and role.{% endif %}</p>
   </div>
 </div>
 
-<section class="panel">
-{% else %}
-<div class="hero-card">
-  <div>
-    <p class="eyebrow">Profile</p>
-    <h1>My account</h1>
-    <p>Review your own account details and role.</p>
+{# ── Non-admin: profile card ── #}
+{% if user.role != 'super_admin' %}
+<div class="profile-card">
+  <div class="profile-avatar" aria-hidden="true">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</div>
+  <div style="flex:1;min-width:0;">
+    <h2 style="font-size:1.15rem;font-weight:700;margin:0 0 2px;">{{ user.get_full_name|default:user.username }}</h2>
+    <p style="font-size:.8rem;color:var(--color-text-muted);margin:0 0 16px;">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
   </div>
 </div>
-
-<section class="panel">
 {% endif %}
+
+{# ── Content ── #}
+<section class="panel">
   <div class="panel-header">
     <div>
-      <p class="eyebrow">User records</p>
-      <h2>Account profiles</h2>
+      <p class="eyebrow">{% if user.role == 'super_admin' %}User Records{% else %}Account Details{% endif %}</p>
+      <h2>{% if user.role == 'super_admin' %}Account Profiles{% else %}Your Information{% endif %}</h2>
     </div>
     {% if user.role == 'super_admin' %}
-      <a href="{% url 'accounts:user_management' %}" class="btn">Manage users</a>
+      <a href="{% url 'accounts:user_management' %}" class="btn btn--sm btn--primary">Manage Users</a>
     {% endif %}
   </div>
 
@@ -47,29 +82,25 @@
         </table>
       </div>
     {% else %}
-      <p class="empty-state">No account profiles have been created yet.</p>
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true">👤</span>
+        <div class="empty-state__title">No Profiles Yet</div>
+        <div class="empty-state__desc">No account profiles have been created yet.</div>
+      </div>
     {% endif %}
   {% else %}
-    <div class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Profile</p>
-          <h2>My account</h2>
-        </div>
-      </div>
-      <div class="table-card">
-        <table>
-          <tbody>
-            <tr><th>Full name</th><td>{{ user.get_full_name|default:user.username }}</td></tr>
-            <tr><th>Username</th><td>{{ user.username }}</td></tr>
-            <tr><th>Email</th><td>{{ user.email|default:"—" }}</td></tr>
-            <tr><th>Phone</th><td>{{ user.phone|default:"—" }}</td></tr>
-            <tr><th>Role</th><td>{{ user.get_role_display }}</td></tr>
-            <tr><th>Department</th><td>{{ user.department|default:"—" }}</td></tr>
-            <tr><th>Status</th><td>{% if user.is_active %}Active{% else %}Inactive{% endif %}</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-card">
+      <table class="account-table">
+        <tbody>
+          <tr><th>Full Name</th><td>{{ user.get_full_name|default:"—" }}</td></tr>
+          <tr><th>Username</th><td>{{ user.username }}</td></tr>
+          <tr><th>Email</th><td>{{ user.email|default:"—" }}</td></tr>
+          <tr><th>Phone</th><td>{{ user.phone|default:"—" }}</td></tr>
+          <tr><th>Role</th><td>{{ user.get_role_display }}</td></tr>
+          <tr><th>Department</th><td>{{ user.department|default:"—" }}</td></tr>
+          <tr><th>Status</th><td><span class="badge {% if user.is_active %}badge--success{% else %}badge--danger{% endif %}">{% if user.is_active %}Active{% else %}Inactive{% endif %}</span></td></tr>
+        </tbody>
+      </table>
     </div>
   {% endif %}
 </section>
