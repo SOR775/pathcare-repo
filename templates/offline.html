@@ -2,109 +2,348 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PathCare - Offline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PathCare Kenya — Offline</title>
+  <meta name="theme-color" content="#0d9488">
+  <meta name="description" content="PathCare Kenya — You are currently offline. Check your connection.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --color-primary: #0d9488;
+      --color-primary-soft: #f0fdfa;
+      --color-text: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-surface: #ffffff;
+      --color-border: #e2e8f0;
+      --color-border-light: #f1f5f9;
+      --color-danger: #ef4444;
+      --color-danger-soft: #fef2f2;
+      --color-success: #10b981;
+      --color-success-soft: #ecfdf5;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      padding: 20px;
+      justify-content: center;
+      padding: 24px;
+      background: var(--color-primary-soft);
     }
 
-    .container {
+    .card {
       text-align: center;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      padding: 40px 30px;
-      max-width: 500px;
+      background: var(--color-surface);
+      border-radius: 20px;
+      box-shadow: 0 4px 32px rgba(15, 23, 42, .07);
+      padding: 48px 36px;
+      max-width: 460px;
       width: 100%;
+      border: 1px solid var(--color-border);
+    }
+    @media (max-width: 480px) {
+      body { padding: 16px; }
+      .card { padding: 36px 22px; border-radius: 16px; }
     }
 
-    .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
+    /* ── Brand logo ── */
+    .logo {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--color-primary), #047857);
+      margin: 0 auto 24px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 1.4rem;
     }
 
+    /* ── Connection indicator ── */
+    .conn-indicator {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 8px;
+      background: var(--color-danger-soft); color: #991b1b;
+      font-size: .78rem; font-weight: 600; margin-bottom: 24px;
+      border-left: 3px solid var(--color-danger);
+    }
+    .conn-indicator.reconnecting {
+      background: #fffbeb; color: #92400e; border-color: #f59e0b;
+    }
+    .conn-indicator.restored {
+      background: var(--color-success-soft); color: #065f46; border-color: var(--color-success);
+    }
+
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--color-danger); flex-shrink: 0;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+    .status-dot.pulse { animation: pulse 1.5s infinite; }
+
+    /* ── Typography ── */
     h1 {
-      color: #333;
-      margin-bottom: 15px;
-      font-size: 28px;
+      color: var(--color-text); font-size: 1.5rem; font-weight: 800;
+      letter-spacing: -0.02em; margin-bottom: 10px;
     }
 
-    p {
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 30px;
-      font-size: 16px;
+    .subtitle {
+      color: var(--color-text-secondary); line-height: 1.6; font-size: .88rem;
+      margin-bottom: 28px; max-width: 340px; margin-left: auto; margin-right: auto;
     }
 
-    .button {
-      display: inline-block;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 30px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: transform 0.3s, box-shadow 0.3s;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px; border-radius: 10px;
+      background: var(--color-primary); color: #fff;
+      text-decoration: none; font-weight: 700; font-size: .88rem;
+      border: none; cursor: pointer; font-family: inherit;
+      transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
     }
+    .btn:hover { background: #0f766e; box-shadow: 0 4px 16px rgba(13, 148, 136, .3); }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .5; pointer-events: none; }
 
-    .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    .btn--outline {
+      background: transparent; color: var(--color-primary);
+      border: 1.5px solid #99f6e4;
     }
+    .btn--outline:hover { background: var(--color-primary-soft); box-shadow: none; }
 
-    .button:active {
-      transform: translateY(0);
+    .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    @media (max-width: 400px) { .btn-row { flex-direction: column; } .btn-row .btn { width: 100%; } }
+
+    /* ── Cached pages ── */
+    .cached-section {
+      margin-top: 28px; padding-top: 24px;
+      border-top: 1px solid var(--color-border-light);
+      text-align: left;
     }
+    .cached-section h2 {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--color-text-muted);
+      margin-bottom: 12px;
+    }
+    .cached-links {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .cached-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 6px;
+      background: var(--color-primary-soft); border: 1px solid #99f6e4;
+      color: #115e59; text-decoration: none;
+      font-size: .75rem; font-weight: 600;
+      transition: background .12s ease;
+    }
+    .cached-link:hover { background: #ccfbf1; }
+    .cached-link .icon { font-size: .85rem; }
 
-    .offline-indicator {
-      display: inline-block;
-      background: #fee;
-      color: #c33;
-      padding: 10px 15px;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-top: 20px;
-      border-left: 4px solid #c33;
+    /* ── Retry feedback ── */
+    .retry-feedback {
+      margin-top: 10px; font-size: .72rem; color: var(--color-text-muted);
+      min-height: 20px; transition: color .2s ease;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="icon">📡</div>
+  <div class="card">
+    <div class="logo" aria-hidden="true">P</div>
+
+    <div class="conn-indicator" id="conn-status">
+      <span class="status-dot pulse" aria-hidden="true"></span>
+      <span id="conn-text">No internet connection</span>
+    </div>
+
     <h1>You're Offline</h1>
-    <p>
-      PathCare is currently unavailable because you're not connected to the internet.
-      Please check your connection and try again.
+    <p class="subtitle">
+      PathCare requires an active internet connection to load live data.
+      Check your Wi‑Fi or mobile data and try again.
     </p>
-    <button class="button" onclick="location.reload()">
-      Try Again
-    </button>
-    <div class="offline-indicator">
-      ⚠️ No internet connection
+
+    <div class="btn-row">
+      <button class="btn" id="btn-retry" onclick="retryConnection()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Try Again
+      </button>
+      <button class="btn btn--outline" onclick="checkNow()">
+        Check Connection
+      </button>
+    </div>
+    <div class="retry-feedback" id="retry-feedback"></div>
+
+    <div class="cached-section">
+      <h2>Available Offline</h2>
+      <div class="cached-links" id="cached-pages">
+        <!-- Populated by JS from cached routes -->
+      </div>
     </div>
   </div>
 
   <script>
-    // Listen for connection restoration
+    (function() {
+      'use strict';
+
+      var btnRetry = document.getElementById('btn-retry');
+      var feedback = document.getElementById('retry-feedback');
+      var connStatus = document.getElementById('conn-status');
+      var connText = document.getElementById('conn-text');
+      var retryCount = 0;
+
+      /* ── Try to detect cached pages from service worker ── */
+      function populateCachedPages() {
+        var container = document.getElementById('cached-pages');
+        if (!container) return;
+
+        // Known app routes that should be in the SW cache
+        var routes = [
+          { href: '/', label: 'Dashboard', icon: '📊' },
+          { href: '/tracking/orders/', label: 'Orders', icon: '📋' },
+          { href: '/tracking/carriers/', label: 'Carriers', icon: '🚚' },
+          { href: '/accounts/', label: 'Profile', icon: '👤' },
+        ];
+
+        // Check which pages are in the cache
+        if ('caches' in window) {
+          caches.open('pathcare-pages-v1').then(function(cache) {
+            routes.forEach(function(route) {
+              cache.match(route.href).then(function(response) {
+                if (response) {
+                  var a = document.createElement('a');
+                  a.className = 'cached-link';
+                  a.href = route.href;
+                  a.innerHTML = '<span class="icon">' + route.icon + '</span>' + route.label;
+                  container.appendChild(a);
+                }
+              });
+            });
+          }).catch(function() {
+            // If Cache API unavailable, show all as potential cached pages
+            showFallbackLinks(container, routes);
+          });
+        } else {
+          showFallbackLinks(container, routes);
+        }
+      }
+
+      function showFallbackLinks(container, routes) {
+        // If no Cache API, try to access the SW registration
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          routes.forEach(function(route) {
+            var a = document.createElement('a');
+            a.className = 'cached-link';
+            a.href = route.href;
+            a.innerHTML = '<span class="icon">' + route.icon + '</span>' + route.label;
+            container.appendChild(a);
+          });
+        } else {
+          container.innerHTML = '<span style="font-size:.75rem;color:var(--color-text-muted);">No cached pages available — install the app for offline access.</span>';
+        }
+      }
+
+      /* ── Retry logic ── */
+      function retryConnection() {
+        retryCount++;
+        btnRetry.disabled = true;
+        feedback.textContent = 'Checking connection…';
+        feedback.style.color = '';
+
+        // Quick fetch probe
+        var probeUrl = '/?t=' + Date.now();
+        fetch(probeUrl, { method: 'HEAD', cache: 'no-store' })
+          .then(function(response) {
+            if (response.ok) {
+              onRestored();
+            } else {
+              onStillOffline();
+            }
+          })
+          .catch(function() {
+            onStillOffline();
+          });
+
+        // Also re-enable after timeout
+        setTimeout(function() {
+          if (btnRetry.disabled) {
+            btnRetry.disabled = false;
+          }
+        }, 5000);
+      }
+
+      function checkNow() {
+        if (navigator.onLine) {
+          onRestored();
+        } else {
+          feedback.textContent = 'Still offline. Check airplane mode or Wi‑Fi settings.';
+        }
+      }
+
+      function onRestored() {
+        connText.textContent = 'Connection restored!';
+        connStatus.className = 'conn-indicator restored';
+        feedback.textContent = 'Redirecting…';
+        feedback.style.color = 'var(--color-success)';
+        btnRetry.disabled = true;
+
+        setTimeout(function() {
+          location.reload();
+        }, 600);
+      }
+
+      function onStillOffline() {
+        btnRetry.disabled = false;
+        var msg = retryCount < 2
+          ? 'Still no connection. Check your network settings.'
+          : 'Still offline after ' + retryCount + ' tries. Try restarting your router or switching networks.';
+        feedback.textContent = msg;
+      }
+
+      /* ── Auto-detect network restore ── */
+      window.addEventListener('online', function() {
+        onRestored();
+      });
+
+      /* ── Periodic polling (firewall-aware fallback) ── */
+      var pollInterval = setInterval(function() {
+        if (navigator.onLine) {
+          fetch('/?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' })
+            .then(function(r) { if (r.ok) { clearInterval(pollInterval); onRestored(); } })
+            .catch(function() { /* truly offline */ });
+        }
+      }, 8000); // every 8 seconds
+
+      /* ── Init ── */
+      populateCachedPages();
+
+      // Show last-known-state timestamp
+      var lastSeen = localStorage.getItem('pathcare_last_online');
+      if (lastSeen) {
+        var ago = Math.floor((Date.now() - parseInt(lastSeen)) / 60000);
+        var agoText = ago < 1 ? 'just now' : ago + ' min ago';
+        var el = document.getElementById('retry-feedback');
+        if (el && !el.textContent) {
+          el.textContent = 'Last online: ' + agoText;
+        }
+      }
+    })();
+
+    // Update last-online timestamp when online
     window.addEventListener('online', function() {
-      console.log('Connection restored');
-      location.reload();
+      localStorage.setItem('pathcare_last_online', Date.now().toString());
     });
   </script>
 </body>

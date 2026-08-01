@@ -1,22 +1,610 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Edit user - Pathcare Kenya{% endblock %}
+{% block title %}Edit User — PathCare Kenya{% endblock %}
 
 {% block content %}
-<div class="hero-card">
-  <div>
-    <p class="eyebrow">Edit user</p>
-    <h1>Update user details</h1>
-    <p>Change the assigned role, status, or password for this account.</p>
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: var(--space-md); font-size: .78rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumbs a {
+    color: var(--color-text-muted); text-decoration: none;
+    font-weight: 500; transition: color var(--duration-fast) var(--ease-out);
+  }
+  .breadcrumbs a:hover { color: var(--color-primary); }
+  .breadcrumbs .separator { color: var(--color-text-muted); user-select: none; }
+  .breadcrumbs .current { color: var(--color-text-secondary); font-weight: 600; }
+
+  /* ── Hero card (flat – no gradient) ── */
+  .hero-card--flat {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .hero-card--flat .eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin: 0 0 6px; }
+  .hero-card--flat h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .hero-card--flat p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; }
+
+  /* ── Form grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+  @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-grid .field-group {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .form-grid .field-group.full { grid-column: 1 / -1; }
+  .form-grid .field-group.half { /* default */ }
+
+  .form-grid label {
+    font-size: .78rem; font-weight: 600; color: var(--color-text-secondary);
+  }
+  .form-grid label .required { color: var(--color-danger); margin-left: 2px; }
+  .form-grid input,
+  .form-grid select {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .875rem;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .form-grid input:focus,
+  .form-grid select:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .form-grid input.field-error {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-soft);
+  }
+  .form-grid input.field-error:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-soft);
+  }
+  .form-grid input[type="checkbox"] {
+    width: auto; padding: 0; accent-color: var(--color-primary);
+  }
+  .form-grid input[readonly] {
+    background: var(--color-surface);
+    color: var(--color-text-muted); cursor: not-allowed;
+  }
+  .form-grid small {
+    font-size: .7rem; color: var(--color-text-muted); line-height: 1.4;
+  }
+
+  .field-errors {
+    font-size: .72rem; color: var(--color-danger);
+    list-style: none; padding: 0; margin: 0;
+  }
+  .field-errors li::before { content: "⚠ "; }
+
+  /* ── Non-field errors banner ── */
+  .form-errors-banner {
+    grid-column: 1 / -1;
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-danger-soft); border: 1px solid #fecaca;
+    font-size: .82rem; color: #991b1b; margin-bottom: var(--space-sm);
+  }
+  .form-errors-banner ul { margin: 0; padding-left: 18px; }
+  .form-errors-banner li { margin-bottom: 4px; }
+  .form-errors-banner li:last-child { margin-bottom: 0; }
+
+  /* ── Form tips & alerts ── */
+  .form-tip {
+    grid-column: 1 / -1;
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-info-soft); border: 1px solid #bfdbfe;
+    font-size: .8rem; color: #1e40af; margin: 0; line-height: 1.5;
+  }
+  .form-tip strong { color: #1e40af; }
+
+  .form-warning {
+    grid-column: 1 / -1;
+    padding: var(--space-md); border-radius: var(--radius-md);
+    background: var(--color-warning-soft); border: 1px solid #fde68a;
+    font-size: .8rem; color: #92400e; margin: 0; line-height: 1.5;
+  }
+
+  /* ── Password strength meter ── */
+  .password-strength {
+    grid-column: 1 / -1;
+    margin-top: -6px;
+  }
+  .strength-bar {
+    height: 6px; border-radius: var(--radius-full);
+    background: var(--color-border-light);
+    overflow: hidden; transition: width var(--duration-normal) var(--ease-out);
+    margin-bottom: 6px;
+    width: 100%;
+  }
+  .strength-bar .fill {
+    height: 100%; border-radius: var(--radius-full);
+    width: 0%; transition: width var(--duration-normal) var(--ease-out),
+                        background var(--duration-normal) var(--ease-out);
+  }
+  .strength-bar .fill.level-0 { width: 0%; }
+  .strength-bar .fill.level-1 { width: 25%; background: var(--color-danger); }
+  .strength-bar .fill.level-2 { width: 50%; background: var(--color-warning); }
+  .strength-bar .fill.level-3 { width: 75%; background: #f59e0b; }
+  .strength-bar .fill.level-4 { width: 100%; background: var(--color-success); }
+
+  .strength-text {
+    font-size: .7rem; font-weight: 600; margin-bottom: 8px;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .strength-text.level-0 { color: var(--color-text-muted); }
+  .strength-text.level-1 { color: var(--color-danger); }
+  .strength-text.level-2 { color: var(--color-warning); }
+  .strength-text.level-3 { color: #92400e; }
+  .strength-text.level-4 { color: var(--color-success); }
+
+  .strength-criteria {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    font-size: .68rem; color: var(--color-text-muted);
+  }
+  .strength-criteria span {
+    display: flex; align-items: center; gap: 4px;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .strength-criteria span.met { color: var(--color-success); }
+  .strength-criteria span.unmet { color: var(--color-text-muted); }
+  .strength-criteria .check-icon { font-size: .72rem; }
+
+  /* ── Checkbox row ── */
+  .checkbox-row {
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+    padding: var(--space-sm) 0;
+  }
+  .checkbox-row label {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: .85rem; font-weight: 500; color: var(--color-text);
+  }
+
+  /* ── Form actions ── */
+  .form-actions {
+    grid-column: 1 / -1; display: flex; gap: 10px; margin-top: var(--space-sm);
+    align-items: center;
+  }
+  @media (max-width: 500px) { .form-actions { flex-direction: column; } .form-actions .btn { width: 100%; } }
+
+  /* ── Confirmation modal ── */
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(15,23,42,.45); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--duration-normal) var(--ease-out),
+                visibility var(--duration-normal);
+  }
+  .confirm-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+  .confirm-dialog {
+    background: var(--color-surface); border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl); padding: var(--space-xl);
+    max-width: 440px; width: calc(100% - 48px);
+    transform: translateY(12px) scale(.96);
+    transition: transform var(--duration-normal) var(--ease-out);
+    text-align: center;
+  }
+  .confirm-overlay.open .confirm-dialog { transform: translateY(0) scale(1); }
+
+  .confirm-dialog .confirm-icon {
+    font-size: 2.5rem; margin-bottom: var(--space-md);
+  }
+  .confirm-dialog h3 {
+    font-size: 1.1rem; font-weight: 700; margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .confirm-dialog p {
+    font-size: .85rem; color: var(--color-text-secondary);
+    margin: 0 0 var(--space-lg); line-height: 1.5;
+  }
+  .confirm-dialog .confirm-changes {
+    font-size: .78rem; color: var(--color-text-muted);
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-md);
+    padding: 10px var(--space-md); margin-bottom: var(--space-lg);
+    text-align: left; line-height: 1.6;
+  }
+  .confirm-dialog .confirm-changes strong { color: var(--color-text); }
+  .confirm-dialog .confirm-actions {
+    display: flex; gap: 10px; justify-content: center;
+  }
+  @media (max-width: 400px) {
+    .confirm-dialog .confirm-actions { flex-direction: column; }
+    .confirm-dialog .confirm-actions .btn { width: 100%; }
+  }
+
+  /* ── Divider inside form ── */
+  .form-section-divider {
+    grid-column: 1 / -1; border: none;
+    border-top: 1px solid var(--color-border-light);
+    margin: var(--space-sm) 0;
+  }
+  .form-section-label {
+    grid-column: 1 / -1;
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--color-text-muted);
+    margin-bottom: -8px;
+  }
+</style>
+
+{# ── Breadcrumbs ── #}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'accounts:role_redirect' %}">Dashboard</a>
+  <span class="separator">›</span>
+  <a href="{% url 'accounts:user_management' %}">User Management</a>
+  <span class="separator">›</span>
+  <span class="current" aria-current="page">Edit {{ edit_user.get_full_name|default:edit_user.username }}</span>
+</nav>
+
+{# ── Hero ── #}
+<div class="hero-card--flat">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
+    <div>
+      <p class="eyebrow">Edit User</p>
+      <h1>{{ edit_user.get_full_name|default:edit_user.username }}</h1>
+      <p>
+        <span class="badge badge--primary" style="font-size:.7rem;">{{ edit_user.get_role_display }}</span>
+        &nbsp;
+        {% if edit_user.is_active %}
+          <span class="badge badge--success" style="font-size:.7rem;">Active</span>
+        {% else %}
+          <span class="badge badge--danger" style="font-size:.7rem;">Inactive</span>
+        {% endif %}
+        &nbsp;
+        <span style="font-size:.8rem;color:var(--color-text-muted);">{{ edit_user.email|default:"No email set" }}</span>
+      </p>
+    </div>
+    <a href="{% url 'accounts:user_management' %}" class="btn btn--outline btn--sm">← Back to Users</a>
   </div>
 </div>
 
+{# ── Edit form ── #}
 <section class="panel">
-  <form method="post" class="filter-form" style="display:block;max-width:520px;">
+  <form method="post" class="form-grid" novalidate id="user-edit-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Save changes</button>
-    <a href="{% url 'accounts:user_management' %}" class="btn secondary">Cancel</a>
+
+    {# ── Non-field errors ── #}
+    {% if form.non_field_errors %}
+      <div class="form-errors-banner">
+        <strong>Please correct the following errors:</strong>
+        <ul>
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {# ── Account Information ── #}
+    <div class="form-section-label">Account Information</div>
+
+    <div class="field-group full">
+      <label for="id_username">Username <span class="required">*</span></label>
+      <input type="text" name="username" value="{{ form.username.value|default:'' }}" id="id_username"
+             class="{% if form.username.errors %}field-error{% endif %}"
+             readonly required>
+      {% if form.username.errors %}
+        <ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+      <small>Username cannot be changed after creation.</small>
+    </div>
+
+    <div class="field-group half">
+      <label for="id_first_name">First Name</label>
+      <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" id="id_first_name"
+             class="{% if form.first_name.errors %}field-error{% endif %}"
+             placeholder="e.g. Jane">
+      {% if form.first_name.errors %}
+        <ul class="field-errors">{% for e in form.first_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+
+    <div class="field-group half">
+      <label for="id_last_name">Last Name</label>
+      <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" id="id_last_name"
+             class="{% if form.last_name.errors %}field-error{% endif %}"
+             placeholder="e.g. Muthoni">
+      {% if form.last_name.errors %}
+        <ul class="field-errors">{% for e in form.last_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+
+    <div class="field-group full">
+      <label for="id_email">Email Address <span class="required">*</span></label>
+      <input type="email" name="email" value="{{ form.email.value|default:'' }}" id="id_email"
+             class="{% if form.email.errors %}field-error{% endif %}"
+             placeholder="e.g. jane@pathcare.co.ke" required>
+      {% if form.email.errors %}
+        <ul class="field-errors">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+      <small>Will be used for login and notifications.</small>
+    </div>
+
+    {# ── Role & Status ── #}
+    <div class="form-section-label">Role &amp; Status</div>
+
+    <div class="field-group half">
+      <label for="id_role">Role <span class="required">*</span></label>
+      <select name="role" id="id_role" class="{% if form.role.errors %}field-error{% endif %}" required>
+        {% for value, label in form.fields.role.choices %}
+          <option value="{{ value }}" {% if form.role.value|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% if form.role.errors %}
+        <ul class="field-errors">{% for e in form.role.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+      <small>Determines what this user can access in the system.</small>
+    </div>
+
+    <div class="field-group half" style="justify-content:flex-end;">
+      <div class="checkbox-row" style="padding-top:24px;">
+        <label>
+          <input type="checkbox" name="is_active" id="id_is_active"
+                 {% if form.is_active.value %}checked{% endif %}>
+          <span>Account is active</span>
+        </label>
+        {% if form.is_active.errors %}
+          <ul class="field-errors">{% for e in form.is_active.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <small style="margin-top:2px;">Inactive users cannot log in but their data is preserved.</small>
+    </div>
+
+    <hr class="form-section-divider">
+
+    {# ── Password ── #}
+    <div class="form-section-label">Change Password <small style="text-transform:none;letter-spacing:0;">(optional)</small></div>
+
+    <p class="form-tip" style="margin-bottom:0;">
+      <strong>Leave blank to keep the current password.</strong> Fill in both fields only if you want to set a new password for this user.
+    </p>
+
+    <div class="field-group half">
+      <label for="id_password1">New Password</label>
+      <input type="password" name="password1" id="id_password1"
+             class="{% if form.password1.errors %}field-error{% endif %}"
+             placeholder="Min. 8 characters"
+             autocomplete="new-password">
+      {% if form.password1.errors %}
+        <ul class="field-errors">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+
+    <div class="field-group half">
+      <label for="id_password2">Confirm New Password</label>
+      <input type="password" name="password2" id="id_password2"
+             class="{% if form.password2.errors %}field-error{% endif %}"
+             placeholder="Re-enter password"
+             autocomplete="new-password">
+      {% if form.password2.errors %}
+        <ul class="field-errors">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+
+    {# Password strength meter #}
+    <div class="password-strength" id="password-strength" style="display:none;">
+      <div class="strength-bar"><div class="fill" id="strength-fill"></div></div>
+      <div class="strength-text" id="strength-label">Type a password to check strength</div>
+      <div class="strength-criteria">
+        <span id="crit-length"><span class="check-icon">○</span> 8+ characters</span>
+        <span id="crit-upper"><span class="check-icon">○</span> Uppercase letter</span>
+        <span id="crit-lower"><span class="check-icon">○</span> Lowercase letter</span>
+        <span id="crit-digit"><span class="check-icon">○</span> Number</span>
+        <span id="crit-special"><span class="check-icon">○</span> Special character</span>
+      </div>
+    </div>
+
+    {# ── Actions ── #}
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary btn--lg" id="submit-btn">
+        Save Changes
+      </button>
+      <a href="{% url 'accounts:user_management' %}" class="btn btn--outline btn--lg">Cancel</a>
+      <span style="font-size:.72rem;color:var(--color-text-muted);margin-left:auto;">
+        Last login: {{ edit_user.last_login|date:"M d, Y H:i"|default:"Never" }}
+      </span>
+    </div>
   </form>
 </section>
+
+{# ── Confirmation modal ── #}
+<div class="confirm-overlay" id="confirm-overlay" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="confirm-icon">⚠️</div>
+    <h3 id="confirm-title">Confirm Changes</h3>
+    <p>You are about to update this user's account details. Please review before saving.</p>
+    <div class="confirm-changes" id="confirm-summary">
+      <strong>Changes will be applied:</strong>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn--primary btn--lg" id="confirm-yes">Yes, Save Changes</button>
+      <button class="btn btn--outline btn--lg" id="confirm-no">Go Back</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    'use strict';
+
+    /* ═══════════════════════════════════════════
+       PASSWORD STRENGTH METER
+       ═══════════════════════════════════════════ */
+    var pwdInput = document.getElementById('id_password1');
+    var strengthBox = document.getElementById('password-strength');
+    var strengthFill = document.getElementById('strength-fill');
+    var strengthLabel = document.getElementById('strength-label');
+
+    var critLength = document.getElementById('crit-length');
+    var critUpper = document.getElementById('crit-upper');
+    var critLower = document.getElementById('crit-lower');
+    var critDigit = document.getElementById('crit-digit');
+    var critSpecial = document.getElementById('crit-special');
+
+    var levelLabels = ['Type a password to check strength', 'Weak — easy to guess', 'Fair — could be stronger', 'Good — almost there', 'Strong — excellent!'];
+
+    function markCriterion(el, met) {
+      if (met) {
+        el.classList.add('met'); el.classList.remove('unmet');
+        el.querySelector('.check-icon').textContent = '●';
+      } else {
+        el.classList.remove('met'); el.classList.add('unmet');
+        el.querySelector('.check-icon').textContent = '○';
+      }
+    }
+
+    function evalStrength(val) {
+      if (!val) return 0;
+      var score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[a-z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      // cap at 4
+      return Math.min(score, 4);
+    }
+
+    function updateMeter() {
+      var val = pwdInput.value;
+      if (!val) {
+        strengthBox.style.display = 'none';
+        return;
+      }
+      strengthBox.style.display = '';
+      var level = evalStrength(val);
+
+      strengthFill.className = 'fill level-' + level;
+      strengthLabel.textContent = levelLabels[level];
+      strengthLabel.className = 'strength-text level-' + level;
+
+      markCriterion(critLength, val.length >= 8);
+      markCriterion(critUpper, /[A-Z]/.test(val));
+      markCriterion(critLower, /[a-z]/.test(val));
+      markCriterion(critDigit, /[0-9]/.test(val));
+      markCriterion(critSpecial, /[^A-Za-z0-9]/.test(val));
+    }
+
+    if (pwdInput) {
+      pwdInput.addEventListener('input', updateMeter);
+      // also trigger on paste
+      pwdInput.addEventListener('paste', function() { setTimeout(updateMeter, 50); });
+    }
+
+    /* ═══════════════════════════════════════════
+       CONFIRMATION DIALOG
+       ═══════════════════════════════════════════ */
+    var form = document.getElementById('user-edit-form');
+    var overlay = document.getElementById('confirm-overlay');
+    var confirmYes = document.getElementById('confirm-yes');
+    var confirmNo = document.getElementById('confirm-no');
+    var confirmSummary = document.getElementById('confirm-summary');
+
+    function buildSummary() {
+      var first = form.querySelector('#id_first_name');
+      var last = form.querySelector('#id_last_name');
+      var email = form.querySelector('#id_email');
+      var role = form.querySelector('#id_role');
+      var active = form.querySelector('#id_is_active');
+      var pwd = form.querySelector('#id_password1');
+      var pwd2 = form.querySelector('#id_password2');
+
+      var parts = [];
+      var name = ((first ? first.value.trim() : '') + ' ' + (last ? last.value.trim() : '')).trim();
+      if (name) parts.push('<strong>Name:</strong> ' + escapeHtml(name));
+      if (email && email.value.trim()) parts.push('<strong>Email:</strong> ' + escapeHtml(email.value.trim()));
+      if (role && role.selectedOptions && role.selectedOptions[0]) {
+        parts.push('<strong>Role:</strong> ' + escapeHtml(role.selectedOptions[0].text));
+      }
+      if (active) parts.push('<strong>Status:</strong> ' + (active.checked ? 'Active' : 'Inactive'));
+      if (pwd && pwd.value && pwd2 && pwd2.value) {
+        parts.push('<strong>Password:</strong> Will be updated');
+      }
+
+      confirmSummary.innerHTML = parts.length
+        ? '<strong>Changes to be applied:</strong><br>' + parts.join('<br>')
+        : '<strong>No changes detected.</strong>';
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    function openConfirm() {
+      buildSummary();
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      confirmYes.focus();
+    }
+
+    function closeConfirm() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      document.getElementById('submit-btn').focus();
+    }
+
+    if (form && overlay && confirmYes && confirmNo) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        openConfirm();
+      });
+
+      confirmYes.addEventListener('click', function() {
+        closeConfirm();
+        // Re-submit the form programmatically
+        form.submit();
+      });
+
+      confirmNo.addEventListener('click', function() {
+        closeConfirm();
+      });
+
+      // Close on overlay click
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeConfirm();
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+          closeConfirm();
+        }
+      });
+    }
+
+    /* ═══════════════════════════════════════════
+       FIELD ERROR – add error class on input blur
+       ═══════════════════════════════════════════ */
+    document.querySelectorAll('.field-error').forEach(function(input) {
+      // Already has class from server-side; add listener for real-time validation feel
+      input.addEventListener('input', function() {
+        if (this.value.trim()) {
+          this.classList.remove('field-error');
+          var errList = this.parentElement.querySelector('.field-errors');
+          if (errList) errList.style.display = 'none';
+        }
+      });
+    });
+  })();
+</script>
 {% endblock %}

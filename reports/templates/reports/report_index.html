@@ -1,90 +1,468 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Reports - Pathcare Kenya{% endblock %}
+{% block title %}Reports — PathCare Kenya{% endblock %}
 
 {% block content %}
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: var(--space-md); font-size: .78rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumbs a {
+    color: var(--color-text-muted); text-decoration: none;
+    font-weight: 500; transition: color var(--duration-fast) var(--ease-out);
+  }
+  .breadcrumbs a:hover { color: var(--color-primary); }
+  .breadcrumbs .separator { color: var(--color-text-muted); user-select: none; }
+  .breadcrumbs .current { color: var(--color-text-secondary); font-weight: 600; }
+
+  /* ── Hero ── */
+  .hero-card--flat {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-lg); flex-wrap: wrap;
+  }
+  .hero-card--flat .eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin: 0 0 6px; }
+  .hero-card--flat h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .hero-card--flat p { font-size: .85rem; color: var(--color-text-secondary); margin: 0; }
+
+  /* ── Stat pills in hero ── */
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: var(--space-sm); margin-top: var(--space-sm);
+  }
+  .hero-stat {
+    text-align: center; padding: 12px 10px; border-radius: var(--radius-md);
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    min-width: 0;
+  }
+  .hero-stat strong {
+    display: block; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--color-text); line-height: 1.2;
+  }
+  .hero-stat span {
+    font-size: .62rem; font-weight: 600; color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .hero-stat.accent { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
+  .hero-stat.accent strong { color: var(--color-primary-ink); }
+  .hero-stat.warning { border-color: #fde68a; background: var(--color-warning-soft); }
+  .hero-stat.warning strong { color: #92400e; }
+  .hero-stat.danger { border-color: #fecaca; background: var(--color-danger-soft); }
+  .hero-stat.danger strong { color: #991b1b; }
+  .hero-stat.success { border-color: #a7f3d0; background: var(--color-success-soft); }
+  .hero-stat.success strong { color: #065f46; }
+
+  /* ── Chart row ── */
+  .chart-row {
+    display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+
+  .chart-panel {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .chart-panel .chart-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--color-border-light);
+    gap: var(--space-sm); flex-wrap: wrap;
+  }
+  .chart-panel .chart-header h3 {
+    font-size: .85rem; font-weight: 700; letter-spacing: -0.01em; margin: 0;
+  }
+  .chart-panel .chart-body { padding: var(--space-md) var(--space-lg) var(--space-lg); }
+  #status-chart { width: 100%; height: 260px; }
+
+  /* ── Snapshot cards ── */
+  .snapshot-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md); padding: var(--space-lg);
+  }
+  @media (max-width: 480px) { .snapshot-grid { grid-template-columns: 1fr; } }
+
+  .snapshot-card {
+    background: var(--color-surface-alt); border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md); padding: var(--space-md);
+    display: flex; flex-direction: column; gap: 8px;
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+    cursor: pointer;
+  }
+  .snapshot-card:hover {
+    border-color: var(--color-primary-border);
+    box-shadow: var(--shadow-md);
+  }
+  .snapshot-card h3 {
+    font-size: .85rem; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--color-text); margin: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .snapshot-card p {
+    font-size: .78rem; color: var(--color-text-secondary);
+    margin: 0; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .snapshot-card .meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .68rem; color: var(--color-text-muted);
+    gap: var(--space-sm);
+  }
+  .snapshot-card .meta .badge { font-size: .65rem; }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-bar select {
+    padding: 8px 14px; border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface-alt);
+    color: var(--color-text); font: inherit; font-size: .8rem;
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .filter-bar select:focus {
+    outline: none; border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+
+  /* ── Table refinements ── */
+  .order-table td { vertical-align: middle; }
+  .order-table .ref-link {
+    color: var(--color-primary); font-weight: 600; text-decoration: none;
+    font-size: .82rem;
+  }
+  .order-table .ref-link:hover { text-decoration: underline; }
+
+  /* ── Status pill ── */
+  .status-pill {
+    display: inline-block; padding: 3px 10px; border-radius: var(--radius-full);
+    font-size: .66rem; font-weight: 700; white-space: nowrap;
+  }
+  .status-pill.success { background: var(--color-success-soft); color: #065f46; }
+  .status-pill.warning { background: var(--color-warning-soft); color: #92400e; }
+  .status-pill.danger { background: var(--color-danger-soft); color: #991b1b; }
+  .status-pill.neutral { background: var(--color-surface-alt); color: var(--color-text-secondary); border: 1px solid var(--color-border-light); }
+  .status-pill.info { background: var(--color-info-soft); color: #1e40af; }
+
+  /* ── Empty states ── */
+  .empty-state--filtered .empty-state__icon { font-size: 2rem; opacity: .4; }
+</style>
+
+{# ── Breadcrumbs ── #}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'accounts:role_redirect' %}">Dashboard</a>
+  <span class="separator">›</span>
+  <span class="current" aria-current="page">Reports</span>
+</nav>
+
+{# ── Hero ── #}
+<div class="hero-card--flat">
+  <div>
+    <p class="eyebrow">Reports &amp; Analytics</p>
+    <h1>Operational Overview</h1>
+    <p>Track performance, monitor trends, and export data.</p>
+  </div>
+</div>
+
+{# ── Stats row ── #}
+<div class="hero-stats">
+  <div class="hero-stat">
+    <strong>{{ summary.total_orders|default:0 }}</strong>
+    <span>Total Orders</span>
+  </div>
+  <div class="hero-stat warning">
+    <strong>{{ summary.pending|default:0 }}</strong>
+    <span>Pending</span>
+  </div>
+  <div class="hero-stat success">
+    <strong>{{ summary.delivered|default:0 }}</strong>
+    <span>Delivered</span>
+  </div>
+  <div class="hero-stat danger">
+    <strong>{{ summary.urgent|default:0 }}</strong>
+    <span>Urgent</span>
+  </div>
+  <div class="hero-stat accent">
+    <strong>{{ summary.exceptions|default:0 }}</strong>
+    <span>Exceptions</span>
+  </div>
+</div>
+
+{# ── Chart + Quick breakdown ── #}
+<div class="chart-row">
+  <div class="chart-panel">
+    <div class="chart-header">
+      <h3>Order Status Distribution</h3>
+    </div>
+    <div class="chart-body">
+      <canvas id="status-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel">
+    <div class="chart-header">
+      <h3>Recent Snapshots</h3>
+    </div>
+    <div class="chart-body" style="display:flex;flex-direction:column;gap:10px;">
+      {% if snapshots %}
+        {% for snapshot in snapshots|slice:":5" %}
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border-light);">
+            <span style="font-size:1.1rem;flex-shrink:0;">📊</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ snapshot.title }}</div>
+              <div style="font-size:.68rem;color:var(--color-text-muted);">{{ snapshot.created_at|date:"M d, H:i" }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:var(--space-lg);color:var(--color-text-muted);">
+          <div style="font-size:2rem;margin-bottom:8px;">📭</div>
+          <div style="font-size:.82rem;font-weight:500;">No snapshots yet</div>
+          <div style="font-size:.72rem;">Saved reports will appear here.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ── Full snapshot list ── #}
+{% if snapshots %}
+<section class="panel" style="margin-bottom:var(--space-lg);">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Saved Reports</p>
+      <h2>All Snapshots</h2>
+    </div>
+  </div>
+  <div class="snapshot-grid">
+    {% for snapshot in snapshots %}
+      <div class="snapshot-card">
+        <h3>📊 {{ snapshot.title }}</h3>
+        <p>{{ snapshot.summary|default:"No summary available." }}</p>
+        <div class="meta">
+          <span>{{ snapshot.created_at|date:"M d, Y H:i" }}</span>
+          <span class="badge badge--primary">Snapshot</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── Orders table ── #}
 <section class="panel">
   <div class="panel-header">
     <div>
-      <p class="eyebrow">Operational report overview</p>
-      <h2>Reports and analytics</h2>
+      <p class="eyebrow">Recent Activity</p>
+      <h2>Latest Orders</h2>
     </div>
-  </div>
-
-  <div class="hero-stats">
-    <div><strong>{{ summary.total_orders }}</strong><span>Total orders</span></div>
-    <div><strong>{{ summary.pending }}</strong><span>Pending</span></div>
-    <div><strong>{{ summary.delivered }}</strong><span>Delivered</span></div>
-    <div><strong>{{ summary.urgent }}</strong><span>Urgent</span></div>
-    <div><strong>{{ summary.exceptions }}</strong><span>Exceptions</span></div>
-  </div>
-
-  <div class="panel-header" style="margin-top:1rem;">
-    <div>
-      <p class="eyebrow">Latest snapshots</p>
-      <h3>Saved report summaries</h3>
-    </div>
-  </div>
-
-  {% if snapshots %}
-    <div class="alert-grid">
-      {% for snapshot in snapshots %}
-        <div class="alert-card primary">
-          <h3>{{ snapshot.title }}</h3>
-          <p>{{ snapshot.summary|default:"No summary available yet." }}</p>
-          <small>{{ snapshot.created_at|date:"M d, Y H:i" }}</small>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="empty-state">No report snapshots have been saved yet.</p>
-  {% endif %}
-
-  <div class="panel-header" style="margin-top:1rem;">
-    <div>
-      <p class="eyebrow">Recent activity</p>
-      <h3>Latest orders</h3>
-    </div>
-    <form method="get" class="filter-form">
-      <label for="status" class="sr-only">Filter status</label>
-      <select id="status" name="status" onchange="this.form.submit()">
-        <option value="">All statuses</option>
+    <div class="filter-bar">
+      <select name="status" id="status-filter" onchange="this.form.submit()">
+        <option value="">All Statuses</option>
         {% for value, label in statuses %}
           <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
-      <button class="button secondary" type="submit">Apply</button>
-      <a class="button primary" href="?download=csv{% if status_filter %}&status={{ status_filter }}{% endif %}">Export CSV</a>
-    </form>
+      <button type="submit" class="btn btn--sm btn--primary">Filter</button>
+      <a href="?download=csv{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn--sm btn--outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export CSV
+      </a>
+    </div>
   </div>
 
   {% if orders %}
+    <div class="table-toolbar" style="display:flex;align-items:center;justify-content:space-between;padding:12px var(--space-lg);background:var(--color-surface-alt);border-bottom:1px solid var(--color-border-light);font-size:.78rem;color:var(--color-text-muted);">
+      <span>Showing <strong>{{ orders|length }}</strong> order{{ orders|length|pluralize }}{% if status_filter %} with status "<strong>{{ status_filter }}</strong>"{% endif %}</span>
+    </div>
+
     <div class="table-card">
-      <table>
+      <table class="order-table">
         <thead>
           <tr>
             <th>Reference</th>
             <th>Client</th>
             <th>Carrier</th>
             <th>Status</th>
+            <th>Priority</th>
             <th>Created</th>
           </tr>
         </thead>
         <tbody>
           {% for order in orders %}
             <tr>
-              <td>{{ order.reference_code }}</td>
+              <td>
+                <a href="{% url 'tracking:order_detail' order.pk %}" class="ref-link">
+                  {{ order.reference_code }}
+                </a>
+              </td>
               <td>{{ order.client.name }}</td>
-              <td>{{ order.carrier|default:"Unassigned" }}</td>
-              <td>{{ order.get_status_display }}</td>
+              <td>{{ order.carrier|default:"—" }}</td>
+              <td>
+                <span class="status-pill {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'pending' or order.status == 'pending_review' %}warning{% elif order.status == 'in_transit' or order.status == 'assigned' or order.status == 'accepted' %}info{% else %}neutral{% endif %}">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+              <td>
+                {% with priority=order.priority|default:"normal" %}
+                  <span style="font-size:.75rem;font-weight:600;{% if priority == 'urgent' %}color:var(--color-danger);{% elif priority == 'high' %}color:var(--color-warning);{% else %}color:var(--color-text-muted);{% endif %}">
+                    {{ order.get_priority_display|default:priority|title }}
+                  </span>
+                {% endwith %}
+              </td>
               <td>{{ order.created_at|date:"M d, Y" }}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    {% if page_obj.has_other_pages %}
+      <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-md);padding:var(--space-md) 0 0;font-size:.85rem;color:var(--color-text-secondary);">
+        {% if page_obj.has_previous %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" style="padding:8px 16px;border-radius:var(--radius-md);border:1px solid var(--color-border);text-decoration:none;color:var(--color-text);font-weight:600;font-size:.82rem;">← Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" style="padding:8px 16px;border-radius:var(--radius-md);border:1px solid var(--color-border);text-decoration:none;color:var(--color-text);font-weight:600;font-size:.82rem;">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
   {% else %}
-    <p class="empty-state">No orders have been created yet.</p>
+    <div class="empty-state {% if status_filter %}empty-state--filtered{% endif %}" style="padding:var(--space-2xl) var(--space-lg);">
+      <span class="empty-state__icon" aria-hidden="true">{% if status_filter %}🔍{% else %}📋{% endif %}</span>
+      <div class="empty-state__title">
+        {% if status_filter %}No Results{% else %}No Orders Yet{% endif %}
+      </div>
+      <div class="empty-state__desc" style="max-width:360px;">
+        {% if status_filter %}
+          No orders match the status "<strong>{{ status_filter }}</strong>". <a href="?" style="color:var(--color-primary);font-weight:600;">Clear filter</a>.
+        {% else %}
+          Orders will appear here once clients create pickup requests or carriers complete deliveries.
+        {% endif %}
+      </div>
+    </div>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  (function() {
+    'use strict';
+
+    var canvas = document.getElementById('status-chart');
+    if (!canvas) return;
+
+    // Status data from backend — expected as a JSON-safe dict
+    var statusData = {{ status_counts_json|safe|default:'{"Pending":0,"In Transit":0,"Delivered":0,"Cancelled":0}' }};
+
+    var labels = Object.keys(statusData);
+    var values = Object.values(statusData);
+
+    // Color map: warning → info → success → danger
+    var colorMap = {
+      'Pending': '#f59e0b',
+      'Pending Review': '#f59e0b',
+      'Assigned': '#3b82f6',
+      'Accepted': '#3b82f6',
+      'In Transit': '#3b82f6',
+      'En Route': '#3b82f6',
+      'Picked Up': '#6366f1',
+      'At Client': '#8b5cf6',
+      'Delivered': '#10b981',
+      'Completed': '#10b981',
+      'Cancelled': '#ef4444',
+      'Delayed': '#f97316',
+    };
+
+    var colors = labels.map(function(l) { return colorMap[l] || '#94a3b8'; });
+
+    new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverBorderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 16,
+              usePointStyle: true,
+              pointStyleWidth: 8,
+              font: { size: 11, family: "'Inter', system-ui, sans-serif" },
+              color: '#475569',
+            }
+          },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { size: 12, weight: '600' },
+            bodyFont: { size: 11 },
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false,
+            callbacks: {
+              label: function(ctx) {
+                var total = values.reduce(function(a, b) { return a + b; }, 0);
+                var pct = total ? Math.round(ctx.raw / total * 100) : 0;
+                return ' ' + ctx.raw + ' order' + (ctx.raw !== 1 ? 's' : '') + ' (' + pct + '%)';
+              }
+            }
+          }
+        }
+      },
+      plugins: [{
+        id: 'centerText',
+        afterDraw: function(chart) {
+          var ctx = chart.ctx;
+          var total = values.reduce(function(a, b) { return a + b; }, 0);
+          var width = chart.width, height = chart.height;
+          ctx.restore();
+          ctx.font = '700 1.5rem Inter, system-ui, sans-serif';
+          ctx.fillStyle = '#0f172a';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(total, width / 2, height / 2 - 8);
+          ctx.font = '600 .62rem Inter, system-ui, sans-serif';
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText('TOTAL', width / 2, height / 2 + 14);
+          ctx.save();
+        }
+      }]
+    });
+
+    // Filter form wiring
+    var filterForm = document.querySelector('form');
+    var statusSelect = document.getElementById('status-filter');
+    if (statusSelect && filterForm) {
+      // Form is the implicit parent — ensure select triggers work
+      statusSelect.addEventListener('change', function() {
+        filterForm.submit();
+      });
+    }
+  })();
+</script>
 {% endblock %}

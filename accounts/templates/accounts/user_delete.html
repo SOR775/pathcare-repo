@@ -1,21 +1,396 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Delete user - Pathcare Kenya{% endblock %}
+{% block title %}Delete User — PathCare Kenya{% endblock %}
 
 {% block content %}
-<div class="hero-card">
-  <div>
-    <p class="eyebrow">Delete user</p>
-    <h1>Confirm delete</h1>
-    <p>Are you sure you want to delete {{ delete_user.get_full_name|default:delete_user.username }}?</p>
+<style>
+  html, body { overflow-x: hidden; max-width: 100vw; }
+
+  /* ── Breadcrumbs ── */
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: var(--space-md); font-size: .78rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumbs a {
+    color: var(--color-text-muted); text-decoration: none;
+    font-weight: 500; transition: color var(--duration-fast) var(--ease-out);
+  }
+  .breadcrumbs a:hover { color: var(--color-primary); }
+  .breadcrumbs .separator { color: var(--color-text-muted); user-select: none; }
+  .breadcrumbs .current { color: var(--color-text-secondary); font-weight: 600; }
+
+  /* ── Hero card (danger variant) ── */
+  .hero-card--danger {
+    background: var(--color-danger-soft); border: 1px solid #fecaca;
+    border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .hero-card--danger .eyebrow {
+    font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; color: #b91c1c; margin: 0 0 6px;
+  }
+  .hero-card--danger h1 {
+    font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
+    margin: 0 0 6px; color: #991b1b;
+  }
+  .hero-card--danger p {
+    font-size: .85rem; color: #b91c1c; margin: 0;
+  }
+
+  /* ── Danger panel ── */
+  .panel--danger {
+    background: var(--color-surface);
+    border: 2px solid #fecaca;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-lg);
+    overflow: hidden;
+  }
+
+  /* ── User identity card ── */
+  .delete-user-card {
+    display: flex; align-items: center; gap: var(--space-md);
+    padding: var(--space-lg); background: var(--color-surface-alt);
+    border-radius: var(--radius-md); margin: var(--space-lg);
+    flex-wrap: wrap;
+  }
+  .delete-user-card .avatar {
+    width: 56px; height: 56px; border-radius: var(--radius-full);
+    background: var(--color-danger-soft); color: var(--color-danger);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 800; flex-shrink: 0;
+    border: 2px solid #fecaca;
+  }
+  .delete-user-card .info { flex: 1; min-width: 0; }
+  .delete-user-card .info strong {
+    display: block; font-size: .95rem; font-weight: 700; color: var(--color-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .delete-user-card .info span {
+    font-size: .78rem; color: var(--color-text-muted);
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .delete-user-card .meta {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .delete-user-card .meta .badge { font-size: .68rem; }
+
+  /* ── Consequences list ── */
+  .consequences {
+    padding: 0 var(--space-lg) var(--space-lg);
+  }
+  .consequences h3 {
+    font-size: .82rem; font-weight: 700; color: #991b1b;
+    margin: 0 0 var(--space-md);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .consequences ul {
+    list-style: none; padding: 0; margin: 0 0 var(--space-lg);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .consequences li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px; background: var(--color-danger-soft);
+    border: 1px solid #fecaca; border-radius: var(--radius-md);
+    font-size: .82rem; color: #991b1b; line-height: 1.5;
+  }
+  .consequences li .icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+
+  /* ── Confirmation checkbox ── */
+  .confirm-check {
+    display: flex; align-items: center; gap: 10px;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-danger-soft);
+    border-top: 2px solid #fecaca;
+    border-bottom: 2px solid #fecaca;
+  }
+  .confirm-check input[type="checkbox"] {
+    width: 18px; height: 18px; accent-color: var(--color-danger);
+    flex-shrink: 0; cursor: pointer;
+  }
+  .confirm-check label {
+    font-size: .82rem; font-weight: 600; color: #991b1b;
+    cursor: pointer; user-select: none;
+  }
+
+  /* ── Actions ── */
+  .delete-actions {
+    display: flex; gap: 10px; padding: var(--space-lg);
+    align-items: center; flex-wrap: wrap;
+  }
+  @media (max-width: 500px) { .delete-actions { flex-direction: column; } .delete-actions .btn { width: 100%; } }
+
+  .btn--danger {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 24px; border-radius: var(--radius-md);
+    font-size: .875rem; font-weight: 600; text-decoration: none;
+    border: none; cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    white-space: nowrap;
+    background: var(--color-danger); color: #fff;
+    opacity: .5; pointer-events: none;
+  }
+  .btn--danger.enabled { opacity: 1; pointer-events: auto; }
+  .btn--danger.enabled:hover { background: #dc2626; box-shadow: var(--shadow-md); }
+  .btn--danger.enabled:active { transform: scale(.97); }
+
+  .btn--outline {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 24px; border-radius: var(--radius-md);
+    font-size: .875rem; font-weight: 600; text-decoration: none;
+    cursor: pointer; white-space: nowrap;
+    transition: all var(--duration-fast) var(--ease-out);
+    background: transparent; color: var(--color-primary);
+    border: 1.5px solid var(--color-primary-border);
+  }
+  .btn--outline:hover { background: var(--color-primary-soft); }
+
+  /* ── Last login hint ── */
+  .last-login-hint {
+    font-size: .72rem; color: var(--color-text-muted);
+    margin-left: auto;
+  }
+  @media (max-width: 500px) { .last-login-hint { margin-left: 0; width: 100%; text-align: center; } }
+
+  /* ── Double-confirm modal ── */
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(15,23,42,.45); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--duration-normal) var(--ease-out),
+                visibility var(--duration-normal);
+  }
+  .confirm-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+  .confirm-dialog {
+    background: var(--color-surface); border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl); padding: var(--space-xl);
+    max-width: 440px; width: calc(100% - 48px);
+    transform: translateY(12px) scale(.96);
+    transition: transform var(--duration-normal) var(--ease-out);
+    text-align: center;
+  }
+  .confirm-overlay.open .confirm-dialog { transform: translateY(0) scale(1); }
+
+  .confirm-dialog .confirm-icon { font-size: 3rem; margin-bottom: var(--space-md); }
+  .confirm-dialog h3 {
+    font-size: 1.1rem; font-weight: 700; margin: 0 0 8px;
+    letter-spacing: -0.01em; color: var(--color-text);
+  }
+  .confirm-dialog p {
+    font-size: .85rem; color: var(--color-text-secondary);
+    margin: 0 0 var(--space-lg); line-height: 1.5;
+  }
+  .confirm-dialog .danger-note {
+    font-size: .78rem; color: #991b1b; font-weight: 600;
+    background: var(--color-danger-soft); border-radius: var(--radius-md);
+    padding: 10px var(--space-md); margin-bottom: var(--space-lg);
+  }
+  .confirm-dialog .confirm-actions {
+    display: flex; gap: 10px; justify-content: center;
+  }
+  @media (max-width: 400px) {
+    .confirm-dialog .confirm-actions { flex-direction: column; }
+    .confirm-dialog .confirm-actions .btn { width: 100%; }
+  }
+</style>
+
+{# ── Breadcrumbs ── #}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'accounts:role_redirect' %}">Dashboard</a>
+  <span class="separator">›</span>
+  <a href="{% url 'accounts:user_management' %}">User Management</a>
+  <span class="separator">›</span>
+  <span class="current" aria-current="page">Delete {{ delete_user.get_full_name|default:delete_user.username }}</span>
+</nav>
+
+{# ── Danger hero ── #}
+<div class="hero-card--danger">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
+    <div>
+      <p class="eyebrow">Delete User</p>
+      <h1>Permanently Remove Account</h1>
+      <p>This action cannot be undone. All personal data and role assignments will be lost.</p>
+    </div>
+    <a href="{% url 'accounts:user_management' %}" class="btn btn--outline btn--sm" style="border-color:#fecaca;color:#991b1b;">← Back to Users</a>
   </div>
 </div>
 
-<section class="panel">
-  <form method="post" class="filter-form" style="display:block;max-width:520px;">
+{# ── Delete confirmation panel ── #}
+<section class="panel--danger">
+  {# User card #}
+  <div class="delete-user-card">
+    <div class="avatar">{{ delete_user.first_name|first|upper|default:delete_user.username|first|upper }}</div>
+    <div class="info">
+      <strong>{{ delete_user.get_full_name|default:delete_user.username }}</strong>
+      <span>{{ delete_user.email|default:"No email set" }}</span>
+    </div>
+    <div class="meta">
+      <span class="badge badge--primary">{{ delete_user.get_role_display }}</span>
+      {% if delete_user.is_active %}
+        <span class="badge badge--success">Active</span>
+      {% else %}
+        <span class="badge badge--danger">Inactive</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Consequences #}
+  <div class="consequences">
+    <h3>⚠️ What will happen:</h3>
+    <ul>
+      <li>
+        <span class="icon">🗑</span>
+        <span><strong>Permanent deletion</strong> — the account and all associated data will be removed from the database.</span>
+      </li>
+      <li>
+        <span class="icon">🔒</span>
+        <span><strong>Access revoked</strong> — this user will no longer be able to log in.</span>
+      </li>
+      <li>
+        <span class="icon">📋</span>
+        <span><strong>Audit trail lost</strong> — historical actions tied to this user may become unlinked.</span>
+      </li>
+    </ul>
+
+    <h3 style="color:var(--color-success);">✅ What remains safe:</h3>
+    <ul>
+      <li style="background:var(--color-success-soft);border-color:#a7f3d0;color:#065f46;">
+        <span class="icon">📦</span>
+        <span><strong>Orders &amp; samples</strong> created by this user are preserved.</span>
+      </li>
+      <li>
+        <span class="icon" style="opacity:.5;">📊</span>
+        <span style="color:var(--color-text-muted);"><strong>System logs</strong> are unaffected.</span>
+      </li>
+    </ul>
+  </div>
+
+  {# Confirmation gate #}
+  <div class="confirm-check">
+    <input type="checkbox" id="confirm-delete-check">
+    <label for="confirm-delete-check">
+      I understand — delete {{ delete_user.get_full_name|default:delete_user.username }} permanently
+    </label>
+  </div>
+
+  {# Actions #}
+  <form method="post" id="delete-form" style="margin:0;">
     {% csrf_token %}
-    <button type="submit" class="btn danger">Delete user</button>
-    <a href="{% url 'accounts:user_management' %}" class="btn secondary">Cancel</a>
+    <div class="delete-actions">
+      <button type="submit" class="btn--danger" id="delete-btn" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+        </svg>
+        Delete {{ delete_user.get_full_name|default:delete_user.username }}
+      </button>
+      <a href="{% url 'accounts:user_management' %}" class="btn--outline">Cancel</a>
+      <span class="last-login-hint">
+        Last login: {{ delete_user.last_login|date:"M d, Y H:i"|default:"Never" }}
+      </span>
+    </div>
   </form>
 </section>
+
+{# ── Final confirmation modal ── #}
+<div class="confirm-overlay" id="confirm-overlay" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="confirm-icon">⚠️</div>
+    <h3 id="confirm-title">Final Confirmation</h3>
+    <p>This is your last chance to cancel. Once deleted, the account <strong>cannot be recovered</strong>.</p>
+    <div class="danger-note">
+      You are about to permanently delete<br>
+      <strong>{{ delete_user.get_full_name|default:delete_user.username }}</strong>
+      ({{ delete_user.email|default:"no email" }})
+    </div>
+    <div class="confirm-actions">
+      <button class="btn--danger enabled" id="confirm-final-yes" style="padding:12px 24px;border-radius:var(--radius-md);font-size:.875rem;font-weight:600;">
+        Yes, Delete Permanently
+      </button>
+      <button class="btn--outline" id="confirm-final-no">Keep Account</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    'use strict';
+
+    var checkbox = document.getElementById('confirm-delete-check');
+    var deleteBtn = document.getElementById('delete-btn');
+    var form = document.getElementById('delete-form');
+    var overlay = document.getElementById('confirm-overlay');
+    var confirmYes = document.getElementById('confirm-final-yes');
+    var confirmNo = document.getElementById('confirm-final-no');
+
+    /* ── Enable / disable delete button ── */
+    function updateDeleteBtn() {
+      if (checkbox && deleteBtn) {
+        if (checkbox.checked) {
+          deleteBtn.disabled = false;
+          deleteBtn.classList.add('enabled');
+        } else {
+          deleteBtn.disabled = true;
+          deleteBtn.classList.remove('enabled');
+        }
+      }
+    }
+
+    if (checkbox) {
+      checkbox.addEventListener('change', updateDeleteBtn);
+      updateDeleteBtn(); // initial state
+    }
+
+    /* ── Modal helpers ── */
+    function openModal() {
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      confirmYes.focus();
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      deleteBtn.focus();
+    }
+
+    /* ── Intercept form submit with modal ── */
+    if (form && overlay && confirmYes && confirmNo) {
+      form.addEventListener('submit', function(e) {
+        if (!checkbox || !checkbox.checked) {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        openModal();
+      });
+
+      confirmYes.addEventListener('click', function() {
+        closeModal();
+        form.submit();
+      });
+
+      confirmNo.addEventListener('click', function() {
+        closeModal();
+      });
+
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeModal();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+          closeModal();
+        }
+      });
+    }
+  })();
+</script>
 {% endblock %}
