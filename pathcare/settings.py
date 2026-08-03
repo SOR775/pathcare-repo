@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,8 +31,15 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 allowed_hosts_env = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,.ngrok-free.dev,.onrender.com,pathcare-tracking.onrender.com"
-)ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+    "localhost,127.0.0.1,.ngrok-free.dev,.ngrok.app,.onrender.com,pathcare-tracking.onrender.com"
+)
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+
+render_host = os.environ.get("RENDER_EXTERNAL_URL", "")
+if render_host:
+    parsed_render_host = urlparse(render_host).netloc or urlparse(render_host).path
+    if parsed_render_host:
+        ALLOWED_HOSTS.append(parsed_render_host)
 
 # Needed when accessing the app through an ngrok tunnel (or any reverse proxy) -
 # Django checks the request's Origin header against this list for CSRF safety.
@@ -41,7 +49,14 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [
     "https://pathcare-tracking.onrender.com",
     "https://*.ngrok-free.dev",
+    "https://*.ngrok.app",
+    "https://*.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
+
+if render_host:
+    CSRF_TRUSTED_ORIGINS.append(render_host)
 # Application definition
 
 INSTALLED_APPS = [
@@ -82,8 +97,8 @@ MIDDLEWARE = [
 ]
 
 # PWA Security Headers
+SECURE_SSL_REDIRECT = False
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
@@ -193,6 +208,12 @@ LOGOUT_REDIRECT_URL = 'login'
 ASGI_APPLICATION = 'pathcare.asgi.application'
 
 REDIS_URL = os.environ.get('REDIS_URL')
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 if REDIS_URL:
     CHANNEL_LAYERS = {
         'default': {

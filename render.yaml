@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: pathcare
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: daphne -b 0.0.0.0 -p $PORT pathcare.asgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: pathcare.settings
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        value: change-me-in-render
+      - key: ALLOWED_HOSTS
+        value: localhost,127.0.0.1,.onrender.com

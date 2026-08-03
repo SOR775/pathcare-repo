@@ -876,7 +876,7 @@ def carrier_monitoring(request):
     return render(request, "tracking/carrier_monitoring.html", {
         "role": role,
         "lab_location": settings.LAB_LOCATION,
-        "WS_URL": f"{ws_protocol}://{request.get_host()}/ws/pathcare/",
+        "WS_URL": f"{ws_protocol}://{request.get_host()}/ws/notifications/",
     })
 @role_required("super_admin", "dispatcher")
 def carrier_positions(request):

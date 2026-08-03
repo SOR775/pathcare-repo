@@ -1219,7 +1219,7 @@
       if (!document.getElementById('notif-toggle')) return;
 
       var wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://')
-                  + location.host + '/ws/pathcare/';
+                  + location.host + '/ws/notifications/';
       var socket = null;
       var reconnectTimer = null;
       var badge = document.querySelector('.notifications-badge');
