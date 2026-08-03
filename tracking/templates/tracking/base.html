@@ -142,6 +142,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       height: 64px;
       padding: 0 var(--space-lg);
       background: var(--color-primary);
@@ -204,8 +205,11 @@
       pointer-events: none; opacity: .7;
     }
     @media (max-width: 768px) {
+      .navbar { gap: 8px; padding: 0 var(--space-md); }
       .nav-search { display: none; }
       .nav-search.mobile-visible { display: block; width: 100%; margin: 8px 0; }
+      .nav-toggle-btn { margin-right: 2px; }
+      .notifications-icon-wrapper { margin-left: 0; }
       /* Hide the notification bell while the mobile search bar is expanded
          so it no longer appears inside/alongside the search row. */
       .nav-search.mobile-visible ~ .notifications-icon-wrapper { display: none; }
@@ -228,7 +232,7 @@
       }
     }
 
-    .notifications-icon-wrapper { position: relative; flex-shrink: 0; }
+    .notifications-icon-wrapper { position: relative; flex-shrink: 0; margin-left: auto; }
     .notifications-icon-button {
       display: flex;
       align-items: center;
@@ -241,6 +245,7 @@
       cursor: pointer;
       transition: background var(--duration-fast) var(--ease-out),
                   transform var(--duration-fast) var(--ease-out);
+      flex-shrink: 0;
     }
     .notifications-icon-button:hover { background: rgba(255,255,255,.2); transform: scale(1.05); }
     .notifications-icon-button:active { transform: scale(.95); }
@@ -966,7 +971,6 @@
       {% elif user.role == 'client' %}
         <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
         <a href="{% url 'tracking:client_request_pickup' %}"><span class="icon">📦</span><span>Request</span></a>
-        <a href="{% url 'tracking:order_search' %}"><span class="icon">📋</span><span>Pickups</span></a>
         <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
       {% endif %}
       <a href="{% url 'accounts:logout' %}"><span class="icon">🚪</span><span>Logout</span></a>

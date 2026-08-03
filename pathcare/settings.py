@@ -27,6 +27,7 @@ SECRET_KEY = 'django-insecure-*pdc3b0r#!6aivu7wb3bln57=13-)=4(+v&3mr7g&fa^0s5009
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 # Allow Render/Railway domains and ngrok tunnels
 allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.ngrok-free.dev')
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
@@ -88,7 +89,8 @@ if not DEBUG:
         "style-src": ("'self'", "'unsafe-inline'", "unpkg.com"),
         "img-src": ("'self'", "data:", "https:"),
         "font-src": ("'self'",),
-        "connect-src": ("'self'",),
+        # "connect-src": ("'self'",),
+        "connect-src": ("'self'", "ws:", "wss:"),
         "frame-ancestors": ("'none'",),
     }
 
@@ -196,17 +198,6 @@ if REDIS_URL:
             },
         },
     }
-else:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        },
-    }
-
-
-
-
-
     SECURE_CONTENT_SECURITY_POLICY = {
     "default-src": ("'self'",),
     "script-src": ("'self'", "'unsafe-inline'", "unpkg.com"),
