@@ -25,19 +25,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-*pdc3b0r#!6aivu7wb3bln57=13-)=4(+v&3mr7g&fa^0s5009'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-
-# Allow Render/Railway domains and ngrok tunnels
-allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.ngrok-free.dev')
-ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+allowed_hosts_env = os.environ.get(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1,.ngrok-free.dev,.onrender.com,pathcare-tracking.onrender.com"
+)ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
 
 # Needed when accessing the app through an ngrok tunnel (or any reverse proxy) -
 # Django checks the request's Origin header against this list for CSRF safety.
 # The wildcard covers ngrok's random subdomain, which changes each time you
 # restart a free-tier tunnel.
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.dev']
-
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = [
+    "https://pathcare-tracking.onrender.com",
+    "https://*.ngrok-free.dev",
+]
 # Application definition
 
 INSTALLED_APPS = [
