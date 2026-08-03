@@ -111,6 +111,50 @@
     display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;
   }
   .lab-actions form { margin: 0; }
+
+  /* ── Mobile handover capture ── */
+  .handover-card {
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-surface-alt), var(--color-surface));
+    margin-top: var(--space-md);
+  }
+  .handover-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-sm);
+  }
+  .handover-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .handover-field label {
+    font-size: .75rem; font-weight: 700; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .handover-field input,
+  .handover-field textarea,
+  .handover-field select {
+    width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    padding: 10px 12px; font: inherit; background: var(--color-surface);
+    color: var(--color-text);
+  }
+  .handover-actions {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--space-sm);
+  }
+  .capture-preview {
+    margin-top: var(--space-sm);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    background: var(--color-surface);
+  }
+  .capture-preview img {
+    max-width: 100%; max-height: 220px; border-radius: var(--radius-md);
+    display: block; object-fit: contain;
+  }
 </style>
 
 <div id="order-detail-root" data-order-id="{{ order.pk }}"></div>
@@ -272,6 +316,46 @@
               <div style="margin-top:8px;"><button class="btn btn--primary btn--sm" type="submit">Verify Barcodes</button></div>
             </form>
           </div>
+
+          <div class="handover-card">
+            <h4 style="margin:0 0 8px;">Mobile Handover Capture</h4>
+            <p style="font-size:.82rem;color:var(--color-text-secondary);margin:0 0 12px;">Capture barcode, GPS, photo evidence, signature, and timestamp in one flow.</p>
+            <form method="post" action="{% url 'tracking:capture_handover' order.pk %}" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="pickup">
+              <div class="handover-grid">
+                <div class="handover-field">
+                  <label for="handover-barcodes">Barcodes</label>
+                  <textarea id="handover-barcodes" name="barcodes" rows="3" placeholder="One barcode per line"></textarea>
+                </div>
+                <div class="handover-field">
+                  <label for="handover-latitude">Latitude</label>
+                  <input id="handover-latitude" name="latitude" type="text" value="{{ order.latitude|default:'' }}">
+                </div>
+                <div class="handover-field">
+                  <label for="handover-longitude">Longitude</label>
+                  <input id="handover-longitude" name="longitude" type="text" value="{{ order.longitude|default:'' }}">
+                </div>
+                <div class="handover-field">
+                  <label for="handover-captured-at">Timestamp</label>
+                  <input id="handover-captured-at" name="captured_at" type="datetime-local">
+                </div>
+                <div class="handover-field">
+                  <label for="handover-photo">Photo Evidence</label>
+                  <input id="handover-photo" name="photo" type="file" accept="image/*" capture="environment">
+                </div>
+                <div class="handover-field">
+                  <label for="handover-signature">Signature</label>
+                  <input id="handover-signature" name="signature" type="file" accept="image/*" capture="environment">
+                </div>
+              </div>
+              <div class="handover-actions">
+                <button class="btn btn--primary btn--sm" type="submit">Save Handover</button>
+                <button class="btn btn--outline btn--sm" type="button" id="capture-location-btn">Use Current GPS</button>
+              </div>
+            </form>
+            <div class="capture-preview" id="handover-preview" style="display:none;"></div>
+          </div>
         {% endif %}
       {% else %}
         {# Carrier actions when no samples #}
@@ -363,6 +447,31 @@
         var collapsed = items.length && items[0].classList.contains('hidden');
         items.forEach(function(el) { el.classList.toggle('hidden', !collapsed); });
         toggle.textContent = collapsed ? 'See less' : 'See more';
+      });
+    }
+
+    /* ── Mobile handover capture ── */
+    var locationBtn = document.getElementById('capture-location-btn');
+    var latInput = document.getElementById('handover-latitude');
+    var lngInput = document.getElementById('handover-longitude');
+    var timestampInput = document.getElementById('handover-captured-at');
+    if (timestampInput && !timestampInput.value) {
+      var now = new Date();
+      var value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      timestampInput.value = value;
+    }
+    if (locationBtn && latInput && lngInput) {
+      locationBtn.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported in this browser.');
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          latInput.value = pos.coords.latitude.toFixed(6);
+          lngInput.value = pos.coords.longitude.toFixed(6);
+        }, function () {
+          alert('Unable to read your current location.');
+        }, { enableHighAccuracy: true, timeout: 15000 });
       });
     }
   })();

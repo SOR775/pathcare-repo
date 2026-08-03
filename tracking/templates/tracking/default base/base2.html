@@ -8,7 +8,7 @@
 
   {# ── PWA ── #}
   <meta name="theme-color" content="#0d9488">
-  <meta name="description" content="PathCare Kenya — Lab Sample Tracking &amp; Management">
+  <meta name="description" content="PathCare Kenya — Laboratory Sample Tracking &amp; Management">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PathCare">
@@ -36,7 +36,7 @@
        PATHCARE KENYA — DESIGN SYSTEM
        ═══════════════════════════════════════════ */
 
-    /* ── Design tokens ── */
+    /* ── Tokens ── */
     :root {
       /* Palette */
       --color-primary:        #0d9488;
@@ -80,7 +80,7 @@
       --radius-xl: 20px;
       --radius-full: 9999px;
 
-      /* Shadow */
+      /* Shadows */
       --shadow-sm:  0 1px 2px rgba(0,0,0,.04);
       --shadow-md:  0 4px 12px rgba(0,0,0,.06);
       --shadow-lg:  0 12px 32px rgba(0,0,0,.08);
@@ -147,6 +147,7 @@
       background: var(--color-primary);
       color: #fff;
       box-shadow: var(--shadow-nav);
+      backdrop-filter: blur(12px);
     }
 
     .brand {
@@ -167,12 +168,122 @@
       border-radius: var(--radius-sm);
     }
 
-    /* ── nav-links, nav-link, nav-group, nav-group-toggle, nav-dropdown*,
-         and nav-toggle-btn are now owned exclusively by navigation.css to
-         avoid duplicate/conflicting rules. ── */
+    /* ── Nav links (desktop) ── */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: var(--space-md);
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
+    }
 
     .nav-link-logout { color: rgba(255,255,255,.65); }
     .nav-link-logout:hover { background: rgba(239,68,68,.2); color: #fecaca; }
+
+    /* ── Desktop dropdown groups ── */
+    .nav-group { position: relative; }
+    .nav-group-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.85);
+      font: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-group-toggle:hover,
+    .nav-group-toggle:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
+    }
+    .nav-group-toggle .chevron {
+      font-size: .75rem;
+      margin-left: 2px;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .nav-group.active .nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 220px;
+      background: var(--color-surface-raised);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
+      padding: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity var(--duration-fast) var(--ease-out),
+                  transform var(--duration-fast) var(--ease-out),
+                  visibility var(--duration-fast);
+      z-index: 1001;
+    }
+    .nav-group.active .nav-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown-header {
+      padding: 8px 12px 6px;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--color-text-muted);
+    }
+
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-dropdown-item:hover,
+    .nav-dropdown-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
 
     /* ── User info ── */
     .nav-user {
@@ -182,9 +293,23 @@
       margin-left: var(--space-md);
     }
 
+    /* ── Hamburger ── */
+    .nav-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-toggle-btn:hover { background: rgba(255,255,255,.12); }
+
 
     /* ═══════════════════════════════════════════
-       NOTIFICATION BELL
+       NOTIFICATIONS BELL
        ═══════════════════════════════════════════ */
     /* ── Global search ── */
     .nav-search {
@@ -194,7 +319,7 @@
       width: 100%; padding: 8px 14px 8px 36px;
       border-radius: var(--radius-full); border: 1.5px solid rgba(255,255,255,.25);
       background: rgba(255,255,255,.12); color: #fff;
-      font: inherit; font-size: .82rem; outline: none; min-width: 140px;
+      font: inherit; font-size: .82rem; outline: none; min-width: 180px;
       transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
     }
     .nav-search input::placeholder { color: rgba(255,255,255,.55); }
@@ -206,26 +331,6 @@
     @media (max-width: 768px) {
       .nav-search { display: none; }
       .nav-search.mobile-visible { display: block; width: 100%; margin: 8px 0; }
-      /* Hide the notification bell while the mobile search bar is expanded
-         so it no longer appears inside/alongside the search row. */
-      .nav-search.mobile-visible ~ .notifications-icon-wrapper { display: none; }
-    }
-
-    @media (max-width: 1150px) {
-      .nav-search { display: none; }
-      .nav-link,
-      .nav-group-toggle {
-        padding: 6px 10px;
-        font-size: .8rem;
-      }
-      .nav-link span,
-      .nav-group-toggle span {
-        display: none;
-      }
-      .nav-link svg,
-      .nav-group-toggle svg {
-        margin: 0;
-      }
     }
 
     .notifications-icon-wrapper { position: relative; flex-shrink: 0; }
@@ -298,7 +403,7 @@
     .message.error,
     .message.danger { background: var(--color-danger-soft); border-color: var(--color-danger); }
 
-    /* ── Floating flash band ── */
+    /* ── Flash band ── */
     .flash-band {
       position: fixed;
       top: 72px;
@@ -329,10 +434,145 @@
     /* ═══════════════════════════════════════════
        MOBILE SIDEBAR
        ═══════════════════════════════════════════ */
-    /* .sidebar-overlay, .sidebar, .sidebar-header, .sidebar-close,
-       .sidebar-nav, .sidebar-nav-item-direct, .sidebar-nav-group*,
-       .sidebar-nav-items, and .sidebar-nav-item are now owned exclusively
-       by navigation.css to avoid duplicate/conflicting rules. */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(15,23,42,.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--duration-normal) var(--ease-out),
+                  visibility var(--duration-normal);
+    }
+    .sidebar-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+      max-width: 85vw;
+      z-index: 1101;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(-100%);
+      transition: transform var(--duration-normal) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      flex-shrink: 0;
+    }
+    .sidebar-header span { font-weight: 700; font-size: 1.05rem; }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-close:hover { background: var(--color-surface-alt); }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-sm) 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar-nav-item-direct {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px var(--space-lg);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+    .sidebar-nav-item-direct:hover,
+    .sidebar-nav-item-direct:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
+
+    .sidebar-nav-group { border-bottom: 1px solid var(--color-border-light); }
+    .sidebar-nav-group:last-child { border-bottom: none; }
+    .sidebar-nav-group-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 13px var(--space-lg);
+      background: none;
+      border: none;
+      color: var(--color-text);
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group-toggle:hover { background: var(--color-surface-alt); }
+    .sidebar-nav-group-toggle .chevron {
+      font-size: .65rem;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .sidebar-nav-items {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--duration-normal) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-items { max-height: 500px; }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px var(--space-lg) 11px 52px;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-item:hover,
+    .sidebar-nav-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
 
 
     /* ═══════════════════════════════════════════
@@ -527,6 +767,11 @@
     /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .nav-links { display: none; }
+      .nav-toggle-btn { display: block; }
+    }
+
     @media (max-width: 768px) {
       .navbar {
         height: 56px;
@@ -545,6 +790,14 @@
       .notifications-sidebar { width: 100%; max-width: 100%; }
 
       .flash-band { top: 64px; }
+
+      .nav-dropdown {
+        position: fixed;
+        top: 64px;
+        left: var(--space-md);
+        right: var(--space-md);
+        width: auto;
+      }
     }
 
 
@@ -746,7 +999,7 @@
       .hero-card h1 { font-size: 1.25rem; }
     }
 
-    /* ── Content panel ── */
+    /* ── Panel (content section) ── */
     .panel {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -825,7 +1078,7 @@
   </style>
 </head>
 <body>
-  {# ── Navbar ── #}
+  {# ── NAVBAR ── #}
   <header class="navbar" role="banner">
     <a class="brand" href="{% url 'accounts:role_redirect' %}" aria-label="PathCare Kenya home">
       <img src="{% static 'icons/icon-192x192.png' %}" alt="" class="brand-logo" aria-hidden="true">
@@ -838,7 +1091,7 @@
       </svg>
     </button>
 
-    {# Desktop navigation #}
+    {# Desktop nav #}
     <nav class="nav-links" id="nav-links" aria-label="Main navigation">
       {% if user.is_authenticated %}
         {% include "tracking/partials/_nav_desktop.html" %}
@@ -869,7 +1122,7 @@
     {% endif %}
   </header>
 
-  {# ── Mobile sidebar ── #}
+  {# ── MOBILE SIDEBAR ── #}
   <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
   <aside class="sidebar" id="sidebar" aria-label="Mobile navigation" aria-hidden="true">
     <div class="sidebar-header">
@@ -885,7 +1138,7 @@
     </nav>
   </aside>
 
-  {# ── Notifications panel ── #}
+  {# ── NOTIFICATIONS PANEL ── #}
   <div class="notifications-overlay" id="notifications-overlay" aria-hidden="true"></div>
   <aside class="notifications-sidebar" id="notifications-sidebar" aria-label="Notifications" aria-hidden="true">
     <div class="notifications-sidebar-header">
@@ -919,23 +1172,23 @@
       {% else %}
         <div class="notifications-empty">
           <span class="notifications-empty-icon" aria-hidden="true">🔕</span>
-          <div class="notifications-empty-text">No notifications</div>
+          <div class="notifications-empty-text">No notifications yet</div>
         </div>
       {% endif %}
     </div>
 
     {% if notifications_list %}
       <div class="notifications-footer">
-        <button class="mark-read-btn">Mark all as read</button>
+        <button class="mark-read-btn">Mark all read</button>
         <button class="clear-btn">Clear all</button>
       </div>
     {% endif %}
   </aside>
 
-  {# ── Floating flash band ── #}
+  {# ── FLASH BAND ── #}
   <div id="flash-band" class="flash-band" role="status" aria-live="polite" style="display:none;"></div>
 
-  {# ── Main content area ── #}
+  {# ── MAIN CONTENT ── #}
   <main class="container" id="main-content">
     {% if messages %}
       <div class="messages">
@@ -948,7 +1201,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  {# ── Mobile bottom tab bar ── #}
+  {# ── MOBILE TAB BAR ── #}
   {% if user.is_authenticated %}
     <nav class="mobile-tabbar" aria-label="Mobile navigation">
       {% if user.role == 'super_admin' or user.role == 'dispatcher' %}
@@ -973,19 +1226,19 @@
     </nav>
   {% endif %}
 
-  {# ── Scripts ── #}
+  {# ── SCRIPTS ── #}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   {% block extra_js %}{% endblock %}
   <script src="{% static 'tracking/js/notifications.js' %}"></script>
 
   <script>
     /* ═══════════════════════════════════════════
-       PATHCARE KENYA — CORE SCRIPT
+       PATHCARE KENYA — CORE SCRIPTS
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
 
-      /* ── Floating flash band ── */
+      /* ── Flash band ── */
       function initFlashBand() {
         var messagesEl = document.querySelector('.messages');
         var flash = document.getElementById('flash-band');
@@ -1055,11 +1308,11 @@
           el.addEventListener('click', function() { close(); });
         });
 
-        // Ensure the sidebar is always closed after navigation or page refresh.
+        // Ensure sidebar is always closed after navigation or page refresh.
         close();
       }
 
-      /* ── Sidebar collapsible groups ── */
+      /* ── Sidebar accordion groups ── */
       function initSidebarGroups() {
         document.querySelectorAll('.sidebar-nav-group-toggle').forEach(function(toggle) {
           toggle.addEventListener('click', function() {
@@ -1077,7 +1330,6 @@
         document.querySelectorAll('.nav-group-toggle').forEach(function(toggle) {
           toggle.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             var group = this.closest('.nav-group');
             if (!group) return;
             var isActive = group.classList.contains('active');
@@ -1142,7 +1394,7 @@
           link.addEventListener('click', function() { closePanel(); });
         });
 
-        /* Mark all as read */
+        /* Mark all read */
         var markBtn = document.querySelector('.mark-read-btn');
         if (markBtn) {
           markBtn.addEventListener('click', function() {
@@ -1166,7 +1418,7 @@
         var clearBtn = document.querySelector('.clear-btn');
         if (clearBtn) {
           clearBtn.addEventListener('click', function() {
-            if (!confirm('Are you sure you want to clear all notifications?')) return;
+            if (!confirm('Clear all notifications?')) return;
             var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
             var csrfVal = csrf ? csrf.value : (document.cookie.split('; ').find(function(r) { return r.startsWith('csrftoken='); }) || '').split('=')[1] || '';
             fetch('{% url "tracking:clear_all_notifications" %}', {
@@ -1174,7 +1426,7 @@
             }).then(function(r) { return r.json(); }).then(function(data) {
               if (data.success) {
                 var content = document.querySelector('.notifications-content');
-                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications</div></div>';
+                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications yet</div></div>';
                 var footer = document.querySelector('.notifications-footer');
                 if (footer) footer.remove();
                 var badge = document.querySelector('.notifications-badge');
@@ -1185,7 +1437,7 @@
         }
       }
 
-      /* ── Highlight active tab ── */
+      /* ── Active tab bar link ── */
       function highlightActiveTab() {
         var path = window.location.pathname;
         document.querySelectorAll('.mobile-tabbar a').forEach(function(a) {
@@ -1195,7 +1447,7 @@
         });
       }
 
-      /* ── Init ── */
+      /* ── Bootstrap ── */
       document.addEventListener('DOMContentLoaded', function() {
         initFlashBand();
         initSidebar();
@@ -1204,10 +1456,11 @@
         initNotifications();
         highlightActiveTab();
       });
+      })();
     })();
 
     /* ═══════════════════════════════════════════
-       LIVE NOTIFICATION LISTENER (WebSocket)
+       REAL-TIME NOTIFICATION LISTENER (WebSocket)
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
@@ -1249,7 +1502,7 @@
           badge.style.display = '';
         }
 
-        // 2. If notifications panel is open, prepend to the list
+        // 2. Prepend to notifications sidebar if open
         var list = document.querySelector('.notifications-list');
         if (list) {
           var item = document.createElement('div');
@@ -1257,12 +1510,12 @@
           item.innerHTML = '<div class="notification-indicator" aria-hidden="true"></div>'
             + '<div class="notification-content">'
             + '<span class="notification-message">' + escapeHtml(message) + '</span>'
-            + '<span class="notification-time">just now</span>'
+            + '<span class="notification-time">Just now</span>'
             + '</div>';
           list.insertBefore(item, list.firstChild);
         }
 
-        // 3. Show flash toast
+        // 3. Show floating toast
         var flash = document.getElementById('flash-band');
         if (flash && !flash.classList.contains('show')) {
           flash.textContent = message;
@@ -1304,7 +1557,7 @@
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
           .then(function(reg) { console.log('SW registered:', reg.scope); })
-          .catch(function(err) { console.log('SW registration failed:', err); });
+          .catch(function(err) { console.log('SW failed:', err); });
       });
     }
   </script>

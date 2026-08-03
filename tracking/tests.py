@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import TestCase
 from django.urls import reverse
@@ -24,6 +25,53 @@ class DashboardWorkflowViewTests(TestCase):
         self.assertContains(response, "Operational overview")
         self.assertContains(response, "Dispatch queue")
         self.assertContains(response, "Carrier availability")
+
+    def test_capture_handover_creates_custody_event_with_evidence(self):
+        carrier_user = get_user_model().objects.create_user(
+            username="carrier-handover",
+            password="secret123",
+            role=get_user_model().Role.CARRIER,
+            phone="0712345678",
+        )
+        carrier = carrier_user.carrier_profile
+        client = Client.objects.create(
+            name="Handover Clinic",
+            contact_phone="0712345678",
+            address="Nairobi",
+        )
+        order = Order.objects.create(
+            client=client,
+            carrier=carrier,
+            priority=Order.Priority.URGENT,
+            status=Order.Status.AT_CLIENT,
+            latitude=-1.2921,
+            longitude=36.8219,
+        )
+        sample = Sample.objects.create(order=order, barcode="ABC-123", sample_type=Sample.SampleType.BLOOD)
+
+        self.client.login(username="carrier-handover", password="secret123")
+        photo = SimpleUploadedFile("photo.png", b"fake-image", content_type="image/png")
+        signature = SimpleUploadedFile("signature.png", b"fake-signature", content_type="image/png")
+
+        response = self.client.post(
+            reverse("tracking:capture_handover", kwargs={"pk": order.pk}),
+            {
+                "action": "pickup",
+                "barcodes": "ABC-123",
+                "latitude": "-1.2921",
+                "longitude": "36.8219",
+                "captured_at": "2026-08-03T10:00:00Z",
+                "photo": photo,
+                "signature": signature,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        sample.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PICKED_UP)
+        self.assertTrue(sample.is_received)
+        self.assertTrue(CustodyEvent.objects.filter(order=order, event_type=CustodyEvent.EventType.PICKED_UP).exists())
 
     def test_dashboard_shows_super_admin_for_superuser(self):
         superuser = get_user_model().objects.create_superuser(
@@ -186,6 +234,24 @@ class DashboardWorkflowViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="contact_phone"')
         self.assertContains(response, 'name="address"')
+
+    def test_client_pickup_request_renders_barcode_scanner_controls(self):
+        client_user = get_user_model().objects.create_user(
+            username="client-scan-requestor",
+            email="scan-requestor@example.com",
+            password="secret123",
+            first_name="Client",
+            last_name="Scanner",
+            role="client",
+        )
+        self.client.login(username="client-scan-requestor", password="secret123")
+
+        response = self.client.get(reverse("tracking:client_request_pickup"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "barcode-scanner")
+        self.assertContains(response, 'capture="environment"')
+        self.assertContains(response, "Scan barcode")
 
     def test_client_can_submit_pickup_request(self):
         client_user = get_user_model().objects.create_user(

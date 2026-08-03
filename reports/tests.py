@@ -23,10 +23,24 @@ class ReportIndexViewTests(TestCase):
         response = self.client.get(reverse("reports:report_index"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Operational report overview")
+        self.assertContains(response, "Operational Overview")
         self.assertContains(response, "Pending")
         self.assertContains(response, "Delivered")
         self.assertContains(response, "ORD-1001")
+
+    def test_report_index_exposes_interactive_chart_data(self):
+        client = Client.objects.create(name="Nairobi Lab", contact_phone="0712345678", address="Nairobi")
+        Order.objects.create(reference_code="ORD-1001", client=client, status=Order.Status.PENDING)
+        Order.objects.create(reference_code="ORD-1002", client=client, status=Order.Status.DELIVERED)
+
+        response = self.client.get(reverse("reports:report_index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "pickups-chart")
+        self.assertContains(response, "laboratory-chart")
+        self.assertContains(response, "carrier-chart")
+        self.assertContains(response, "client-chart")
+        self.assertIn("status_counts_json", response.context)
 
     def test_report_index_can_filter_orders_by_status(self):
         client = Client.objects.create(name="Nairobi Lab", contact_phone="0712345678", address="Nairobi")

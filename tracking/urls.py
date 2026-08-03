@@ -34,6 +34,7 @@ urlpatterns = [
     path("samples/<uuid:pk>/pickup/", views.sample_mark_pickup, name="sample_mark_pickup"),
     path("samples/<uuid:pk>/deliver/", views.sample_mark_delivery, name="sample_mark_delivery"),
     path("orders/<uuid:pk>/verify-samples/", views.verify_samples_collection, name="verify_samples_collection"),
+    path("orders/<uuid:pk>/capture-handover/", views.capture_handover, name="capture_handover"),
     path("clients/", views.client_list, name="client_list"),
     path("clients/new/", views.client_create, name="client_create"),
     path("clients/request-pickup/", views.client_request_pickup, name="client_request_pickup"),

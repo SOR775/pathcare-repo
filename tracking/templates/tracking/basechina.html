@@ -1,14 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>{% block title %}PathCare Kenya{% endblock %}</title>
+  <title>{% block title %}PathCare 肯尼亚{% endblock %}</title>
 
   {# ── PWA ── #}
   <meta name="theme-color" content="#0d9488">
-  <meta name="description" content="PathCare Kenya — Lab Sample Tracking &amp; Management">
+  <meta name="description" content="PathCare 肯尼亚 — 实验室样本追踪与管理">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PathCare">
@@ -18,12 +18,12 @@
   <link rel="icon" type="image/png" sizes="512x512" href="{% static 'icons/icon-512x512.png' %}">
   <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
 
-  {# ── Fonts ── #}
+  {# ── 字体 ── #}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  {# ── Stylesheets ── #}
+  {# ── 样式表 ── #}
   <link rel="stylesheet" href="{% static 'tracking/css/style.css' %}">
   <link rel="stylesheet" href="{% static 'tracking/css/notifications.css' %}">
   <link rel="stylesheet" href="{% static 'tracking/css/navigation.css' %}">
@@ -33,12 +33,12 @@
 
   <style>
     /* ═══════════════════════════════════════════
-       PATHCARE KENYA — DESIGN SYSTEM
+       PATHCARE 肯尼亚 — 设计系统
        ═══════════════════════════════════════════ */
 
-    /* ── Design tokens ── */
+    /* ── 设计令牌 ── */
     :root {
-      /* Palette */
+      /* 调色板 */
       --color-primary:        #0d9488;
       --color-primary-hover:  #0f766e;
       --color-primary-soft:   #f0fdfa;
@@ -65,7 +65,7 @@
       --color-info:           #3b82f6;
       --color-info-soft:      #eff6ff;
 
-      /* Spacing */
+      /* 间距 */
       --space-xs:  4px;
       --space-sm:  8px;
       --space-md:  16px;
@@ -73,32 +73,32 @@
       --space-xl:  32px;
       --space-2xl: 48px;
 
-      /* Radius */
+      /* 圆角 */
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-xl: 20px;
       --radius-full: 9999px;
 
-      /* Shadow */
+      /* 阴影 */
       --shadow-sm:  0 1px 2px rgba(0,0,0,.04);
       --shadow-md:  0 4px 12px rgba(0,0,0,.06);
       --shadow-lg:  0 12px 32px rgba(0,0,0,.08);
       --shadow-xl:  0 24px 48px rgba(0,0,0,.10);
       --shadow-nav: 0 2px 20px rgba(0,0,0,.08);
 
-      /* Motion */
+      /* 动效 */
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
       --duration-fast: 150ms;
       --duration-normal: 250ms;
       --duration-slow: 400ms;
 
-      /* Typography */
+      /* 排版 */
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    /* ── Reset ── */
+    /* ── 重置 ── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html {
@@ -121,7 +121,7 @@
 
     *, *::before, *::after { min-width: 0; }
 
-    /* ── Reduced motion ── */
+    /* ── 减少动画 ── */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -133,7 +133,7 @@
 
 
     /* ═══════════════════════════════════════════
-       NAVBAR
+       导航栏
        ═══════════════════════════════════════════ */
     .navbar {
       position: sticky;
@@ -167,14 +167,124 @@
       border-radius: var(--radius-sm);
     }
 
-    /* ── nav-links, nav-link, nav-group, nav-group-toggle, nav-dropdown*,
-         and nav-toggle-btn are now owned exclusively by navigation.css to
-         avoid duplicate/conflicting rules. ── */
+    /* ── 导航链接（桌面端） ── */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: var(--space-sm);
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
+    }
 
     .nav-link-logout { color: rgba(255,255,255,.65); }
     .nav-link-logout:hover { background: rgba(239,68,68,.2); color: #fecaca; }
 
-    /* ── User info ── */
+    /* ── 桌面端下拉分组 ── */
+    .nav-group { position: relative; }
+    .nav-group-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.85);
+      font: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-group-toggle:hover,
+    .nav-group-toggle:focus-visible {
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      outline: none;
+    }
+    .nav-group-toggle .chevron {
+      font-size: .75rem;
+      margin-left: 2px;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .nav-group.active .nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 220px;
+      background: var(--color-surface-raised);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
+      padding: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity var(--duration-fast) var(--ease-out),
+                  transform var(--duration-fast) var(--ease-out),
+                  visibility var(--duration-fast);
+      z-index: 9999;
+    }
+    .nav-group.active .nav-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown-header {
+      padding: 8px 12px 6px;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--color-text-muted);
+    }
+
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-dropdown-item:hover,
+    .nav-dropdown-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
+
+    /* ── 用户信息 ── */
     .nav-user {
       display: flex;
       flex-direction: column;
@@ -182,11 +292,25 @@
       margin-left: var(--space-md);
     }
 
+    /* ── 汉堡菜单按钮 ── */
+    .nav-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .nav-toggle-btn:hover { background: rgba(255,255,255,.12); }
+
 
     /* ═══════════════════════════════════════════
-       NOTIFICATION BELL
+       通知铃铛
        ═══════════════════════════════════════════ */
-    /* ── Global search ── */
+    /* ── 全局搜索 ── */
     .nav-search {
       position: relative; margin: 0 var(--space-md); flex-shrink: 1; min-width: 0;
     }
@@ -206,9 +330,6 @@
     @media (max-width: 768px) {
       .nav-search { display: none; }
       .nav-search.mobile-visible { display: block; width: 100%; margin: 8px 0; }
-      /* Hide the notification bell while the mobile search bar is expanded
-         so it no longer appears inside/alongside the search row. */
-      .nav-search.mobile-visible ~ .notifications-icon-wrapper { display: none; }
     }
 
     @media (max-width: 1150px) {
@@ -271,7 +392,7 @@
 
 
     /* ═══════════════════════════════════════════
-       MAIN CONTAINER
+       主容器
        ═══════════════════════════════════════════ */
     .container {
       max-width: 1400px;
@@ -281,7 +402,7 @@
 
 
     /* ═══════════════════════════════════════════
-       MESSAGES
+       消息提示
        ═══════════════════════════════════════════ */
     .messages { margin-bottom: var(--space-lg); }
     .message {
@@ -298,7 +419,7 @@
     .message.error,
     .message.danger { background: var(--color-danger-soft); border-color: var(--color-danger); }
 
-    /* ── Floating flash band ── */
+    /* ── 浮动提示条 ── */
     .flash-band {
       position: fixed;
       top: 72px;
@@ -327,16 +448,151 @@
 
 
     /* ═══════════════════════════════════════════
-       MOBILE SIDEBAR
+       移动端侧边栏
        ═══════════════════════════════════════════ */
-    /* .sidebar-overlay, .sidebar, .sidebar-header, .sidebar-close,
-       .sidebar-nav, .sidebar-nav-item-direct, .sidebar-nav-group*,
-       .sidebar-nav-items, and .sidebar-nav-item are now owned exclusively
-       by navigation.css to avoid duplicate/conflicting rules. */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(15,23,42,.4);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--duration-normal) var(--ease-out),
+                  visibility var(--duration-normal);
+    }
+    .sidebar-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 300px;
+      max-width: 85vw;
+      z-index: 1101;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-xl);
+      transform: translateX(-100%);
+      transition: transform var(--duration-normal) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border-light);
+      flex-shrink: 0;
+    }
+    .sidebar-header span { font-weight: 700; font-size: 1.05rem; }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-close:hover { background: var(--color-surface-alt); }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-sm) 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar-nav-item-direct {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px var(--space-lg);
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out);
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+    .sidebar-nav-item-direct:hover,
+    .sidebar-nav-item-direct:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
+
+    .sidebar-nav-group { border-bottom: 1px solid var(--color-border-light); }
+    .sidebar-nav-group:last-child { border-bottom: none; }
+    .sidebar-nav-group-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 13px var(--space-lg);
+      background: none;
+      border: none;
+      color: var(--color-text);
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group-toggle:hover { background: var(--color-surface-alt); }
+    .sidebar-nav-group-toggle .chevron {
+      font-size: .65rem;
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-group-toggle .chevron { transform: rotate(180deg); }
+
+    .sidebar-nav-items {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--duration-normal) var(--ease-out);
+    }
+    .sidebar-nav-group.active .sidebar-nav-items { max-height: 500px; }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px var(--space-lg) 11px 52px;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+    }
+    .sidebar-nav-item:hover,
+    .sidebar-nav-item:focus-visible {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-ink);
+      outline: none;
+    }
 
 
     /* ═══════════════════════════════════════════
-       NOTIFICATIONS PANEL
+       通知面板
        ═══════════════════════════════════════════ */
     .notifications-overlay {
       position: fixed;
@@ -486,7 +742,7 @@
 
 
     /* ═══════════════════════════════════════════
-       MOBILE BOTTOM TAB BAR
+       移动端底部标签栏
        ═══════════════════════════════════════════ */
     .mobile-tabbar {
       display: none;
@@ -525,8 +781,13 @@
 
 
     /* ═══════════════════════════════════════════
-       RESPONSIVE
+       响应式
        ═══════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .nav-links { display: none; }
+      .nav-toggle-btn { display: block; }
+    }
+
     @media (max-width: 768px) {
       .navbar {
         height: 56px;
@@ -549,10 +810,10 @@
 
 
     /* ═══════════════════════════════════════════
-       SHARED UTILITY COMPONENTS
+       共享工具组件
        ═══════════════════════════════════════════ */
 
-    /* Card */
+    /* 卡片 */
     .card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -565,7 +826,7 @@
     .card--interactive { cursor: pointer; }
     .card--interactive:active { transform: scale(.985); }
 
-    /* Stat card */
+    /* 统计卡片 */
     .stat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -594,7 +855,7 @@
       color: var(--color-text-muted);
     }
 
-    /* Button */
+    /* 按钮 */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -631,7 +892,7 @@
     .btn--lg { padding: 14px 32px; font-size: 1rem; }
     .btn--block { width: 100%; }
 
-    /* Badge */
+    /* 标签 */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -647,7 +908,7 @@
     .badge--warning { background: var(--color-warning-soft); color: #92400e; }
     .badge--danger { background: var(--color-danger-soft); color: #991b1b; }
 
-    /* Section heading */
+    /* 段落标题 */
     .section-heading {
       font-size: 1.1rem;
       font-weight: 700;
@@ -655,7 +916,7 @@
       margin-bottom: var(--space-md);
     }
 
-    /* Loading skeleton */
+    /* 加载骨架屏 */
     .skeleton {
       background: linear-gradient(90deg, var(--color-border-light) 25%, #e8ecf1 50%, var(--color-border-light) 75%);
       background-size: 200% 100%;
@@ -667,7 +928,7 @@
       100% { background-position: -200% 0; }
     }
 
-    /* Empty state */
+    /* 空状态 */
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -681,14 +942,14 @@
     .empty-state__title { font-weight: 700; font-size: 1rem; }
     .empty-state__desc { color: var(--color-text-muted); font-size: .85rem; max-width: 320px; }
 
-    /* Divider */
+    /* 分割线 */
     .divider {
       border: none;
       border-top: 1px solid var(--color-border-light);
       margin: var(--space-md) 0;
     }
 
-    /* ── Hero card ── */
+    /* ── 主视觉卡片 ── */
     .hero-card {
       background: linear-gradient(135deg, var(--color-primary), #0f766e);
       color: #fff;
@@ -746,7 +1007,7 @@
       .hero-card h1 { font-size: 1.25rem; }
     }
 
-    /* ── Content panel ── */
+    /* ── 内容面板 ── */
     .panel {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -785,7 +1046,7 @@
       .panel-header { flex-direction: column; }
     }
 
-    /* ── Table card ── */
+    /* ── 表格卡片 ── */
     .table-card {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -816,7 +1077,7 @@
     .table-card tbody tr:last-child td { border-bottom: none; }
     .table-card tbody tr:hover { background: var(--color-surface-alt); }
 
-    /* Focus ring */
+    /* 聚焦环 */
     :focus-visible {
       outline: 2px solid var(--color-primary);
       outline-offset: 2px;
@@ -825,39 +1086,39 @@
   </style>
 </head>
 <body>
-  {# ── Navbar ── #}
+  {# ── 导航栏 ── #}
   <header class="navbar" role="banner">
-    <a class="brand" href="{% url 'accounts:role_redirect' %}" aria-label="PathCare Kenya home">
+    <a class="brand" href="{% url 'accounts:role_redirect' %}" aria-label="PathCare 肯尼亚首页">
       <img src="{% static 'icons/icon-192x192.png' %}" alt="" class="brand-logo" aria-hidden="true">
       PathCare
     </a>
 
-    <button class="nav-toggle-btn" id="nav-toggle" aria-label="Open navigation menu" aria-expanded="false">
+    <button class="nav-toggle-btn" id="nav-toggle" aria-label="打开导航菜单" aria-expanded="false">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
         <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
       </svg>
     </button>
 
-    {# Desktop navigation #}
-    <nav class="nav-links" id="nav-links" aria-label="Main navigation">
+    {# 桌面端导航 #}
+    <nav class="nav-links" id="nav-links" aria-label="主导航">
       {% if user.is_authenticated %}
         {% include "tracking/partials/_nav_desktop.html" %}
         <a class="nav-link nav-link-logout" href="{% url 'accounts:logout' %}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          <span>Logout</span>
+          <span>退出</span>
         </a>
       {% else %}
-        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+        <a class="nav-link" href="{% url 'accounts:login' %}">登录</a>
       {% endif %}
     </nav>
 
     {% if user.is_authenticated %}
       <form class="nav-search" method="get" action="{% url 'tracking:order_search' %}">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" name="q" placeholder="Search orders, samples, users…" value="{{ search_query|default:'' }}">
+        <input type="search" name="q" placeholder="搜索订单、样本、用户…" value="{{ search_query|default:'' }}">
       </form>
       <div class="notifications-icon-wrapper">
-        <button id="notif-toggle" class="notifications-icon-button" aria-label="Open notifications">
+        <button id="notif-toggle" class="notifications-icon-button" aria-label="打开通知">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
@@ -869,12 +1130,12 @@
     {% endif %}
   </header>
 
-  {# ── Mobile sidebar ── #}
+  {# ── 移动端侧边栏 ── #}
   <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
-  <aside class="sidebar" id="sidebar" aria-label="Mobile navigation" aria-hidden="true">
+  <aside class="sidebar" id="sidebar" aria-label="移动端导航" aria-hidden="true">
     <div class="sidebar-header">
-      <span>Navigation</span>
-      <button class="sidebar-close" id="sidebar-close" aria-label="Close menu">
+      <span>导航</span>
+      <button class="sidebar-close" id="sidebar-close" aria-label="关闭菜单">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -885,18 +1146,18 @@
     </nav>
   </aside>
 
-  {# ── Notifications panel ── #}
+  {# ── 通知面板 ── #}
   <div class="notifications-overlay" id="notifications-overlay" aria-hidden="true"></div>
-  <aside class="notifications-sidebar" id="notifications-sidebar" aria-label="Notifications" aria-hidden="true">
+  <aside class="notifications-sidebar" id="notifications-sidebar" aria-label="通知" aria-hidden="true">
     <div class="notifications-sidebar-header">
       <h2>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        Notifications
+        通知
         {% if notifications_unread_count %}<span class="notifications-count">{{ notifications_unread_count }}</span>{% endif %}
       </h2>
-      <button class="notifications-sidebar-close" id="notifications-close" aria-label="Close notifications">
+      <button class="notifications-sidebar-close" id="notifications-close" aria-label="关闭通知">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -910,7 +1171,7 @@
               <div class="notification-content">
                 <a href="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-mark-url="{% url 'tracking:notification_mark_read' notification.pk %}?next=/" data-next-url="/">
                   <span class="notification-message">{{ notification.message }}</span>
-                  <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                  <span class="notification-time">{{ notification.created_at|timesince }} 前</span>
                 </a>
               </div>
             </div>
@@ -919,23 +1180,23 @@
       {% else %}
         <div class="notifications-empty">
           <span class="notifications-empty-icon" aria-hidden="true">🔕</span>
-          <div class="notifications-empty-text">No notifications</div>
+          <div class="notifications-empty-text">暂无通知</div>
         </div>
       {% endif %}
     </div>
 
     {% if notifications_list %}
       <div class="notifications-footer">
-        <button class="mark-read-btn">Mark all as read</button>
-        <button class="clear-btn">Clear all</button>
+        <button class="mark-read-btn">全部标为已读</button>
+        <button class="clear-btn">清空全部</button>
       </div>
     {% endif %}
   </aside>
 
-  {# ── Floating flash band ── #}
+  {# ── 浮动提示条 ── #}
   <div id="flash-band" class="flash-band" role="status" aria-live="polite" style="display:none;"></div>
 
-  {# ── Main content area ── #}
+  {# ── 主内容区 ── #}
   <main class="container" id="main-content">
     {% if messages %}
       <div class="messages">
@@ -948,44 +1209,44 @@
     {% block content %}{% endblock %}
   </main>
 
-  {# ── Mobile bottom tab bar ── #}
+  {# ── 移动端底部标签栏 ── #}
   {% if user.is_authenticated %}
-    <nav class="mobile-tabbar" aria-label="Mobile navigation">
+    <nav class="mobile-tabbar" aria-label="移动端导航">
       {% if user.role == 'super_admin' or user.role == 'dispatcher' %}
-        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
-        <a href="{% url 'tracking:client_list' %}"><span class="icon">👥</span><span>Clients</span></a>
-        <a href="{% url 'tracking:carrier_list' %}"><span class="icon">🚚</span><span>Carriers</span></a>
-        <a href="{% url 'tracking:reports_view' %}"><span class="icon">📈</span><span>Reports</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>仪表盘</span></a>
+        <a href="{% url 'tracking:client_list' %}"><span class="icon">👥</span><span>客户</span></a>
+        <a href="{% url 'tracking:carrier_list' %}"><span class="icon">🚚</span><span>承运商</span></a>
+        <a href="{% url 'tracking:reports_view' %}"><span class="icon">📈</span><span>报表</span></a>
       {% elif user.role == 'carrier' %}
-        <a href="{% url 'tracking:carrier_view' %}"><span class="icon">📋</span><span>Pickups</span></a>
-        <a href="{% url 'tracking:dashboard' %}"><span class="icon">🗺️</span><span>Map</span></a>
-        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
+        <a href="{% url 'tracking:carrier_view' %}"><span class="icon">📋</span><span>取件</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">🗺️</span><span>地图</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>个人</span></a>
       {% elif user.role == 'lab_staff' %}
-        <a href="{% url 'tracking:lab_dashboard' %}"><span class="icon">🧪</span><span>Lab</span></a>
-        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
+        <a href="{% url 'tracking:lab_dashboard' %}"><span class="icon">🧪</span><span>实验室</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>个人</span></a>
       {% elif user.role == 'client' %}
-        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
-        <a href="{% url 'tracking:client_request_pickup' %}"><span class="icon">📦</span><span>Request</span></a>
-        <a href="{% url 'tracking:order_search' %}"><span class="icon">📋</span><span>Pickups</span></a>
-        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
+        <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>仪表盘</span></a>
+        <a href="{% url 'tracking:client_request_pickup' %}"><span class="icon">📦</span><span>申请</span></a>
+        <a href="{% url 'tracking:order_search' %}"><span class="icon">📋</span><span>取件</span></a>
+        <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>个人</span></a>
       {% endif %}
-      <a href="{% url 'accounts:logout' %}"><span class="icon">🚪</span><span>Logout</span></a>
+      <a href="{% url 'accounts:logout' %}"><span class="icon">🚪</span><span>退出</span></a>
     </nav>
   {% endif %}
 
-  {# ── Scripts ── #}
+  {# ── 脚本 ── #}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   {% block extra_js %}{% endblock %}
   <script src="{% static 'tracking/js/notifications.js' %}"></script>
 
   <script>
     /* ═══════════════════════════════════════════
-       PATHCARE KENYA — CORE SCRIPT
+       PATHCARE 肯尼亚 — 核心脚本
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
 
-      /* ── Floating flash band ── */
+      /* ── 浮动提示条 ── */
       function initFlashBand() {
         var messagesEl = document.querySelector('.messages');
         var flash = document.getElementById('flash-band');
@@ -1022,7 +1283,7 @@
         messagesEl.style.display = 'none';
       }
 
-      /* ── Sidebar ── */
+      /* ── 侧边栏 ── */
       function initSidebar() {
         var toggle   = document.getElementById('nav-toggle');
         var sidebar  = document.getElementById('sidebar');
@@ -1055,11 +1316,11 @@
           el.addEventListener('click', function() { close(); });
         });
 
-        // Ensure the sidebar is always closed after navigation or page refresh.
+        // 确保导航或页面刷新后侧边栏始终关闭。
         close();
       }
 
-      /* ── Sidebar collapsible groups ── */
+      /* ── 侧边栏折叠分组 ── */
       function initSidebarGroups() {
         document.querySelectorAll('.sidebar-nav-group-toggle').forEach(function(toggle) {
           toggle.addEventListener('click', function() {
@@ -1072,7 +1333,7 @@
         });
       }
 
-      /* ── Desktop nav groups ── */
+      /* ── 桌面端导航分组 ── */
       function initNavGroups() {
         document.querySelectorAll('.nav-group-toggle').forEach(function(toggle) {
           toggle.addEventListener('click', function(e) {
@@ -1101,7 +1362,7 @@
         });
       }
 
-      /* ── Notifications panel ── */
+      /* ── 通知面板 ── */
       function initNotifications() {
         var panel   = document.getElementById('notifications-sidebar');
         var overlay = document.getElementById('notifications-overlay');
@@ -1142,7 +1403,7 @@
           link.addEventListener('click', function() { closePanel(); });
         });
 
-        /* Mark all as read */
+        /* 全部标为已读 */
         var markBtn = document.querySelector('.mark-read-btn');
         if (markBtn) {
           markBtn.addEventListener('click', function() {
@@ -1162,11 +1423,11 @@
           });
         }
 
-        /* Clear all */
+        /* 清空全部 */
         var clearBtn = document.querySelector('.clear-btn');
         if (clearBtn) {
           clearBtn.addEventListener('click', function() {
-            if (!confirm('Are you sure you want to clear all notifications?')) return;
+            if (!confirm('确定要清空所有通知吗？')) return;
             var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
             var csrfVal = csrf ? csrf.value : (document.cookie.split('; ').find(function(r) { return r.startsWith('csrftoken='); }) || '').split('=')[1] || '';
             fetch('{% url "tracking:clear_all_notifications" %}', {
@@ -1174,7 +1435,7 @@
             }).then(function(r) { return r.json(); }).then(function(data) {
               if (data.success) {
                 var content = document.querySelector('.notifications-content');
-                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications</div></div>';
+                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">暂无通知</div></div>';
                 var footer = document.querySelector('.notifications-footer');
                 if (footer) footer.remove();
                 var badge = document.querySelector('.notifications-badge');
@@ -1185,7 +1446,7 @@
         }
       }
 
-      /* ── Highlight active tab ── */
+      /* ── 当前标签栏高亮 ── */
       function highlightActiveTab() {
         var path = window.location.pathname;
         document.querySelectorAll('.mobile-tabbar a').forEach(function(a) {
@@ -1195,7 +1456,7 @@
         });
       }
 
-      /* ── Init ── */
+      /* ── 启动 ── */
       document.addEventListener('DOMContentLoaded', function() {
         initFlashBand();
         initSidebar();
@@ -1207,7 +1468,7 @@
     })();
 
     /* ═══════════════════════════════════════════
-       LIVE NOTIFICATION LISTENER (WebSocket)
+       实时通知监听（WebSocket）
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
@@ -1242,14 +1503,14 @@
         var message = payload.message || '';
         var msgType = payload.message_type || 'info';
 
-        // 1. Update badge count
+        // 1. 更新角标数
         if (badge) {
           var count = parseInt(badge.textContent) || 0;
           badge.textContent = count + 1;
           badge.style.display = '';
         }
 
-        // 2. If notifications panel is open, prepend to the list
+        // 2. 若通知面板打开，则插入到列表顶部
         var list = document.querySelector('.notifications-list');
         if (list) {
           var item = document.createElement('div');
@@ -1257,12 +1518,12 @@
           item.innerHTML = '<div class="notification-indicator" aria-hidden="true"></div>'
             + '<div class="notification-content">'
             + '<span class="notification-message">' + escapeHtml(message) + '</span>'
-            + '<span class="notification-time">just now</span>'
+            + '<span class="notification-time">刚刚</span>'
             + '</div>';
           list.insertBefore(item, list.firstChild);
         }
 
-        // 3. Show flash toast
+        // 3. 显示浮动提示
         var flash = document.getElementById('flash-band');
         if (flash && !flash.classList.contains('show')) {
           flash.textContent = message;
@@ -1303,8 +1564,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
-          .then(function(reg) { console.log('SW registered:', reg.scope); })
-          .catch(function(err) { console.log('SW registration failed:', err); });
+          .then(function(reg) { console.log('SW 已注册:', reg.scope); })
+          .catch(function(err) { console.log('SW 注册失败:', err); });
       });
     }
   </script>

@@ -1,122 +1,406 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}Request Pickup - Pathcare Kenya{% endblock %}
+{% block title %}Request Pickup — PathCare Kenya{% endblock %}
 
 {% block content %}
-<section class="panel">
-  <div class="panel-header">
-    <div>
-      <p class="eyebrow">Client operations</p>
-      <h2>Request pickup</h2>
-    </div>
+{# ── HERO ── #}
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Client Operations</p>
+    <h1>Request Pickup</h1>
+    <p>Fill in the details below to schedule a sample collection.</p>
   </div>
+  <div>
+    <a href="{% url 'tracking:order_search' %}" class="btn btn--outline" style="color:#fff;border-color:rgba(255,255,255,.4);">
+      ← View pickups
+    </a>
+  </div>
+</div>
 
-  <form method="post" class="form-grid" novalidate>
+{# ── MAIN FORM PANEL ── #}
+<section class="panel">
+  <form method="post" class="user-form" novalidate>
     {% csrf_token %}
-    <div class="field-group">
-      <label for="id_facility">Facility</label>
-      {{ form.facility }}
-      {% if form.facility.errors %}<div class="field-errors">{{ form.facility.errors }}</div>{% endif %}
-    </div>
 
-    <div class="field-group" style="grid-column: 1 / -1;">
-      <label for="id_pickup_address">Pickup address</label>
-      {{ form.pickup_address }}
-      {% if form.pickup_address.errors %}<div class="field-errors">{{ form.pickup_address.errors }}</div>{% endif %}
-    </div>
+    {# ── Pickup Details ── #}
+    <div class="form-section">
+      <h3 class="form-section__title">Pickup Details</h3>
 
-    <div class="field-group" style="grid-column: 1 / -1; display: grid; gap: 0.75rem;">
-      <label>Pin pickup location on map</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
-        <button type="button" id="use-location" class="button">📍 Use My Current Location</button>
-        <div id="location-status" class="muted" style="font-size:0.95rem"></div>
+      <div class="form-grid">
+        <div class="field-group">
+          <label for="id_facility">Facility</label>
+          {{ form.facility }}
+          {% if form.facility.errors %}<div class="field-errors">{{ form.facility.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group field-group--full">
+          <label for="id_pickup_address">Pickup Address</label>
+          {{ form.pickup_address }}
+          {% if form.pickup_address.errors %}<div class="field-errors">{{ form.pickup_address.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group field-group--full">
+          <label>Pin Pickup Location on Map</label>
+          <div class="map-toolbar">
+            <button type="button" id="use-location" class="btn btn--outline btn--sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 8 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"/></svg>
+              Use My Location
+            </button>
+            <span id="location-status" class="map-toolbar__status"></span>
+          </div>
+          <div id="pickup-map" class="map-container" style="height: clamp(260px, 36vh, 380px);"></div>
+          <p class="form-hint">Drag the marker or tap the map to adjust pickup location.</p>
+
+          <div class="live-preview">
+            <div class="live-preview__row">
+              <span class="live-preview__label">Address</span>
+              <span id="preview-address" class="live-preview__value">—</span>
+            </div>
+            <div class="live-preview__row">
+              <span class="live-preview__label">Accuracy</span>
+              <span id="preview-accuracy" class="live-preview__value">—</span>
+            </div>
+            <div class="live-preview__row">
+              <span class="live-preview__label">Distance to Lab</span>
+              <span id="preview-distance" class="live-preview__value">—</span>
+            </div>
+            <div class="live-preview__row">
+              <span class="live-preview__label">Est. Pickup</span>
+              <span id="preview-eta" class="live-preview__value">—</span>
+            </div>
+          </div>
+        </div>
+
+        {{ form.latitude }}
+        {{ form.longitude }}
+
+        <div class="field-group">
+          <label for="id_contact_person">Contact Person</label>
+          {{ form.contact_person }}
+          {% if form.contact_person.errors %}<div class="field-errors">{{ form.contact_person.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group">
+          <label for="id_contact_phone">Contact Phone</label>
+          {{ form.contact_phone }}
+          {% if form.contact_phone.errors %}<div class="field-errors">{{ form.contact_phone.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group">
+          <label for="id_requested_pickup_time">Requested Pickup Time</label>
+          {{ form.requested_pickup_time }}
+          {% if form.requested_pickup_time.errors %}<div class="field-errors">{{ form.requested_pickup_time.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group">
+          <label for="id_temperature_requirement">Temp. Requirement</label>
+          {{ form.temperature_requirement }}
+          {% if form.temperature_requirement.errors %}<div class="field-errors">{{ form.temperature_requirement.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group">
+          <label for="id_priority">Priority</label>
+          {{ form.priority }}
+          {% if form.priority.errors %}<div class="field-errors">{{ form.priority.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field-group field-group--full">
+          <label for="id_notes">Notes</label>
+          {{ form.notes }}
+          {% if form.notes.errors %}<div class="field-errors">{{ form.notes.errors }}</div>{% endif %}
+        </div>
       </div>
-      <div id="pickup-map" style="height: clamp(260px, 34vh, 360px); max-height: 360px; min-height: 260px; width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; position: relative; z-index: 1; touch-action: pan-y;"></div>
-      <p class="muted">On mobile, drag the marker or tap the map to adjust pickup location.</p>
-      <div id="live-preview" style="margin-top:8px;font-size:0.95rem;color:#333">
-        <div><strong>Address:</strong> <span id="preview-address">—</span></div>
-        <div><strong>Accuracy:</strong> <span id="preview-accuracy">—</span></div>
-        <div><strong>Distance to lab:</strong> <span id="preview-distance">—</span></div>
-        <div><strong>Estimated pickup:</strong> <span id="preview-eta">—</span></div>
-      </div>
     </div>
 
-    {{ form.latitude }}
-    {{ form.longitude }}
+    <hr class="divider">
 
-    <div class="field-group">
-      <label for="id_contact_person">Contact person</label>
-      {{ form.contact_person }}
-      {% if form.contact_person.errors %}<div class="field-errors">{{ form.contact_person.errors }}</div>{% endif %}
-    </div>
+    {# ── Samples ── #}
+    <div class="form-section">
+      <h3 class="form-section__title">Samples</h3>
 
-    <div class="field-group">
-      <label for="id_contact_phone">Contact phone</label>
-      {{ form.contact_phone }}
-      {% if form.contact_phone.errors %}<div class="field-errors">{{ form.contact_phone.errors }}</div>{% endif %}
-    </div>
-
-    <div class="field-group">
-      <label for="id_requested_pickup_time">Requested pickup time</label>
-      {{ form.requested_pickup_time }}
-      {% if form.requested_pickup_time.errors %}<div class="field-errors">{{ form.requested_pickup_time.errors }}</div>{% endif %}
-    </div>
-
-    <hr style="grid-column:1 / -1" />
-    <h3 style="grid-column:1 / -1">Samples</h3>
-    <div id="samples-section" style="grid-column:1 / -1">
       {% if sample_formset %}
         {{ sample_formset.management_form }}
+
         <div id="sample-rows">
           {% for sform in sample_formset.forms %}
-            <div class="sample-row" data-index="{{ forloop.counter0 }}" style="border:1px solid #eee;padding:10px;margin-bottom:8px;border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;">
-              <div>
+            <div class="sample-row" data-index="{{ forloop.counter0 }}">
+              <div class="sample-row__fields">
                 {{ sform.as_p }}
+
+                {# Barcode scanner #}
+                <div class="barcode-scanner">
+                  <div class="barcode-scanner__header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                    <span>Barcode Scanner</span>
+                  </div>
+                  <div class="barcode-scanner__actions">
+                    <button type="button" class="btn btn--outline btn--sm scan-barcode-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      Scan Barcode
+                    </button>
+                    <label class="btn btn--outline btn--sm">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Upload Image
+                      <input type="file" accept="image/*" capture="environment" class="barcode-file-input" hidden>
+                    </label>
+                  </div>
+                  <div class="scanner-status"></div>
+                  <video autoplay playsinline muted hidden></video>
+                  <canvas hidden></canvas>
+                </div>
               </div>
-              <div style="align-self:center">
-                <button type="button" class="button secondary remove-sample">Remove</button>
-              </div>
+              <button type="button" class="btn btn--danger btn--sm remove-sample">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Remove
+              </button>
             </div>
           {% endfor %}
         </div>
-        <div style="margin-top:8px">
-          <button type="button" id="add-sample" class="button">+ Add sample</button>
-        </div>
+
+        <button type="button" id="add-sample" class="btn btn--outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Sample
+        </button>
       {% else %}
-        <p>No sample form available.</p>
+        <div class="empty-state">
+          <span class="empty-state__icon">🧪</span>
+          <p class="empty-state__title">No sample form available</p>
+          <p class="empty-state__desc">Please contact your administrator.</p>
+        </div>
       {% endif %}
     </div>
 
     <div id="empty-sample-template" style="display:none">{{ sample_formset.empty_form.as_p|escape }}</div>
 
-    <div class="field-group">
-      <label for="id_temperature_requirement">Temperature requirement</label>
-      {{ form.temperature_requirement }}
-      {% if form.temperature_requirement.errors %}<div class="field-errors">{{ form.temperature_requirement.errors }}</div>{% endif %}
-    </div>
-
-    <div class="field-group">
-      <label for="id_priority">Priority</label>
-      {{ form.priority }}
-      {% if form.priority.errors %}<div class="field-errors">{{ form.priority.errors }}</div>{% endif %}
-    </div>
-
-    <div class="field-group" style="grid-column: 1 / -1;">
-      <label for="id_notes">Notes</label>
-      {{ form.notes }}
-      {% if form.notes.errors %}<div class="field-errors">{{ form.notes.errors }}</div>{% endif %}
-    </div>
-
-    <div class="form-actions" style="grid-column: 1 / -1;">
-      <button class="button primary" type="submit">Submit request</button>
+    {# ── Submit ── #}
+    <div class="form-actions">
+      <button class="btn btn--primary btn--lg" type="submit">Submit Request</button>
     </div>
   </form>
 </section>
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
+
+<style>
+  /* ═══════════════════════════════════════════
+     REQUEST PICKUP — PAGE STYLES
+     ═══════════════════════════════════════════ */
+
+  /* ── Form sections ── */
+  .form-section {
+    padding: 0;
+  }
+  .form-section__title {
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--space-md);
+    color: var(--color-text);
+  }
+
+  /* ── Form grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .field-group--full { grid-column: 1 !important; }
+  }
+  .field-group--full { grid-column: 1 / -1; }
+
+  /* ── Form fields ── */
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-group label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    letter-spacing: .01em;
+  }
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-size: .875rem;
+    color: var(--color-text);
+    background: var(--color-surface);
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .field-group input:focus,
+  .field-group select:focus,
+  .field-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .field-group select { cursor: pointer; }
+  .field-group textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  .field-errors {
+    font-size: .75rem;
+    color: var(--color-danger);
+    margin-top: 2px;
+  }
+
+  /* ── Form hint ── */
+  .form-hint {
+    font-size: .75rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── User form (panel inner padding) ── */
+  .user-form {
+    padding: var(--space-lg);
+  }
+  @media (max-width: 480px) {
+    .user-form { padding: var(--space-md); }
+  }
+
+  /* ── Form actions ── */
+  .form-actions {
+    display: flex;
+    gap: var(--space-sm);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border-light);
+    margin-top: var(--space-md);
+  }
+
+  /* ── Map ── */
+  .map-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .map-toolbar__status {
+    font-size: .8rem;
+    color: var(--color-text-muted);
+  }
+  .map-container {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    touch-action: pan-y;
+  }
+
+  /* ── Live preview ── */
+  .live-preview {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 0;
+    padding: 12px 16px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+  }
+  @media (max-width: 480px) {
+    .live-preview { grid-template-columns: 1fr; }
+  }
+  .live-preview__row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .live-preview__label {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--color-text-muted);
+  }
+  .live-preview__value {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  /* ── Sample row ── */
+  .sample-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-md);
+    align-items: start;
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .sample-row:hover {
+    border-color: var(--color-primary-border);
+    box-shadow: var(--shadow-sm);
+  }
+  .sample-row__fields { min-width: 0; }
+
+  /* ── Barcode scanner ── */
+  .barcode-scanner {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    border: 1.5px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-alt);
+    transition: border-color var(--duration-fast) var(--ease-out);
+  }
+  .barcode-scanner:hover {
+    border-color: var(--color-primary-border);
+  }
+  .barcode-scanner__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--color-text-muted);
+  }
+  .barcode-scanner__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .scanner-status {
+    margin-top: 10px;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    min-height: 1.2em;
+  }
+
+  /* ── Hero card: body-visible link ── */
+  .hero-card .btn--outline {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+
   const latitudeField = document.getElementById('id_latitude');
   const longitudeField = document.getElementById('id_longitude');
   const addressField = document.getElementById('id_pickup_address');
@@ -135,35 +419,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const R = 6371;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
 
   function updatePreview(lat, lng, accuracyMeters) {
-    if (addressField && addressField.value) previewAddress.textContent = addressField.value;
-    previewAccuracy.textContent = accuracyMeters ? `${accuracyMeters} m` : '—';
-    if (labLat && labLng) {
+    if (lat !== undefined && lng !== undefined && labLat && labLng) {
       const dist = haversine(lat, lng, labLat, labLng);
-      previewDistance.textContent = `${dist.toFixed(2)} km`;
+      previewDistance.textContent = dist.toFixed(2) + ' km';
       const etaMin = Math.round(dist / DEFAULT_SPEED_KMH * 60);
-      previewETA.textContent = `${etaMin} min`;
+      previewETA.textContent = etaMin + ' min';
     }
+    if (accuracyMeters) previewAccuracy.textContent = accuracyMeters + ' m';
   }
 
   const initialLat = parseFloat(latitudeField.value) || -1.2921;
   const initialLng = parseFloat(longitudeField.value) || 36.8219;
 
   const map = L.map('pickup-map').setView([initialLat, initialLng], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
 
-  // Leaflet can miscalculate container size if it initializes before the
-  // surrounding grid/flex layout has fully settled - very common on mobile,
-  // where the address bar showing/hiding also shifts the viewport mid-render.
-  setTimeout(function () { map.invalidateSize(); }, 200);
+  setTimeout(function () { map.invalidateSize(); }, 250);
   window.addEventListener('resize', function () { map.invalidateSize(); });
   window.addEventListener('orientationchange', function () {
-    setTimeout(function () { map.invalidateSize(); }, 200);
+    setTimeout(function () { map.invalidateSize(); }, 250);
   });
 
   const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
@@ -173,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
     map.setView([lat, lng], map.getZoom());
     latitudeField.value = lat.toFixed(6);
     longitudeField.value = lng.toFixed(6);
-    if (accuracy) previewAccuracy.textContent = `${accuracy} m`;
+    if (accuracy) previewAccuracy.textContent = accuracy + ' m';
     reverseGeocode(lat, lng);
     updatePreview(lat, lng, accuracy);
   }
@@ -196,86 +478,237 @@ document.addEventListener('DOMContentLoaded', function () {
     navigator.geolocation.getCurrentPosition(function (pos) {
       statusEl.textContent = 'Location found';
       setPosition(pos.coords.latitude, pos.coords.longitude, Math.round(pos.coords.accuracy));
-    }, function (err) {
+    }, function () {
       statusEl.textContent = 'Unable to retrieve your location.';
     }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
   });
 
   function reverseGeocode(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+    fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng)
       .then(r => r.json())
       .then(data => {
         const display = data.display_name || '';
         if (addressField) addressField.value = display;
         previewAddress.textContent = display || '—';
       })
-      .catch(() => {
-        // ignore
-      });
+      .catch(function () { /* ignore */ });
   }
 
-  // Initialize preview from initial values
   if (latitudeField.value && longitudeField.value) {
     updatePreview(parseFloat(latitudeField.value), parseFloat(longitudeField.value));
   }
 
-  // Formset add/remove logic
+  /* ── Barcode scanner ── */
+  function findBarcodeInput(row) {
+    return row.querySelector('input[name$="barcode"], input[id$="barcode"], textarea[name$="barcode"]');
+  }
+
+  function attachBarcodeScanner(row) {
+    if (!row || row.dataset.barcodeScannerBound === 'true') return;
+
+    const barcodeInput = findBarcodeInput(row);
+    if (!barcodeInput) return;
+
+    const scanner = row.querySelector('.barcode-scanner');
+    if (!scanner) return;
+
+    const scanBtn = scanner.querySelector('.scan-barcode-btn');
+    const fileInput = scanner.querySelector('.barcode-file-input');
+    const statusEl = scanner.querySelector('.scanner-status');
+    const videoEl = scanner.querySelector('video');
+    const canvasEl = scanner.querySelector('canvas');
+
+    if (!scanBtn || !fileInput || !statusEl || !videoEl || !canvasEl) return;
+
+    const supportsBarcodeDetector = 'BarcodeDetector' in window;
+
+    function setBarcodeValue(value) {
+      barcodeInput.value = value;
+      barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      barcodeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      statusEl.textContent = '✓ Barcode: ' + value;
+      statusEl.style.color = 'var(--color-success)';
+    }
+
+    function stopStream(stream) {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      if (videoEl) { videoEl.pause(); videoEl.srcObject = null; }
+    }
+
+    async function readBarcodeFromImage(imageBitmap) {
+      if (!supportsBarcodeDetector) {
+        statusEl.textContent = 'Barcode scanning not supported in this browser.';
+        statusEl.style.color = 'var(--color-warning)';
+        return;
+      }
+      try {
+        const detector = new BarcodeDetector({
+          formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'itf']
+        });
+        const results = await detector.detect(imageBitmap);
+        if (results && results.length) {
+          setBarcodeValue(results[0].rawValue);
+        } else {
+          statusEl.textContent = 'No barcode detected. Try a sharper image.';
+          statusEl.style.color = 'var(--color-text-secondary)';
+        }
+      } catch (e) {
+        statusEl.textContent = 'Unable to read image. Please try again.';
+        statusEl.style.color = 'var(--color-text-secondary)';
+      }
+    }
+
+    scanBtn.addEventListener('click', async function () {
+      if (!supportsBarcodeDetector) {
+        statusEl.textContent = 'Barcode scanning requires a modern browser.';
+        statusEl.style.color = 'var(--color-warning)';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+        videoEl.hidden = false;
+        videoEl.srcObject = stream;
+        await videoEl.play();
+        statusEl.textContent = 'Scanning… point camera at the barcode.';
+        statusEl.style.color = 'var(--color-text-secondary)';
+
+        const detector = new BarcodeDetector({
+          formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'itf']
+        });
+        const tick = async function () {
+          if (!videoEl.videoWidth || !videoEl.videoHeight) {
+            requestAnimationFrame(tick); return;
+          }
+          canvasEl.width = videoEl.videoWidth;
+          canvasEl.height = videoEl.videoHeight;
+          const ctx = canvasEl.getContext('2d');
+          ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+          try {
+            const results = await detector.detect(canvasEl);
+            if (results && results.length) {
+              setBarcodeValue(results[0].rawValue);
+              stopStream(stream);
+              videoEl.hidden = true;
+              return;
+            }
+          } catch (e) { /* retry */ }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      } catch (e) {
+        statusEl.textContent = 'Camera access blocked. Upload an image instead.';
+        statusEl.style.color = 'var(--color-warning)';
+      }
+    });
+
+    fileInput.addEventListener('change', async function (e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      statusEl.textContent = 'Reading barcode from image…';
+      statusEl.style.color = 'var(--color-text-secondary)';
+      try {
+        const bmp = await createImageBitmap(file);
+        await readBarcodeFromImage(bmp);
+      } catch (e) {
+        statusEl.textContent = 'Unable to read uploaded image.';
+        statusEl.style.color = 'var(--color-text-secondary)';
+      }
+    });
+
+    row.dataset.barcodeScannerBound = 'true';
+  }
+
+  /* ── Formset: add / remove ── */
   const addBtn = document.getElementById('add-sample');
   const rowsContainer = document.getElementById('sample-rows');
-  const emptyTemplateRaw = document.getElementById('empty-sample-template') ? document.getElementById('empty-sample-template').innerHTML : null;
+  const emptyTemplateRaw = (document.getElementById('empty-sample-template') || {}).innerHTML;
+  const prefix = '{{ sample_formset.prefix }}';
 
   function reindexFormRows() {
     const forms = rowsContainer.querySelectorAll('.sample-row');
-    const total = forms.length;
-    const totalInput = document.querySelector('#id_' + '{{ sample_formset.prefix }}-TOTAL_FORMS');
-    if (totalInput) totalInput.value = total;
+    const totalInput = document.querySelector('#id_' + prefix + '-TOTAL_FORMS');
+    if (totalInput) totalInput.value = forms.length;
     forms.forEach((row, idx) => {
       row.dataset.index = idx;
-      // update inputs' names and ids
       row.querySelectorAll('input, select, textarea, label').forEach(el => {
-        if (el.name) el.name = el.name.replace(/-\d+-/, `-${idx}-`);
-        if (el.id) el.id = el.id.replace(/-\d+-/, `-${idx}-`);
-        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/-\d+-/, `-${idx}-`);
+        if (el.name) el.name = el.name.replace(/-\d+-/, '-' + idx + '-');
+        if (el.id) el.id = el.id.replace(/-\d+-/, '-' + idx + '-');
+        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/-\d+-/, '-' + idx + '-');
       });
     });
   }
 
   if (addBtn && emptyTemplateRaw && rowsContainer) {
     addBtn.addEventListener('click', function () {
-      const totalFormsInput = document.querySelector('#id_' + '{{ sample_formset.prefix }}-TOTAL_FORMS');
+      const totalFormsInput = document.querySelector('#id_' + prefix + '-TOTAL_FORMS');
       let nextIndex = parseInt(totalFormsInput.value, 10);
-      let newHtml = emptyTemplateRaw.replace(/__prefix__/g, nextIndex);
+      let html = emptyTemplateRaw.replace(/__prefix__/g, nextIndex);
+
       const wrapper = document.createElement('div');
       wrapper.className = 'sample-row';
       wrapper.dataset.index = nextIndex;
-      wrapper.style = 'border:1px solid #eee;padding:10px;margin-bottom:8px;border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;';
-      const inner = document.createElement('div');
-      inner.innerHTML = newHtml;
-      const ctrl = document.createElement('div');
-      ctrl.style = 'align-self:center';
+
+      const fields = document.createElement('div');
+      fields.className = 'sample-row__fields';
+      fields.innerHTML = html;
+
+      // Barcode scanner block
+      const scannerHTML =
+        '<div class="barcode-scanner">' +
+          '<div class="barcode-scanner__header">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>' +
+            '<span>Barcode Scanner</span>' +
+          '</div>' +
+          '<div class="barcode-scanner__actions">' +
+            '<button type="button" class="btn btn--outline btn--sm scan-barcode-btn">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>' +
+              'Scan Barcode' +
+            '</button>' +
+            '<label class="btn btn--outline btn--sm">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
+              'Upload Image' +
+              '<input type="file" accept="image/*" capture="environment" class="barcode-file-input" hidden>' +
+            '</label>' +
+          '</div>' +
+          '<div class="scanner-status"></div>' +
+          '<video autoplay playsinline muted hidden></video>' +
+          '<canvas hidden></canvas>' +
+        '</div>';
+      fields.insertAdjacentHTML('beforeend', scannerHTML);
+
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'button secondary remove-sample';
-      removeBtn.textContent = 'Remove';
-      ctrl.appendChild(removeBtn);
-      wrapper.appendChild(inner);
-      wrapper.appendChild(ctrl);
+      removeBtn.className = 'btn btn--danger btn--sm remove-sample';
+      removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Remove';
+
+      wrapper.appendChild(fields);
+      wrapper.appendChild(removeBtn);
       rowsContainer.appendChild(wrapper);
+
       totalFormsInput.value = nextIndex + 1;
-      removeBtn.addEventListener('click', function () { wrapper.remove(); reindexFormRows(); });
+      attachBarcodeScanner(wrapper);
+
+      removeBtn.addEventListener('click', function () {
+        wrapper.remove();
+        reindexFormRows();
+      });
     });
 
-    // attach remove handlers for existing rows
     rowsContainer.querySelectorAll('.remove-sample').forEach(btn => {
-      btn.addEventListener('click', function (ev) {
-        const row = ev.target.closest('.sample-row');
-        row.remove();
-        reindexFormRows();
+      btn.addEventListener('click', function (e) {
+        const row = e.target.closest('.sample-row');
+        if (row) { row.remove(); reindexFormRows(); }
       });
     });
   }
 
-  // Searchable facility select
+  document.querySelectorAll('.sample-row').forEach(function (row) {
+    attachBarcodeScanner(row);
+  });
+
+  /* ── Searchable facility select ── */
   const facilitySelect = document.getElementById('id_facility');
   if (facilitySelect && facilitySelect.classList.contains('searchable-select')) {
     const originalOptions = Array.from(facilitySelect.options).map(opt => ({
@@ -284,36 +717,24 @@ document.addEventListener('DOMContentLoaded', function () {
       option: opt
     }));
 
-    facilitySelect.addEventListener('focus', function() {
+    facilitySelect.addEventListener('focus', function () {
       this.style.minWidth = '300px';
     });
 
-    facilitySelect.addEventListener('input', function(e) {
-      const searchTerm = this.value.toLowerCase();
-      
-      // If nothing typed, show original
-      if (!searchTerm) {
-        originalOptions.forEach(item => {
-          item.option.style.display = '';
-        });
+    facilitySelect.addEventListener('input', function () {
+      const term = this.value.toLowerCase();
+      if (!term) {
+        originalOptions.forEach(o => o.option.style.display = '');
         return;
       }
-
-      // Filter options
-      originalOptions.forEach(item => {
-        if (item.text.toLowerCase().includes(searchTerm) || item.value === searchTerm) {
-          item.option.style.display = '';
-        } else {
-          item.option.style.display = 'none';
-        }
+      originalOptions.forEach(o => {
+        o.option.style.display = (o.text.toLowerCase().includes(term) || o.value === term) ? '' : 'none';
       });
     });
 
-    // Add a data attribute to make it clear the dropdown is searchable
     facilitySelect.setAttribute('data-searchable', 'true');
     facilitySelect.title = 'Type to search for facilities';
   }
-
 });
 </script>
 {% endblock %}

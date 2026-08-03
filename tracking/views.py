@@ -1252,6 +1252,54 @@ def verify_samples_collection(request, pk):
     return redirect("tracking:order_detail", pk=pk)
 
 
+@role_required("super_admin", "dispatcher", "carrier")
+def capture_handover(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == "POST":
+        barcodes_text = request.POST.get("barcodes", "")
+        barcodes = [b.strip() for b in barcodes_text.splitlines() if b.strip()]
+        matched_any = False
+        notes = []
+        for code in barcodes:
+            try:
+                sample = Sample.objects.get(barcode=code, order=order)
+                sample.is_received = True
+                sample.save()
+                notes.append(f"Captured {sample.barcode}")
+                matched_any = True
+            except Sample.DoesNotExist:
+                continue
+
+        if matched_any:
+            order.status = Order.Status.PICKED_UP
+            if request.POST.get("latitude"):
+                order.latitude = float(request.POST.get("latitude"))
+            if request.POST.get("longitude"):
+                order.longitude = float(request.POST.get("longitude"))
+            order.save()
+
+            captured_at = request.POST.get("captured_at") or timezone.now().isoformat()
+            evidence_note = f"Handover captured at {captured_at}"
+            if request.FILES.get("photo"):
+                evidence_note += " | photo attached"
+            if request.FILES.get("signature"):
+                evidence_note += " | signature attached"
+
+            CustodyEvent.objects.create(
+                order=order,
+                event_type=CustodyEvent.EventType.PICKED_UP,
+                actor=request.user,
+                notes=evidence_note,
+                latitude=order.latitude,
+                longitude=order.longitude,
+            )
+            broadcast_order_update(order)
+            messages.success(request, "Handover captured and shared with dispatch.")
+        else:
+            messages.error(request, "No matching barcodes found for this order.")
+    return redirect("tracking:order_detail", pk=pk)
+
+
 def api_notifications(request):
     from django.http import JsonResponse
     from django.urls import reverse

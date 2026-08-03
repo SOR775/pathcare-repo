@@ -64,7 +64,15 @@
     display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md);
     margin-bottom: var(--space-lg);
   }
-  @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+  .chart-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  .insight-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+  @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } .chart-grid { grid-template-columns: 1fr; } .insight-grid { grid-template-columns: 1fr; } }
 
   .chart-panel {
     background: var(--color-surface); border: 1px solid var(--color-border);
@@ -79,7 +87,16 @@
     font-size: .85rem; font-weight: 700; letter-spacing: -0.01em; margin: 0;
   }
   .chart-panel .chart-body { padding: var(--space-md) var(--space-lg) var(--space-lg); }
-  #status-chart { width: 100%; height: 260px; }
+  .chart-panel canvas { width: 100%; height: 240px; }
+  .chart-panel--compact canvas { height: 220px; }
+  .insight-card {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .insight-card .eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin: 0 0 8px; }
+  .insight-card strong { display: block; font-size: 1.3rem; margin-bottom: 6px; }
+  .insight-card p { margin: 0; color: var(--color-text-secondary); font-size: .8rem; }
 
   /* ── Snapshot cards ── */
   .snapshot-grid {
@@ -176,23 +193,23 @@
 {# ── Stats row ── #}
 <div class="hero-stats">
   <div class="hero-stat">
-    <strong>{{ summary.total_orders|default:0 }}</strong>
+    <strong>{{ summary.total_orders|default:"0" }}</strong>
     <span>Total Orders</span>
   </div>
   <div class="hero-stat warning">
-    <strong>{{ summary.pending|default:0 }}</strong>
+    <strong>{{ summary.pending|default:"0" }}</strong>
     <span>Pending</span>
   </div>
   <div class="hero-stat success">
-    <strong>{{ summary.delivered|default:0 }}</strong>
+    <strong>{{ summary.delivered|default:"0" }}</strong>
     <span>Delivered</span>
   </div>
   <div class="hero-stat danger">
-    <strong>{{ summary.urgent|default:0 }}</strong>
+    <strong>{{ summary.urgent|default:"0" }}</strong>
     <span>Urgent</span>
   </div>
   <div class="hero-stat accent">
-    <strong>{{ summary.exceptions|default:0 }}</strong>
+    <strong>{{ summary.exceptions|default:"0" }}</strong>
     <span>Exceptions</span>
   </div>
 </div>
@@ -231,6 +248,58 @@
         </div>
       {% endif %}
     </div>
+  </div>
+</div>
+
+{# ── Interactive charts ── #}
+<div class="chart-grid">
+  <div class="chart-panel chart-panel--compact">
+    <div class="chart-header">
+      <h3>Pickups per day</h3>
+    </div>
+    <div class="chart-body">
+      <canvas id="pickups-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel chart-panel--compact">
+    <div class="chart-header">
+      <h3>Samples by laboratory</h3>
+    </div>
+    <div class="chart-body">
+      <canvas id="laboratory-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel chart-panel--compact">
+    <div class="chart-header">
+      <h3>Carrier performance</h3>
+    </div>
+    <div class="chart-body">
+      <canvas id="carrier-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel chart-panel--compact">
+    <div class="chart-header">
+      <h3>Orders by client</h3>
+    </div>
+    <div class="chart-body">
+      <canvas id="client-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="insight-grid">
+  <div class="insight-card">
+    <p class="eyebrow">Average delivery time</p>
+    <strong>{{ delivery_time_avg_hours|floatformat:1 }} hrs</strong>
+    <p>{{ delivery_time_completed_orders }} completed orders tracked</p>
+  </div>
+  <div class="insight-card">
+    <p class="eyebrow">Delay hotspots</p>
+    <strong>{{ delay_regions.0.0|default:"No data" }}</strong>
+    <p>{% if delay_regions %}{{ delay_regions.0.1 }} orders in the most active region{% else %}No region trend yet{% endif %}</p>
   </div>
 </div>
 
@@ -363,16 +432,11 @@
   (function() {
     'use strict';
 
-    var canvas = document.getElementById('status-chart');
-    if (!canvas) return;
+    var chartData = {{ chart_data_json|safe }};
+    var statusData = chartData.status || {};
 
-    // Status data from backend — expected as a JSON-safe dict
-    var statusData = {{ status_counts_json|safe|default:'{"Pending":0,"In Transit":0,"Delivered":0,"Cancelled":0}' }};
-
-    var labels = Object.keys(statusData);
-    var values = Object.values(statusData);
-
-    // Color map: warning → info → success → danger
+    var statusLabels = Object.keys(statusData);
+    var statusValues = Object.values(statusData);
     var colorMap = {
       'Pending': '#f59e0b',
       'Pending Review': '#f59e0b',
@@ -387,78 +451,173 @@
       'Cancelled': '#ef4444',
       'Delayed': '#f97316',
     };
+    var colors = statusLabels.map(function(l) { return colorMap[l] || '#94a3b8'; });
 
-    var colors = labels.map(function(l) { return colorMap[l] || '#94a3b8'; });
-
-    new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values,
-          backgroundColor: colors,
-          borderColor: '#ffffff',
-          borderWidth: 2,
-          hoverBorderWidth: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 16,
-              usePointStyle: true,
-              pointStyleWidth: 8,
-              font: { size: 11, family: "'Inter', system-ui, sans-serif" },
-              color: '#475569',
-            }
-          },
-          tooltip: {
-            backgroundColor: '#0f172a',
-            titleFont: { size: 12, weight: '600' },
-            bodyFont: { size: 11 },
-            padding: 10,
-            cornerRadius: 6,
-            displayColors: false,
-            callbacks: {
-              label: function(ctx) {
-                var total = values.reduce(function(a, b) { return a + b; }, 0);
-                var pct = total ? Math.round(ctx.raw / total * 100) : 0;
-                return ' ' + ctx.raw + ' order' + (ctx.raw !== 1 ? 's' : '') + ' (' + pct + '%)';
+    var statusCanvas = document.getElementById('status-chart');
+    if (statusCanvas) {
+      new Chart(statusCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: statusLabels,
+          datasets: [{
+            data: statusValues,
+            backgroundColor: colors,
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            hoverBorderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 16,
+                usePointStyle: true,
+                pointStyleWidth: 8,
+                font: { size: 11, family: "'Inter', system-ui, sans-serif" },
+                color: '#475569',
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleFont: { size: 12, weight: '600' },
+              bodyFont: { size: 11 },
+              padding: 10,
+              cornerRadius: 6,
+              displayColors: false,
+              callbacks: {
+                label: function(ctx) {
+                  var total = statusValues.reduce(function(a, b) { return a + b; }, 0);
+                  var pct = total ? Math.round(ctx.raw / total * 100) : 0;
+                  return ' ' + ctx.raw + ' order' + (ctx.raw !== 1 ? 's' : '') + ' (' + pct + '%)';
+                }
               }
             }
           }
+        },
+        plugins: [{
+          id: 'centerText',
+          afterDraw: function(chart) {
+            var ctx = chart.ctx;
+            var total = statusValues.reduce(function(a, b) { return a + b; }, 0);
+            var width = chart.width, height = chart.height;
+            ctx.restore();
+            ctx.font = '700 1.5rem Inter, system-ui, sans-serif';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(total, width / 2, height / 2 - 8);
+            ctx.font = '600 .62rem Inter, system-ui, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('TOTAL', width / 2, height / 2 + 14);
+            ctx.save();
+          }
+        }]
+      });
+    }
+
+    var pickupsCanvas = document.getElementById('pickups-chart');
+    if (pickupsCanvas) {
+      var pickups = chartData.pickups_per_day || { labels: [], data: [] };
+      new Chart(pickupsCanvas, {
+        type: 'bar',
+        data: {
+          labels: pickups.labels,
+          datasets: [{
+            label: 'Orders',
+            data: pickups.data,
+            backgroundColor: '#3b82f6',
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
-      },
-      plugins: [{
-        id: 'centerText',
-        afterDraw: function(chart) {
-          var ctx = chart.ctx;
-          var total = values.reduce(function(a, b) { return a + b; }, 0);
-          var width = chart.width, height = chart.height;
-          ctx.restore();
-          ctx.font = '700 1.5rem Inter, system-ui, sans-serif';
-          ctx.fillStyle = '#0f172a';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(total, width / 2, height / 2 - 8);
-          ctx.font = '600 .62rem Inter, system-ui, sans-serif';
-          ctx.fillStyle = '#94a3b8';
-          ctx.fillText('TOTAL', width / 2, height / 2 + 14);
-          ctx.save();
+      });
+    }
+
+    var laboratoryCanvas = document.getElementById('laboratory-chart');
+    if (laboratoryCanvas) {
+      var laboratory = chartData.samples_by_laboratory || { labels: [], data: [] };
+      new Chart(laboratoryCanvas, {
+        type: 'bar',
+        data: {
+          labels: laboratory.labels,
+          datasets: [{
+            label: 'Orders',
+            data: laboratory.data,
+            backgroundColor: '#8b5cf6',
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
-      }]
-    });
+      });
+    }
+
+    var carrierCanvas = document.getElementById('carrier-chart');
+    if (carrierCanvas) {
+      var carrier = chartData.carrier_performance || { labels: [], data: [] };
+      new Chart(carrierCanvas, {
+        type: 'bar',
+        data: {
+          labels: carrier.labels,
+          datasets: [{
+            label: 'Orders',
+            data: carrier.data,
+            backgroundColor: '#10b981',
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { ticks: { autoSkip: false } } }
+        }
+      });
+    }
+
+    var clientCanvas = document.getElementById('client-chart');
+    if (clientCanvas) {
+      var client = chartData.orders_by_client || { labels: [], data: [] };
+      new Chart(clientCanvas, {
+        type: 'bar',
+        data: {
+          labels: client.labels,
+          datasets: [{
+            label: 'Orders',
+            data: client.data,
+            backgroundColor: '#f59e0b',
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { ticks: { autoSkip: false } } }
+        }
+      });
+    }
 
     // Filter form wiring
     var filterForm = document.querySelector('form');
     var statusSelect = document.getElementById('status-filter');
     if (statusSelect && filterForm) {
-      // Form is the implicit parent — ensure select triggers work
       statusSelect.addEventListener('change', function() {
         filterForm.submit();
       });

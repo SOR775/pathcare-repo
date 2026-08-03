@@ -40,6 +40,8 @@ CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.dev']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -173,6 +175,9 @@ LAB_LOCATION = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@pathcare.local')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.locmem.EmailBackend')
+
 AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_URL = 'login'
@@ -211,3 +216,6 @@ else:
     "connect-src": ("'self'", "ws:", "wss:"),   # ← add ws: and wss:
     "frame-ancestors": ("'none'",),
 }
+
+
+ASGI_APPLICATION = 'pathcare.asgi.application'

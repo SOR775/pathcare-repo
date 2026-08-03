@@ -1,0 +1,474 @@
+{% extends "tracking/base.html" %}
+
+{% block title %}Request Pickup - Pathcare Kenya{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Client operations</p>
+      <h2>Request pickup</h2>
+    </div>
+  </div>
+
+  <form method="post" class="form-grid" novalidate>
+    {% csrf_token %}
+    <div class="field-group">
+      <label for="id_facility">Facility</label>
+      {{ form.facility }}
+      {% if form.facility.errors %}<div class="field-errors">{{ form.facility.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group" style="grid-column: 1 / -1;">
+      <label for="id_pickup_address">Pickup address</label>
+      {{ form.pickup_address }}
+      {% if form.pickup_address.errors %}<div class="field-errors">{{ form.pickup_address.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group" style="grid-column: 1 / -1; display: grid; gap: 0.75rem;">
+      <label>Pin pickup location on map</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <button type="button" id="use-location" class="button">📍 Use My Current Location</button>
+        <div id="location-status" class="muted" style="font-size:0.95rem"></div>
+      </div>
+      <div id="pickup-map" style="height: clamp(260px, 34vh, 360px); max-height: 360px; min-height: 260px; width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; position: relative; z-index: 1; touch-action: pan-y;"></div>
+      <p class="muted">On mobile, drag the marker or tap the map to adjust pickup location.</p>
+      <div id="live-preview" style="margin-top:8px;font-size:0.95rem;color:#333">
+        <div><strong>Address:</strong> <span id="preview-address">—</span></div>
+        <div><strong>Accuracy:</strong> <span id="preview-accuracy">—</span></div>
+        <div><strong>Distance to lab:</strong> <span id="preview-distance">—</span></div>
+        <div><strong>Estimated pickup:</strong> <span id="preview-eta">—</span></div>
+      </div>
+    </div>
+
+    {{ form.latitude }}
+    {{ form.longitude }}
+
+    <div class="field-group">
+      <label for="id_contact_person">Contact person</label>
+      {{ form.contact_person }}
+      {% if form.contact_person.errors %}<div class="field-errors">{{ form.contact_person.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group">
+      <label for="id_contact_phone">Contact phone</label>
+      {{ form.contact_phone }}
+      {% if form.contact_phone.errors %}<div class="field-errors">{{ form.contact_phone.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group">
+      <label for="id_requested_pickup_time">Requested pickup time</label>
+      {{ form.requested_pickup_time }}
+      {% if form.requested_pickup_time.errors %}<div class="field-errors">{{ form.requested_pickup_time.errors }}</div>{% endif %}
+    </div>
+
+    <hr style="grid-column:1 / -1" />
+    <h3 style="grid-column:1 / -1">Samples</h3>
+    <div id="samples-section" style="grid-column:1 / -1">
+      {% if sample_formset %}
+        {{ sample_formset.management_form }}
+        <div id="sample-rows">
+          {% for sform in sample_formset.forms %}
+            <div class="sample-row" data-index="{{ forloop.counter0 }}" style="border:1px solid #eee;padding:10px;margin-bottom:8px;border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;">
+              <div>
+                {{ sform.as_p }}
+                <div class="barcode-scanner" data-sample-row="{{ forloop.counter0 }}" style="margin-top:8px;padding:10px;border:1px dashed var(--border-color);border-radius:8px;background:var(--surface-alt);">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <button type="button" class="button secondary scan-barcode-btn">📷 Scan barcode</button>
+                    <label class="button secondary" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+                      📤 Upload image
+                      <input type="file" accept="image/*" capture="environment" class="barcode-file-input" hidden>
+                    </label>
+                  </div>
+                  <div class="scanner-status" style="margin-top:8px;font-size:0.85rem;color:#4b5563;">Use your camera or upload an image to populate the barcode field.</div>
+                  <video autoplay playsinline muted hidden></video>
+                  <canvas hidden></canvas>
+                </div>
+              </div>
+              <div style="align-self:center">
+                <button type="button" class="button secondary remove-sample">Remove</button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <div style="margin-top:8px">
+          <button type="button" id="add-sample" class="button">+ Add sample</button>
+        </div>
+      {% else %}
+        <p>No sample form available.</p>
+      {% endif %}
+    </div>
+
+    <div id="empty-sample-template" style="display:none">{{ sample_formset.empty_form.as_p|escape }}</div>
+
+    <div class="field-group">
+      <label for="id_temperature_requirement">Temperature requirement</label>
+      {{ form.temperature_requirement }}
+      {% if form.temperature_requirement.errors %}<div class="field-errors">{{ form.temperature_requirement.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group">
+      <label for="id_priority">Priority</label>
+      {{ form.priority }}
+      {% if form.priority.errors %}<div class="field-errors">{{ form.priority.errors }}</div>{% endif %}
+    </div>
+
+    <div class="field-group" style="grid-column: 1 / -1;">
+      <label for="id_notes">Notes</label>
+      {{ form.notes }}
+      {% if form.notes.errors %}<div class="field-errors">{{ form.notes.errors }}</div>{% endif %}
+    </div>
+
+    <div class="form-actions" style="grid-column: 1 / -1;">
+      <button class="button primary" type="submit">Submit request</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const latitudeField = document.getElementById('id_latitude');
+  const longitudeField = document.getElementById('id_longitude');
+  const addressField = document.getElementById('id_pickup_address');
+  const previewAddress = document.getElementById('preview-address');
+  const previewAccuracy = document.getElementById('preview-accuracy');
+  const previewDistance = document.getElementById('preview-distance');
+  const previewETA = document.getElementById('preview-eta');
+  const statusEl = document.getElementById('location-status');
+
+  const labLat = {{ lab_location.latitude }};
+  const labLng = {{ lab_location.longitude }};
+  const DEFAULT_SPEED_KMH = 40;
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    const toRad = v => v * Math.PI / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  function updatePreview(lat, lng, accuracyMeters) {
+    if (addressField && addressField.value) previewAddress.textContent = addressField.value;
+    previewAccuracy.textContent = accuracyMeters ? `${accuracyMeters} m` : '—';
+    if (labLat && labLng) {
+      const dist = haversine(lat, lng, labLat, labLng);
+      previewDistance.textContent = `${dist.toFixed(2)} km`;
+      const etaMin = Math.round(dist / DEFAULT_SPEED_KMH * 60);
+      previewETA.textContent = `${etaMin} min`;
+    }
+  }
+
+  const initialLat = parseFloat(latitudeField.value) || -1.2921;
+  const initialLng = parseFloat(longitudeField.value) || 36.8219;
+
+  const map = L.map('pickup-map').setView([initialLat, initialLng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+
+  // Leaflet can miscalculate container size if it initializes before the
+  // surrounding grid/flex layout has fully settled - very common on mobile,
+  // where the address bar showing/hiding also shifts the viewport mid-render.
+  setTimeout(function () { map.invalidateSize(); }, 200);
+  window.addEventListener('resize', function () { map.invalidateSize(); });
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () { map.invalidateSize(); }, 200);
+  });
+
+  const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+
+  function setPosition(lat, lng, accuracy) {
+    marker.setLatLng([lat, lng]);
+    map.setView([lat, lng], map.getZoom());
+    latitudeField.value = lat.toFixed(6);
+    longitudeField.value = lng.toFixed(6);
+    if (accuracy) previewAccuracy.textContent = `${accuracy} m`;
+    reverseGeocode(lat, lng);
+    updatePreview(lat, lng, accuracy);
+  }
+
+  marker.on('dragend', function (e) {
+    const p = e.target.getLatLng();
+    setPosition(p.lat, p.lng);
+  });
+
+  map.on('click', function (e) {
+    setPosition(e.latlng.lat, e.latlng.lng);
+  });
+
+  document.getElementById('use-location').addEventListener('click', function () {
+    if (!navigator.geolocation) {
+      statusEl.textContent = 'Geolocation not supported.';
+      return;
+    }
+    statusEl.textContent = 'Locating…';
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      statusEl.textContent = 'Location found';
+      setPosition(pos.coords.latitude, pos.coords.longitude, Math.round(pos.coords.accuracy));
+    }, function (err) {
+      statusEl.textContent = 'Unable to retrieve your location.';
+    }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
+  });
+
+  function reverseGeocode(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+      .then(r => r.json())
+      .then(data => {
+        const display = data.display_name || '';
+        if (addressField) addressField.value = display;
+        previewAddress.textContent = display || '—';
+      })
+      .catch(() => {
+        // ignore
+      });
+  }
+
+  // Initialize preview from initial values
+  if (latitudeField.value && longitudeField.value) {
+    updatePreview(parseFloat(latitudeField.value), parseFloat(longitudeField.value));
+  }
+
+  function findBarcodeInput(row) {
+    return row.querySelector('input[name$="barcode"], input[id$="barcode"], textarea[name$="barcode"]');
+  }
+
+  function attachBarcodeScanner(row) {
+    if (!row || row.dataset.barcodeScannerBound === 'true') return;
+
+    const barcodeInput = findBarcodeInput(row);
+    if (!barcodeInput) return;
+
+    const scanner = row.querySelector('.barcode-scanner');
+    if (!scanner) return;
+
+    const scanBtn = scanner.querySelector('.scan-barcode-btn');
+    const fileInput = scanner.querySelector('.barcode-file-input');
+    const statusEl = scanner.querySelector('.scanner-status');
+    const videoEl = scanner.querySelector('video');
+    const canvasEl = scanner.querySelector('canvas');
+
+    if (!scanBtn || !fileInput || !statusEl || !videoEl || !canvasEl) return;
+
+    const supportsBarcodeDetector = 'BarcodeDetector' in window;
+
+    function setBarcodeValue(value) {
+      barcodeInput.value = value;
+      barcodeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      barcodeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      if (statusEl) {
+        statusEl.textContent = `Barcode populated: ${value}`;
+      }
+    }
+
+    function stopStream(stream) {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.srcObject = null;
+      }
+    }
+
+    async function readBarcodeFromImage(imageBitmap) {
+      if (!supportsBarcodeDetector) {
+        statusEl.textContent = 'Barcode scanning is not supported in this browser. Please enter the barcode manually.';
+        return;
+      }
+
+      try {
+        const detector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'itf'] });
+        const results = await detector.detect(imageBitmap);
+        if (results && results.length) {
+          const value = results[0].rawValue;
+          if (value) {
+            setBarcodeValue(value);
+            return;
+          }
+        }
+        statusEl.textContent = 'No barcode detected in the image. Try a sharper photo or enter the barcode manually.';
+      } catch (error) {
+        statusEl.textContent = 'Unable to read the image. Please try again or enter the barcode manually.';
+      }
+    }
+
+    scanBtn.addEventListener('click', async function () {
+      if (!supportsBarcodeDetector) {
+        statusEl.textContent = 'Barcode scanning requires a modern browser with camera support. Please enter the barcode manually.';
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+        videoEl.hidden = false;
+        videoEl.srcObject = stream;
+        await videoEl.play();
+        statusEl.textContent = 'Scanning… point the camera at the barcode.';
+
+        const detector = new BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'qr_code', 'upc_a', 'upc_e', 'itf'] });
+        const tick = async function () {
+          if (!videoEl.videoWidth || !videoEl.videoHeight) {
+            requestAnimationFrame(tick);
+            return;
+          }
+          canvasEl.width = videoEl.videoWidth;
+          canvasEl.height = videoEl.videoHeight;
+          const ctx = canvasEl.getContext('2d');
+          ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+          try {
+            const results = await detector.detect(canvasEl);
+            if (results && results.length) {
+              const value = results[0].rawValue;
+              if (value) {
+                setBarcodeValue(value);
+                stopStream(stream);
+                videoEl.hidden = true;
+                return;
+              }
+            }
+          } catch (error) {
+            // Ignore transient detection issues and keep trying.
+          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      } catch (error) {
+        statusEl.textContent = 'Camera access was blocked or unavailable. Please upload an image or enter the barcode manually.';
+      }
+    });
+
+    fileInput.addEventListener('change', async function (event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      statusEl.textContent = 'Reading barcode from image…';
+      try {
+        const imageBitmap = await createImageBitmap(file);
+        await readBarcodeFromImage(imageBitmap);
+      } catch (error) {
+        statusEl.textContent = 'Unable to read the uploaded image. Please enter the barcode manually.';
+      }
+    });
+
+    row.dataset.barcodeScannerBound = 'true';
+  }
+
+  // Formset add/remove logic
+  const addBtn = document.getElementById('add-sample');
+  const rowsContainer = document.getElementById('sample-rows');
+  const emptyTemplateRaw = document.getElementById('empty-sample-template') ? document.getElementById('empty-sample-template').innerHTML : null;
+
+  function reindexFormRows() {
+    const forms = rowsContainer.querySelectorAll('.sample-row');
+    const total = forms.length;
+    const totalInput = document.querySelector('#id_' + '{{ sample_formset.prefix }}-TOTAL_FORMS');
+    if (totalInput) totalInput.value = total;
+    forms.forEach((row, idx) => {
+      row.dataset.index = idx;
+      // update inputs' names and ids
+      row.querySelectorAll('input, select, textarea, label').forEach(el => {
+        if (el.name) el.name = el.name.replace(/-\d+-/, `-${idx}-`);
+        if (el.id) el.id = el.id.replace(/-\d+-/, `-${idx}-`);
+        if (el.htmlFor) el.htmlFor = el.htmlFor.replace(/-\d+-/, `-${idx}-`);
+      });
+    });
+  }
+
+  if (addBtn && emptyTemplateRaw && rowsContainer) {
+    addBtn.addEventListener('click', function () {
+      const totalFormsInput = document.querySelector('#id_' + '{{ sample_formset.prefix }}-TOTAL_FORMS');
+      let nextIndex = parseInt(totalFormsInput.value, 10);
+      let newHtml = emptyTemplateRaw.replace(/__prefix__/g, nextIndex);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'sample-row';
+      wrapper.dataset.index = nextIndex;
+      wrapper.style = 'border:1px solid #eee;padding:10px;margin-bottom:8px;border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;';
+      const inner = document.createElement('div');
+      inner.innerHTML = newHtml;
+      const scannerMarkup = `
+        <div class="barcode-scanner" style="margin-top:8px;padding:10px;border:1px dashed var(--border-color);border-radius:8px;background:var(--surface-alt);">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button type="button" class="button secondary scan-barcode-btn">📷 Scan barcode</button>
+            <label class="button secondary" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;">
+              📤 Upload image
+              <input type="file" accept="image/*" capture="environment" class="barcode-file-input" hidden>
+            </label>
+          </div>
+          <div class="scanner-status" style="margin-top:8px;font-size:0.85rem;color:#4b5563;">Use your camera or upload an image to populate the barcode field.</div>
+          <video autoplay playsinline muted hidden></video>
+          <canvas hidden></canvas>
+        </div>`;
+      inner.insertAdjacentHTML('beforeend', scannerMarkup);
+      const ctrl = document.createElement('div');
+      ctrl.style = 'align-self:center';
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'button secondary remove-sample';
+      removeBtn.textContent = 'Remove';
+      ctrl.appendChild(removeBtn);
+      wrapper.appendChild(inner);
+      wrapper.appendChild(ctrl);
+      rowsContainer.appendChild(wrapper);
+      totalFormsInput.value = nextIndex + 1;
+      attachBarcodeScanner(wrapper);
+      removeBtn.addEventListener('click', function () { wrapper.remove(); reindexFormRows(); });
+    });
+
+    // attach remove handlers for existing rows
+    rowsContainer.querySelectorAll('.remove-sample').forEach(btn => {
+      btn.addEventListener('click', function (ev) {
+        const row = ev.target.closest('.sample-row');
+        row.remove();
+        reindexFormRows();
+      });
+    });
+  }
+
+  document.querySelectorAll('.sample-row').forEach(function (row) {
+    attachBarcodeScanner(row);
+  });
+
+  // Searchable facility select
+  const facilitySelect = document.getElementById('id_facility');
+  if (facilitySelect && facilitySelect.classList.contains('searchable-select')) {
+    const originalOptions = Array.from(facilitySelect.options).map(opt => ({
+      value: opt.value,
+      text: opt.textContent,
+      option: opt
+    }));
+
+    facilitySelect.addEventListener('focus', function() {
+      this.style.minWidth = '300px';
+    });
+
+    facilitySelect.addEventListener('input', function(e) {
+      const searchTerm = this.value.toLowerCase();
+      
+      // If nothing typed, show original
+      if (!searchTerm) {
+        originalOptions.forEach(item => {
+          item.option.style.display = '';
+        });
+        return;
+      }
+
+      // Filter options
+      originalOptions.forEach(item => {
+        if (item.text.toLowerCase().includes(searchTerm) || item.value === searchTerm) {
+          item.option.style.display = '';
+        } else {
+          item.option.style.display = 'none';
+        }
+      });
+    });
+
+    // Add a data attribute to make it clear the dropdown is searchable
+    facilitySelect.setAttribute('data-searchable', 'true');
+    facilitySelect.title = 'Type to search for facilities';
+  }
+
+});
+</script>
+{% endblock %}
