@@ -123,6 +123,7 @@
   /* ── Notification Dropdown Engine ─────────────────────── */
   let lastKnownUnread = null;         // null = initial state, not yet polled
   let knownNotifIds   = new Set();    // IDs we've seen — avoids repeat toasts
+  let socketConnected = false;
 
   /**
    * Render the notification dropdown list from fresh API data.
@@ -208,15 +209,15 @@
 
   /** Update the badge count in the nav bell. */
   function updateBadge(count) {
-    const toggle = document.querySelector('.notif-toggle');
+    const toggle = document.querySelector('.notif-toggle') || document.getElementById('notif-toggle');
     if (!toggle) return;
 
-    let badge = toggle.querySelector('.badge');
+    let badge = toggle.querySelector('.notifications-badge') || toggle.querySelector('.badge');
 
     if (count > 0) {
       if (!badge) {
         badge = document.createElement('span');
-        badge.className = 'badge';
+        badge.className = 'notifications-badge';
         toggle.appendChild(badge);
       }
       badge.textContent = count > 99 ? '99+' : count;
@@ -247,8 +248,8 @@
       const notifDropdown = document.querySelector('.notif-dropdown');
       renderDropdown(notifDropdown, data.notifications);
 
-      // Fire a toast for each genuinely NEW unread notification
-      if (lastKnownUnread !== null) {
+      // Fire a toast for each genuinely NEW unread notification only when websocket is unavailable.
+      if (lastKnownUnread !== null && !socketConnected) {
         data.notifications.forEach(function (n) {
           if (!n.is_read && !knownNotifIds.has(n.pk)) {
             showToast(n.message, 'info', 6000);
@@ -359,8 +360,10 @@
     updateBadge(payload.unread);
     updateSidebarNotificationCount(payload.unread);
     insertNotificationItem(notification);
-    knownNotifIds.add(notification.pk);
-    showToast(notification.message, 'info', 6000);
+    if (!knownNotifIds.has(notification.pk)) {
+      knownNotifIds.add(notification.pk);
+      showToast(notification.message, 'info', 6000);
+    }
   }
 
   function handleOrderEvent(payload) {
@@ -387,6 +390,7 @@
 
     socket.addEventListener('open', function () {
       console.info('[Pathcare] WebSocket connected');
+      socketConnected = true;
     });
 
     socket.addEventListener('message', function (event) {
@@ -408,10 +412,12 @@
 
     socket.addEventListener('close', function () {
       console.warn('[Pathcare] WebSocket closed, falling back to polling');
+      socketConnected = false;
     });
 
     socket.addEventListener('error', function (err) {
       console.warn('[Pathcare] WebSocket error', err);
+      socketConnected = false;
     });
   }
 

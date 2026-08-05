@@ -87,8 +87,6 @@
     border-bottom: 1px solid var(--color-border-light); position: relative;
   }
   .timeline li:last-child { border-bottom: none; }
-  /* Scoped fallback so the collapse toggle does not depend on a base `.hidden` rule */
-  .timeline .hidden { display: none; }
   .timeline-icon {
     width: 24px; height: 24px; flex-shrink: 0; margin-top: 2px;
     display: flex; align-items: center; justify-content: center;
@@ -159,15 +157,17 @@
   }
 </style>
 
+<div id="order-detail-root" data-order-id="{{ order.pk }}"></div>
+
 {# ── Hero card ── #}
 <div class="hero-card">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-md);flex-wrap:wrap;">
     <div style="min-width:0;">
       <p class="eyebrow">Order Overview</p>
       <h1>{{ order.reference_code }}</h1>
-      <p>{{ order.client.name|default:"—" }} · {{ order.get_priority_display }} Priority · {{ order.get_status_display }}</p>
+      <p>{{ order.client.name }} · {{ order.get_priority_display }} Priority · {{ order.get_status_display }}</p>
     </div>
-    <span class="order-status {% if order.status == 'delivered' or order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'assigned' %}warning{% else %}primary{% endif %}">
+    <span class="order-status {% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'assigned' %}warning{% else %}primary{% endif %}">
       {{ order.get_status_display }}
     </span>
   </div>
@@ -189,13 +189,11 @@
     {% if user.is_super_admin or user.is_carrier %}
       {% if order.carrier and order.carrier.user == user %}
         <a class="btn btn--outline btn--sm" href="{% url 'tracking:carrier_view' %}">My Pickups</a>
-        {% if order.status == 'assigned' %}
+        {% if order.status == 'pending' or order.status == 'assigned' %}
           <form method="post" action="{% url 'tracking:order_accept_assignment' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Accept</button></form>
         {% elif order.status == 'accepted' %}
-          {% if navigation_url %}<a class="btn btn--outline btn--sm" href="{{ navigation_url }}">Start Navigation</a>{% endif %}
           <form method="post" action="{% url 'tracking:order_start_to_client' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Start Trip</button></form>
         {% elif order.status == 'en_route_client' %}
-          {% if navigation_url %}<a class="btn btn--outline btn--sm" href="{{ navigation_url }}">Open Route</a>{% endif %}
           <form method="post" action="{% url 'tracking:order_arrive_client' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Mark Arrival</button></form>
         {% elif order.status == 'at_client' %}
           <form method="post" action="{% url 'tracking:order_mark_pickup' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Confirm Pickup</button></form>
@@ -214,10 +212,8 @@
 {# ── Lab / Admin actions ── #}
 {% if user.is_super_admin or user.is_dispatcher or user.is_lab_staff %}
 <div class="lab-actions">
-  {% if order.status == 'delivered' %}
-    <form method="post" action="{% url 'tracking:order_mark_received' order.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Mark Received at Lab</button></form>
-  {% endif %}
-  {% if order.status == 'delivered' and not user.is_lab_staff %}
+  <form method="post" action="{% url 'tracking:order_mark_received' order.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Mark Received at Lab</button></form>
+  {% if not user.is_lab_staff %}
     <form method="post" action="{% url 'tracking:order_mark_complete' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Mark Complete</button></form>
   {% endif %}
 </div>
@@ -269,7 +265,7 @@
     {# Order info #}
     <div class="detail-card">
       <h3>Order Information</h3>
-      <p><strong>Client:</strong> {{ order.client.name|default:"—" }}</p>
+      <p><strong>Client:</strong> {{ order.client.name }}</p>
       <p><strong>Carrier:</strong> {{ order.carrier|default:"Unassigned" }}</p>
       <p><strong>Pickup Contact:</strong> {{ order.requestor_name|default:order.client.contact_name|default:"Not specified" }}</p>
       <p><strong>Phone:</strong> {{ order.requestor_phone|default:order.client.contact_phone|default:"Not specified" }}</p>
@@ -306,13 +302,9 @@
               <div class="sample-actions">
                 {% if sample.is_received %}
                   <span class="badge badge--success">Delivered</span>
-                {% elif order.carrier and order.carrier.user == user %}
-                  {% if order.status == 'at_client' or order.status == 'picked_up' %}
-                    <form method="post" action="{% url 'tracking:sample_mark_pickup' sample.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Pickup</button></form>
-                  {% endif %}
-                  {% if order.status == 'picked_up' or order.status == 'in_transit' %}
-                    <form method="post" action="{% url 'tracking:sample_mark_delivery' sample.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Delivery</button></form>
-                  {% endif %}
+                {% else %}
+                  <form method="post" action="{% url 'tracking:sample_mark_pickup' sample.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Pickup</button></form>
+                  <form method="post" action="{% url 'tracking:sample_mark_delivery' sample.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Delivery</button></form>
                 {% endif %}
               </div>
             </li>
@@ -359,7 +351,7 @@
                 </div>
                 <div class="handover-field">
                   <label for="handover-signature">Signature</label>
-                  <input id="handover-signature" name="signature" type="file" accept="image/*">
+                  <input id="handover-signature" name="signature" type="file" accept="image/*" capture="environment">
                 </div>
               </div>
               <div class="handover-actions">
@@ -372,6 +364,24 @@
           {% endif %}
         {% endif %}
       {% else %}
+        {# Carrier actions when no samples #}
+        {% if user.is_super_admin or user.is_carrier and order.carrier and order.carrier.user == user %}
+          {% if order.status == 'assigned' %}
+            <form method="post" action="{% url 'tracking:order_accept_assignment' order.pk %}">{% csrf_token %}<button class="btn btn--primary" type="submit">Accept Assignment</button></form>
+          {% elif order.status == 'accepted' %}
+            {% if navigation_url %}<a class="btn btn--primary btn--sm" href="{{ navigation_url }}">Start Navigation</a>{% endif %}
+            <form method="post" action="{% url 'tracking:order_start_to_client' order.pk %}" style="display:inline-block;margin-left:8px;">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Mark En Route</button></form>
+          {% elif order.status == 'en_route_client' %}
+            {% if navigation_url %}<a class="btn btn--primary btn--sm" href="{{ navigation_url }}">Open Route</a>{% endif %}
+            <form method="post" action="{% url 'tracking:order_arrive_client' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Mark Arrival</button></form>
+          {% elif order.status == 'at_client' %}
+            <form method="post" action="{% url 'tracking:order_mark_pickup' order.pk %}">{% csrf_token %}<button class="btn btn--primary btn--sm" type="submit">Confirm Pickup</button></form>
+          {% elif order.status == 'picked_up' %}
+            <form method="post" action="{% url 'tracking:order_mark_in_transit' order.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Begin Transport</button></form>
+          {% elif order.status == 'in_transit' %}
+            <form method="post" action="{% url 'tracking:order_mark_delivery' order.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Confirm Delivery</button></form>
+          {% endif %}
+        {% endif %}
         <div class="empty-state"><span class="empty-state__icon" aria-hidden="true">📦</span><div class="empty-state__title">No Samples Yet</div><div class="empty-state__desc">No samples have been added to this order.</div></div>
       {% endif %}
     </div>
@@ -397,7 +407,7 @@
 
         {% if custody_events|length > 3 %}
           <div class="timeline-toggle">
-            <a href="#" id="show-timeline-toggle" role="button" aria-expanded="false">See more</a>
+            <a href="#" id="show-timeline-toggle">See more</a>
             <small>({{ custody_events|length }} events)</small>
           </div>
         {% endif %}
@@ -414,24 +424,23 @@
   (function() {
     'use strict';
 
-    /* ── Map (guarded: a missing Leaflet must not break the rest of the page) ── */
+    /* ── Map ── */
     var mapEl = document.getElementById('order-map');
-    if (mapEl && typeof L !== 'undefined') {
+    if (mapEl) {
       var oLat = parseFloat(mapEl.dataset.lat), oLng = parseFloat(mapEl.dataset.lng);
       if (!isNaN(oLat) && !isNaN(oLng)) {
         var m = L.map('order-map');
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM', maxZoom: 19 }).addTo(m);
 
-        L.marker([oLat, oLng]).addTo(m).bindPopup('Pickup location').openPopup();
-
+        var pm = L.marker([oLat, oLng]).addTo(m).bindPopup('Pickup location').openPopup();
+        var pts = [[oLat, oLng]];
         var cLat = parseFloat(mapEl.dataset.carrierLat), cLng = parseFloat(mapEl.dataset.carrierLng);
         if (!isNaN(cLat) && !isNaN(cLng)) {
           L.marker([cLat, cLng]).addTo(m).bindPopup('Carrier location');
-          L.polyline([[oLat, oLng], [cLat, cLng]], { color: '#0d9488', weight: 4, opacity: .8 }).addTo(m);
-          m.fitBounds([[oLat, oLng], [cLat, cLng]], { padding: [40, 40] });
-        } else {
-          m.setView([oLat, oLng], 14);  // single point: sane zoom instead of maxZoom
+          pts.unshift([cLat, cLng]);
+          L.polyline(pts, { color: '#0d9488', weight: 4, opacity: .8 }).addTo(m);
         }
+        m.fitBounds(pts, { padding: [40, 40] });
       }
     }
 
@@ -444,7 +453,6 @@
         var collapsed = items.length && items[0].classList.contains('hidden');
         items.forEach(function(el) { el.classList.toggle('hidden', !collapsed); });
         toggle.textContent = collapsed ? 'See less' : 'See more';
-        toggle.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
       });
     }
 
@@ -470,29 +478,6 @@
         }, function () {
           alert('Unable to read your current location.');
         }, { enableHighAccuracy: true, timeout: 15000 });
-      });
-    }
-
-    /* ── Photo / signature preview (wires up the previously dead preview box) ── */
-    var previewBox = document.getElementById('handover-preview');
-    var previewInputs = ['handover-photo', 'handover-signature']
-      .map(function(id) { return document.getElementById(id); })
-      .filter(Boolean);
-    if (previewBox && previewInputs.length) {
-      previewInputs.forEach(function(input) {
-        input.addEventListener('change', function() {
-          var file = input.files && input.files[0];
-          if (!file) return;
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            previewBox.style.display = 'block';
-            var img = document.createElement('img');
-            img.src = e.target.result;
-            img.alt = (input.id === 'handover-photo') ? 'Photo evidence preview' : 'Signature preview';
-            previewBox.appendChild(img);
-          };
-          reader.readAsDataURL(file);
-        });
       });
     }
   })();

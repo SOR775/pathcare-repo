@@ -16,3 +16,7 @@ services:
         value: change-me-in-render
       - key: ALLOWED_HOSTS
         value: localhost,127.0.0.1,.onrender.com
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://pathcare-tracking.onrender.com

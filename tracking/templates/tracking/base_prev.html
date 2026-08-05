@@ -8,7 +8,7 @@
 
   {# ── PWA ── #}
   <meta name="theme-color" content="#0d9488">
-  <meta name="description" content="PathCare Kenya — Laboratory Sample Tracking &amp; Management">
+  <meta name="description" content="PathCare Kenya — Lab Sample Tracking &amp; Management">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PathCare">
@@ -36,7 +36,7 @@
        PATHCARE KENYA — DESIGN SYSTEM
        ═══════════════════════════════════════════ */
 
-    /* ── Tokens ── */
+    /* ── Design tokens ── */
     :root {
       /* Palette */
       --color-primary:        #0d9488;
@@ -80,7 +80,7 @@
       --radius-xl: 20px;
       --radius-full: 9999px;
 
-      /* Shadows */
+      /* Shadow */
       --shadow-sm:  0 1px 2px rgba(0,0,0,.04);
       --shadow-md:  0 4px 12px rgba(0,0,0,.06);
       --shadow-lg:  0 12px 32px rgba(0,0,0,.08);
@@ -142,6 +142,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       height: 64px;
       padding: 0 var(--space-lg);
       background: var(--color-primary);
@@ -167,122 +168,12 @@
       border-radius: var(--radius-sm);
     }
 
-    /* ── Nav links (desktop) ── */
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: auto;
-      margin-right: var(--space-sm);
-    }
-
-    .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: var(--radius-md);
-      color: rgba(255,255,255,.85);
-      text-decoration: none;
-      font-size: .875rem;
-      font-weight: 500;
-      transition: background var(--duration-fast) var(--ease-out),
-                  color var(--duration-fast) var(--ease-out);
-      white-space: nowrap;
-    }
-
-    .nav-link:hover,
-    .nav-link:focus-visible {
-      background: rgba(255,255,255,.15);
-      color: #fff;
-      outline: none;
-    }
+    /* ── nav-links, nav-link, nav-group, nav-group-toggle, nav-dropdown*,
+         and nav-toggle-btn are now owned exclusively by navigation.css to
+         avoid duplicate/conflicting rules. ── */
 
     .nav-link-logout { color: rgba(255,255,255,.65); }
     .nav-link-logout:hover { background: rgba(239,68,68,.2); color: #fecaca; }
-
-    /* ── Desktop dropdown groups ── */
-    .nav-group { position: relative; }
-    .nav-group-toggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: var(--radius-md);
-      background: none;
-      border: none;
-      color: rgba(255,255,255,.85);
-      font: inherit;
-      font-size: .875rem;
-      font-weight: 500;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background var(--duration-fast) var(--ease-out);
-    }
-    .nav-group-toggle:hover,
-    .nav-group-toggle:focus-visible {
-      background: rgba(255,255,255,.15);
-      color: #fff;
-      outline: none;
-    }
-    .nav-group-toggle .chevron {
-      font-size: .75rem;
-      margin-left: 2px;
-      transition: transform var(--duration-fast) var(--ease-out);
-    }
-    .nav-group.active .nav-group-toggle .chevron { transform: rotate(180deg); }
-
-    .nav-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      min-width: 220px;
-      background: var(--color-surface-raised);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-xl);
-      border: 1px solid var(--color-border);
-      padding: 8px;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-8px);
-      transition: opacity var(--duration-fast) var(--ease-out),
-                  transform var(--duration-fast) var(--ease-out),
-                  visibility var(--duration-fast);
-      z-index: 9999;
-    }
-    .nav-group.active .nav-dropdown {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .nav-dropdown-header {
-      padding: 8px 12px 6px;
-      font-size: .7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--color-text-muted);
-    }
-
-    .nav-dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      color: var(--color-text);
-      text-decoration: none;
-      font-size: .875rem;
-      font-weight: 500;
-      transition: background var(--duration-fast) var(--ease-out);
-    }
-    .nav-dropdown-item:hover,
-    .nav-dropdown-item:focus-visible {
-      background: var(--color-primary-soft);
-      color: var(--color-primary-ink);
-      outline: none;
-    }
 
     /* ── User info ── */
     .nav-user {
@@ -292,23 +183,9 @@
       margin-left: var(--space-md);
     }
 
-    /* ── Hamburger ── */
-    .nav-toggle-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 6px 8px;
-      border-radius: var(--radius-sm);
-      transition: background var(--duration-fast) var(--ease-out);
-    }
-    .nav-toggle-btn:hover { background: rgba(255,255,255,.12); }
-
 
     /* ═══════════════════════════════════════════
-       NOTIFICATIONS BELL
+       NOTIFICATION BELL
        ═══════════════════════════════════════════ */
     /* ── Global search ── */
     .nav-search {
@@ -328,8 +205,14 @@
       pointer-events: none; opacity: .7;
     }
     @media (max-width: 768px) {
+      .navbar { gap: 8px; padding: 0 var(--space-md); }
       .nav-search { display: none; }
       .nav-search.mobile-visible { display: block; width: 100%; margin: 8px 0; }
+      .nav-toggle-btn { margin-right: 2px; }
+      .notifications-icon-wrapper { margin-left: 0; }
+      /* Hide the notification bell while the mobile search bar is expanded
+         so it no longer appears inside/alongside the search row. */
+      .nav-search.mobile-visible ~ .notifications-icon-wrapper { display: none; }
     }
 
     @media (max-width: 1150px) {
@@ -349,7 +232,7 @@
       }
     }
 
-    .notifications-icon-wrapper { position: relative; flex-shrink: 0; }
+    .notifications-icon-wrapper { position: relative; flex-shrink: 0; margin-left: auto; }
     .notifications-icon-button {
       display: flex;
       align-items: center;
@@ -362,6 +245,7 @@
       cursor: pointer;
       transition: background var(--duration-fast) var(--ease-out),
                   transform var(--duration-fast) var(--ease-out);
+      flex-shrink: 0;
     }
     .notifications-icon-button:hover { background: rgba(255,255,255,.2); transform: scale(1.05); }
     .notifications-icon-button:active { transform: scale(.95); }
@@ -419,7 +303,7 @@
     .message.error,
     .message.danger { background: var(--color-danger-soft); border-color: var(--color-danger); }
 
-    /* ── Flash band ── */
+    /* ── Floating flash band ── */
     .flash-band {
       position: fixed;
       top: 72px;
@@ -450,145 +334,10 @@
     /* ═══════════════════════════════════════════
        MOBILE SIDEBAR
        ═══════════════════════════════════════════ */
-    .sidebar-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1100;
-      background: rgba(15,23,42,.4);
-      backdrop-filter: blur(4px);
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity var(--duration-normal) var(--ease-out),
-                  visibility var(--duration-normal);
-    }
-    .sidebar-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
-
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 300px;
-      max-width: 85vw;
-      z-index: 1101;
-      background: var(--color-surface);
-      box-shadow: var(--shadow-xl);
-      transform: translateX(-100%);
-      transition: transform var(--duration-normal) var(--ease-out);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .sidebar.open {
-      transform: translateX(0);
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    .sidebar-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: var(--space-lg);
-      border-bottom: 1px solid var(--color-border-light);
-      flex-shrink: 0;
-    }
-    .sidebar-header span { font-weight: 700; font-size: 1.05rem; }
-
-    .sidebar-close {
-      background: none;
-      border: none;
-      font-size: 1.25rem;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      padding: 6px;
-      border-radius: var(--radius-sm);
-      transition: background var(--duration-fast) var(--ease-out);
-    }
-    .sidebar-close:hover { background: var(--color-surface-alt); }
-
-    .sidebar-nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--space-sm) 0;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .sidebar-nav-item-direct {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px var(--space-lg);
-      color: var(--color-text);
-      text-decoration: none;
-      font-size: .9rem;
-      font-weight: 500;
-      transition: background var(--duration-fast) var(--ease-out);
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-    }
-    .sidebar-nav-item-direct:hover,
-    .sidebar-nav-item-direct:focus-visible {
-      background: var(--color-primary-soft);
-      color: var(--color-primary-ink);
-      outline: none;
-    }
-
-    .sidebar-nav-group { border-bottom: 1px solid var(--color-border-light); }
-    .sidebar-nav-group:last-child { border-bottom: none; }
-    .sidebar-nav-group-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      padding: 13px var(--space-lg);
-      background: none;
-      border: none;
-      color: var(--color-text);
-      font: inherit;
-      font-size: .9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background var(--duration-fast) var(--ease-out);
-    }
-    .sidebar-nav-group-toggle:hover { background: var(--color-surface-alt); }
-    .sidebar-nav-group-toggle .chevron {
-      font-size: .65rem;
-      transition: transform var(--duration-fast) var(--ease-out);
-    }
-    .sidebar-nav-group.active .sidebar-nav-group-toggle .chevron { transform: rotate(180deg); }
-
-    .sidebar-nav-items {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height var(--duration-normal) var(--ease-out);
-    }
-    .sidebar-nav-group.active .sidebar-nav-items { max-height: 500px; }
-
-    .sidebar-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px var(--space-lg) 11px 52px;
-      color: var(--color-text-secondary);
-      text-decoration: none;
-      font-size: .85rem;
-      font-weight: 500;
-      transition: background var(--duration-fast) var(--ease-out),
-                  color var(--duration-fast) var(--ease-out);
-    }
-    .sidebar-nav-item:hover,
-    .sidebar-nav-item:focus-visible {
-      background: var(--color-primary-soft);
-      color: var(--color-primary-ink);
-      outline: none;
-    }
+    /* .sidebar-overlay, .sidebar, .sidebar-header, .sidebar-close,
+       .sidebar-nav, .sidebar-nav-item-direct, .sidebar-nav-group*,
+       .sidebar-nav-items, and .sidebar-nav-item are now owned exclusively
+       by navigation.css to avoid duplicate/conflicting rules. */
 
 
     /* ═══════════════════════════════════════════
@@ -783,11 +532,6 @@
     /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
-    @media (max-width: 1024px) {
-      .nav-links { display: none; }
-      .nav-toggle-btn { display: block; }
-    }
-
     @media (max-width: 768px) {
       .navbar {
         height: 56px;
@@ -1007,7 +751,7 @@
       .hero-card h1 { font-size: 1.25rem; }
     }
 
-    /* ── Panel (content section) ── */
+    /* ── Content panel ── */
     .panel {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -1086,7 +830,7 @@
   </style>
 </head>
 <body>
-  {# ── NAVBAR ── #}
+  {# ── Navbar ── #}
   <header class="navbar" role="banner">
     <a class="brand" href="{% url 'accounts:role_redirect' %}" aria-label="PathCare Kenya home">
       <img src="{% static 'icons/icon-192x192.png' %}" alt="" class="brand-logo" aria-hidden="true">
@@ -1099,7 +843,7 @@
       </svg>
     </button>
 
-    {# Desktop nav #}
+    {# Desktop navigation #}
     <nav class="nav-links" id="nav-links" aria-label="Main navigation">
       {% if user.is_authenticated %}
         {% include "tracking/partials/_nav_desktop.html" %}
@@ -1130,7 +874,7 @@
     {% endif %}
   </header>
 
-  {# ── MOBILE SIDEBAR ── #}
+  {# ── Mobile sidebar ── #}
   <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
   <aside class="sidebar" id="sidebar" aria-label="Mobile navigation" aria-hidden="true">
     <div class="sidebar-header">
@@ -1146,7 +890,7 @@
     </nav>
   </aside>
 
-  {# ── NOTIFICATIONS PANEL ── #}
+  {# ── Notifications panel ── #}
   <div class="notifications-overlay" id="notifications-overlay" aria-hidden="true"></div>
   <aside class="notifications-sidebar" id="notifications-sidebar" aria-label="Notifications" aria-hidden="true">
     <div class="notifications-sidebar-header">
@@ -1180,23 +924,23 @@
       {% else %}
         <div class="notifications-empty">
           <span class="notifications-empty-icon" aria-hidden="true">🔕</span>
-          <div class="notifications-empty-text">No notifications yet</div>
+          <div class="notifications-empty-text">No notifications</div>
         </div>
       {% endif %}
     </div>
 
     {% if notifications_list %}
       <div class="notifications-footer">
-        <button class="mark-read-btn">Mark all read</button>
+        <button class="mark-read-btn">Mark all as read</button>
         <button class="clear-btn">Clear all</button>
       </div>
     {% endif %}
   </aside>
 
-  {# ── FLASH BAND ── #}
+  {# ── Floating flash band ── #}
   <div id="flash-band" class="flash-band" role="status" aria-live="polite" style="display:none;"></div>
 
-  {# ── MAIN CONTENT ── #}
+  {# ── Main content area ── #}
   <main class="container" id="main-content">
     {% if messages %}
       <div class="messages">
@@ -1209,7 +953,7 @@
     {% block content %}{% endblock %}
   </main>
 
-  {# ── MOBILE TAB BAR ── #}
+  {# ── Mobile bottom tab bar ── #}
   {% if user.is_authenticated %}
     <nav class="mobile-tabbar" aria-label="Mobile navigation">
       {% if user.role == 'super_admin' or user.role == 'dispatcher' %}
@@ -1227,26 +971,25 @@
       {% elif user.role == 'client' %}
         <a href="{% url 'tracking:dashboard' %}"><span class="icon">📊</span><span>Dashboard</span></a>
         <a href="{% url 'tracking:client_request_pickup' %}"><span class="icon">📦</span><span>Request</span></a>
-        <a href="{% url 'tracking:order_search' %}"><span class="icon">📋</span><span>Pickups</span></a>
         <a href="{% url 'accounts:account_index' %}"><span class="icon">👤</span><span>Profile</span></a>
       {% endif %}
       <a href="{% url 'accounts:logout' %}"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   {% endif %}
 
-  {# ── SCRIPTS ── #}
+  {# ── Scripts ── #}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   {% block extra_js %}{% endblock %}
   <script src="{% static 'tracking/js/notifications.js' %}"></script>
 
   <script>
     /* ═══════════════════════════════════════════
-       PATHCARE KENYA — CORE SCRIPTS
+       PATHCARE KENYA — CORE SCRIPT
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
 
-      /* ── Flash band ── */
+      /* ── Floating flash band ── */
       function initFlashBand() {
         var messagesEl = document.querySelector('.messages');
         var flash = document.getElementById('flash-band');
@@ -1316,11 +1059,11 @@
           el.addEventListener('click', function() { close(); });
         });
 
-        // Ensure sidebar is always closed after navigation or page refresh.
+        // Ensure the sidebar is always closed after navigation or page refresh.
         close();
       }
 
-      /* ── Sidebar accordion groups ── */
+      /* ── Sidebar collapsible groups ── */
       function initSidebarGroups() {
         document.querySelectorAll('.sidebar-nav-group-toggle').forEach(function(toggle) {
           toggle.addEventListener('click', function() {
@@ -1403,7 +1146,7 @@
           link.addEventListener('click', function() { closePanel(); });
         });
 
-        /* Mark all read */
+        /* Mark all as read */
         var markBtn = document.querySelector('.mark-read-btn');
         if (markBtn) {
           markBtn.addEventListener('click', function() {
@@ -1427,7 +1170,7 @@
         var clearBtn = document.querySelector('.clear-btn');
         if (clearBtn) {
           clearBtn.addEventListener('click', function() {
-            if (!confirm('Clear all notifications?')) return;
+            if (!confirm('Are you sure you want to clear all notifications?')) return;
             var csrf = document.querySelector('[name=csrfmiddlewaretoken]');
             var csrfVal = csrf ? csrf.value : (document.cookie.split('; ').find(function(r) { return r.startsWith('csrftoken='); }) || '').split('=')[1] || '';
             fetch('{% url "tracking:clear_all_notifications" %}', {
@@ -1435,7 +1178,7 @@
             }).then(function(r) { return r.json(); }).then(function(data) {
               if (data.success) {
                 var content = document.querySelector('.notifications-content');
-                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications yet</div></div>';
+                content.innerHTML = '<div class="notifications-empty"><span class="notifications-empty-icon" aria-hidden="true">🔕</span><div class="notifications-empty-text">No notifications</div></div>';
                 var footer = document.querySelector('.notifications-footer');
                 if (footer) footer.remove();
                 var badge = document.querySelector('.notifications-badge');
@@ -1446,7 +1189,7 @@
         }
       }
 
-      /* ── Active tab bar link ── */
+      /* ── Highlight active tab ── */
       function highlightActiveTab() {
         var path = window.location.pathname;
         document.querySelectorAll('.mobile-tabbar a').forEach(function(a) {
@@ -1456,7 +1199,7 @@
         });
       }
 
-      /* ── Bootstrap ── */
+      /* ── Init ── */
       document.addEventListener('DOMContentLoaded', function() {
         initFlashBand();
         initSidebar();
@@ -1468,7 +1211,7 @@
     })();
 
     /* ═══════════════════════════════════════════
-       REAL-TIME NOTIFICATION LISTENER (WebSocket)
+       LIVE NOTIFICATION LISTENER (WebSocket)
        ═══════════════════════════════════════════ */
     (function() {
       'use strict';
@@ -1476,7 +1219,7 @@
       if (!document.getElementById('notif-toggle')) return;
 
       var wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://')
-                  + location.host + '/ws/pathcare/';
+                  + location.host + '/ws/notifications/';
       var socket = null;
       var reconnectTimer = null;
       var badge = document.querySelector('.notifications-badge');
@@ -1510,7 +1253,7 @@
           badge.style.display = '';
         }
 
-        // 2. Prepend to notifications sidebar if open
+        // 2. If notifications panel is open, prepend to the list
         var list = document.querySelector('.notifications-list');
         if (list) {
           var item = document.createElement('div');
@@ -1518,12 +1261,12 @@
           item.innerHTML = '<div class="notification-indicator" aria-hidden="true"></div>'
             + '<div class="notification-content">'
             + '<span class="notification-message">' + escapeHtml(message) + '</span>'
-            + '<span class="notification-time">Just now</span>'
+            + '<span class="notification-time">just now</span>'
             + '</div>';
           list.insertBefore(item, list.firstChild);
         }
 
-        // 3. Show floating toast
+        // 3. Show flash toast
         var flash = document.getElementById('flash-band');
         if (flash && !flash.classList.contains('show')) {
           flash.textContent = message;
@@ -1565,7 +1308,7 @@
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
           .then(function(reg) { console.log('SW registered:', reg.scope); })
-          .catch(function(err) { console.log('SW failed:', err); });
+          .catch(function(err) { console.log('SW registration failed:', err); });
       });
     }
   </script>

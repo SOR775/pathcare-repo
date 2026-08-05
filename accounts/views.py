@@ -11,7 +11,8 @@ from .models import AccountProfile, User
 
 
 class UserCreateForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
+    password1 = forms.CharField(widget=forms.PasswordInput, label="Password")
+    password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
     is_active = forms.BooleanField(required=False, initial=True, label="Active")
 
     class Meta:
@@ -23,13 +24,26 @@ class UserCreateForm(forms.ModelForm):
             "email",
             "phone",
             "role",
-            "password",
             "is_active",
         ]
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if not password1:
+            self.add_error("password1", "Password is required.")
+        if not password2:
+            self.add_error("password2", "Password confirmation is required.")
+        if password1 and password2 and password1 != password2:
+            self.add_error("password2", "Passwords do not match.")
+
+        return cleaned_data
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
+        user.set_password(self.cleaned_data["password1"])
         user.is_active = self.cleaned_data.get("is_active", True)
         if commit:
             user.save()

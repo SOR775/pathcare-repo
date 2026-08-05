@@ -1231,6 +1231,10 @@ def order_cancel(request, pk):
 def verify_samples_collection(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == "POST":
+        if order.status not in [Order.Status.AT_CLIENT, Order.Status.PICKED_UP]:
+            messages.error(request, "Cannot verify samples at this stage.")
+            return redirect("tracking:order_detail", pk=pk)
+
         barcodes_text = request.POST.get("barcodes", "")
         barcodes = [b.strip() for b in barcodes_text.splitlines() if b.strip()]
         matched_any = False
@@ -1244,7 +1248,8 @@ def verify_samples_collection(request, pk):
             except Sample.DoesNotExist:
                 continue
         if matched_any:
-            order.status = Order.Status.PICKED_UP
+            if order.status == Order.Status.AT_CLIENT:
+                order.status = Order.Status.PICKED_UP
             order.save()
             messages.success(request, "Samples verified")
         else:
@@ -1256,6 +1261,10 @@ def verify_samples_collection(request, pk):
 def capture_handover(request, pk):
     order = get_object_or_404(Order, pk=pk)
     if request.method == "POST":
+        if order.status not in [Order.Status.AT_CLIENT, Order.Status.PICKED_UP]:
+            messages.error(request, "Cannot capture handover at this stage.")
+            return redirect("tracking:order_detail", pk=pk)
+
         barcodes_text = request.POST.get("barcodes", "")
         barcodes = [b.strip() for b in barcodes_text.splitlines() if b.strip()]
         matched_any = False
@@ -1271,7 +1280,8 @@ def capture_handover(request, pk):
                 continue
 
         if matched_any:
-            order.status = Order.Status.PICKED_UP
+            if order.status == Order.Status.AT_CLIENT:
+                order.status = Order.Status.PICKED_UP
             if request.POST.get("latitude"):
                 order.latitude = float(request.POST.get("latitude"))
             if request.POST.get("longitude"):

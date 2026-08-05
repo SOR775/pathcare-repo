@@ -84,6 +84,32 @@ class CustomUserTests(TestCase):
         self.assertTrue(super_admin.is_super_admin())
         self.assertEqual(super_admin.role, User.Role.SUPER_ADMIN)
 
+    def test_super_admin_can_create_user_with_template_password_fields(self):
+        super_admin = get_user_model().objects.create_superuser(
+            username="admin-creator",
+            email="admin-creator@example.com",
+            password="secret",
+        )
+        self.client.force_login(super_admin)
+
+        response = self.client.post(
+            reverse("accounts:user_management"),
+            {
+                "first_name": "Jane",
+                "last_name": "Doe",
+                "username": "jane-doe",
+                "email": "jane@example.com",
+                "phone": "0712345678",
+                "role": User.Role.DISPATCHER,
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+                "is_active": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(get_user_model().objects.filter(username="jane-doe").exists())
+
     def test_creating_carrier_user_creates_carrier_profile(self):
         User = get_user_model()
         user = User.objects.create_user(username="driver", password="secret", role=User.Role.CARRIER, phone="0712345678")

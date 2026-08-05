@@ -73,6 +73,47 @@ class DashboardWorkflowViewTests(TestCase):
         self.assertTrue(sample.is_received)
         self.assertTrue(CustodyEvent.objects.filter(order=order, event_type=CustodyEvent.EventType.PICKED_UP).exists())
 
+    def test_capture_handover_fails_for_delivered_order(self):
+        carrier_user = get_user_model().objects.create_user(
+            username="carrier-delivered",
+            password="secret123",
+            role=get_user_model().Role.CARRIER,
+            phone="0712345678",
+        )
+        carrier = carrier_user.carrier_profile
+        client = Client.objects.create(
+            name="Delivered Clinic",
+            contact_phone="0712345678",
+            address="Nairobi",
+        )
+        order = Order.objects.create(
+            client=client,
+            carrier=carrier,
+            priority=Order.Priority.URGENT,
+            status=Order.Status.DELIVERED,
+            latitude=-1.2921,
+            longitude=36.8219,
+        )
+        Sample.objects.create(order=order, barcode="DEL-123", sample_type=Sample.SampleType.BLOOD)
+
+        self.client.login(username="carrier-delivered", password="secret123")
+        response = self.client.post(
+            reverse("tracking:capture_handover", kwargs={"pk": order.pk}),
+            {
+                "action": "pickup",
+                "barcodes": "DEL-123",
+                "latitude": "-1.2921",
+                "longitude": "36.8219",
+                "captured_at": "2026-08-03T10:00:00Z",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.DELIVERED)
+        self.assertContains(response, "Cannot capture handover at this stage.")
+
     def test_dashboard_shows_super_admin_for_superuser(self):
         superuser = get_user_model().objects.create_superuser(
             username="admin",

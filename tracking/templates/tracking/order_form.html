@@ -1,6 +1,6 @@
 {% extends "tracking/base.html" %}
 
-{% block title %}New order - Pathcare Kenya{% endblock %}
+{% block title %}New Order — PathCare Kenya{% endblock %}
 
 {% block content %}
 <section class="panel">
@@ -11,21 +11,120 @@
     </div>
   </div>
 
-  <form method="post" class="form-grid">
+  <form method="post" class="form-grid" enctype="multipart/form-data">
     {% csrf_token %}
-    {% for field in form %}
+
+    {# ── Form-level (non-field) errors: would otherwise be silently dropped ── #}
+    {% if form.non_field_errors %}
+      <div class="form-errors" role="alert">{{ form.non_field_errors|striptags }}</div>
+    {% endif %}
+
+    {# ── Hidden fields rendered explicitly; loop only visible fields ── #}
+    {{ form.hidden_fields }}
+
+    {% for field in form.visible_fields %}
       <div class="field-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}">
+          {{ field.label }}{% if field.field.required %}<span class="required-star" aria-hidden="true"> *</span>{% endif %}
+        </label>
         {{ field }}
+        {% if field.help_text %}<p class="form-hint">{{ field.help_text }}</p>{% endif %}
         {% if field.errors %}
-          <div class="field-errors">{{ field.errors|striptags }}</div>
+          <div class="field-errors" id="{{ field.id_for_label }}-errors" role="alert">{{ field.errors|striptags }}</div>
         {% endif %}
       </div>
     {% endfor %}
+
     <div class="form-actions">
-      <button class="button primary" type="submit">Create order</button>
-      <a class="button secondary" href="{% url 'tracking:dashboard' %}">Cancel</a>
+      <button class="btn btn--primary btn--lg" type="submit">Create order</button>
+      <a class="btn btn--outline" href="{% url 'tracking:dashboard' %}">Cancel</a>
     </div>
   </form>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+
+<style>
+  /* ═══════════════════════════════════════════
+     NEW PICKUP REQUEST — PAGE STYLES
+     (matches the shared design system tokens)
+     ═══════════════════════════════════════════ */
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-group label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    letter-spacing: .01em;
+  }
+  .field-group input,
+  .field-group select,
+  .field-group textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-size: .875rem;
+    color: var(--color-text);
+    background: var(--color-surface);
+    transition: border-color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .field-group input:focus,
+  .field-group select:focus,
+  .field-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+  }
+  .field-group select { cursor: pointer; }
+  .field-group textarea { min-height: 100px; resize: vertical; }
+
+  .field-errors {
+    font-size: .75rem;
+    color: var(--color-danger);
+    margin-top: 2px;
+  }
+  .form-hint {
+    font-size: .75rem;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+  .required-star { color: var(--color-danger); }
+
+  .form-actions {
+    display: flex;
+    gap: var(--space-sm);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border-light);
+    margin-top: var(--space-md);
+    grid-column: 1 / -1;
+  }
+
+  .form-errors {
+    grid-column: 1 / -1;
+    padding: 10px 14px;
+    background: var(--color-danger-soft);
+    border: 1px solid var(--color-danger);
+    border-radius: var(--radius-md);
+    font-size: .8rem;
+    font-weight: 500;
+    color: #991b1b;
+  }
+</style>
 {% endblock %}
